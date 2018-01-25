@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# generates a proper release tar.xz given a dynacoe directory from git 
+# with a built library.
+
+if [ "$1" = "" ]; then 
+    echo "Please specify a version name"
+    exit 1
+fi
+
+
+rm -rf ./.temp-build/
+mkdir ./.temp-build
+cd ./.temp-build
+
+# prepare toplevel
+
+echo "$1" > VERSION
+git rev-parse HEAD >> VERSION
+mkdir ./include
+mkdir ./lib
+mkdir ./build
+mkdir ./DynacoeSrc
+mkdir ./licenses
+cp ../COPYING ./
+
+
+
+
+# includes first
+cp -r ../include/* ./include
+
+# then libs 
+cp -r ../lib/* ./lib
+
+
+# assemble build
+mkdir ./build/lib
+cp ../build/lib/libdynacoe.a ./build/lib/
+if [ ! -f "../build/lib/libdynacoe-fallback.a" ]; then 
+    echo "WARNING: No fallback build available. Using regular build as the fallback.";
+    cp ../build/lib/libdynacoe.a  ./build/lib/libdynacoe-fallback.a
+else 
+    cp ../build/lib/libdynacoe-fallback.a  ./build/lib/
+fi
+cp ../build/lib/lib_compileropts ./build/lib/
+cp ../build/lib/lib_defines ./build/lib/
+cp ../build/lib/lib_incpaths ./build/lib/
+cp ../build/lib/lib_libpaths ./build/lib/
+cp ../build/lib/build_libs ./build/lib/
+
+# includes directory
+mkdir ./DynacoeSrc/includes
+cp -r ../DynacoeSrc/includes/* ./DynacoeSrc/includes/
+
+# last and definitely not least, liceses!
+cp -r ../licenses/* ./licenses/
+
+
+
+
+
+
+# now build it
+rm -f ../dynacoe.tar.xz 
+tar czf ../dynacoe.tar ./
+xz --compress ../dynacoe.tar
+cd ..
+rm -f ../dynacoe.tar
+rm -rf ./.temp-build
+
+echo "Done."

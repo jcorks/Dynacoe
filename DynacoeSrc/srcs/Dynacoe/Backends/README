@@ -1,0 +1,2 @@
+Backend folders are structured in terms of dependencies:
+[RelevantBackend]/[RequiredSystem]/[RequiredSubsystem]/etc

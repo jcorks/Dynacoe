@@ -1,0 +1,276 @@
+~DYNACOE: a brief update history (Before Git)~
+
+4 / 15 
+- Scrapping AutoVersion... Now on git!
+
+
+Cleaned DynacoeSys: removed deprecated fncts; added clean descriptions
+Added   Unix vs. Win build targets
+Cleaned Image class security improvements. Less guts; more armor.
+Added   =op to CoedeUtil::Matrix
+Added   Image::setPixel, framework for renderTarget textures
+Updated User Image retrival is done via ref rather than by *
+Fixed   Debug Overlay: ent window drag functionality FIXED
+Added   Image::setAsTarget done, but resulting tex is upside down?
+Cleaned organized Display members
+Updated Particle emission and instantiation fixes
+Updated DIsplay::getFromCache is now Display::getImage to avoid complication
+Added   Display::drawLine3D
+Updated DynacoeSys::toggleConsole has been replaced with showConsole(bool)
+Fixed   Pitch yaw and roll are now accurate
+Updated Reorganized source, removed some deprecated / copied junk
+Added   DynacoeSys key input and associated methods
+Updated EntDebugger highlighting is now in 3D
+Added   Expanded Color implementation (adding, mult, etc)
+Fixed   Display::setAsRenderTarget gives an upright Tex
+Removed Compensations for setAsRenderTarget complications
+Added   Image::addFrame() for public use
+Updated Display::rebuildCache is deprecated, replaced by panic_copyTextureData
+Added   Filesys::findFile 
+Updated File searches for storing operations no longer require gameRes structure
+Fixed   Display::setAsRenderTarget, off-by-one error!
+Added   Main display framebuffer drawing
+Added   Image create, copyDisplay
+Added   generateStringImage
+Fixed   Image::getFrame()
+Updated Image::getImage now returns a Matrix of colors
+Removed Internal caching for Image pixel data.
+
+
+2/ 20
+- Scrapping manual update tracking, switching to AutoVersion
+
+8/ 11 - 2 / 20
+- Many changes (that were undocumented)
+
+
+
+8/ 11
+- Decided to make the setters/getters of Params (core) private.
+- Wrote wrappers for Params setters and getters
+- Moved IO buffers to Params.cpp
+- Moved deprecated functions of Display to private. will remove them soon.
+- Cleaned up Display
+
+8/ 10
+- Changed engine name to "Dynacoe" ( courtesy of TD) to avoid confusion with
+  with the group Coebeef, the group that this was meant for.
+
+- Fixed an issue with InputBuffer and reading DWORDs
+- Fixed a translation issue with the new 2D mode image drawing
+
+8/ 6
+- Finished Adding the "Params" standard module
+    - Params is the module that contains all "global" variables
+      and serves to remove dependency issues involved with retrieving values
+      All other module's send/get related functions and open values were migrated
+      to the Params module. If an Entity wishes to retrieve a global-related variable,
+      they retrieve it using Params' module tag "core".
+
+            Example:
+
+            core->getWinHeight(); // returns the height of the window.
+
+
+     This also serves to remove a multitude of values that should have been hidden from
+     the client-side. The module is also included in  every other core module.
+
+     NOTE: Input querying will also be done through Params. Though, CoebeefSys still
+     handles the input processing, the user will use the "core" functions.
+
+- Replaced old CAMERA_X with flatCamera to control
+  2D drawing in a seperate environment from 3D.
+- Wrapped old main in a single class to eliminate need for global scope interaction as well as
+  allow for the keeping of hidden assets
+
+7/ 29
+- Added input grabber wrapper from SDL's grabInput()
+- Added getRotation/ getDistance functions that supply user input coords
+- Started Billboard drawing
+- Added (First Person Camera) as a seperate camera mode independently taking care of the mouse
+
+7/ 28
+- Swapped Module references from all caps to all lowercase to streamline to look of coebeef code
+- Added Pitch Yaw and Roll for non-target camera
+
+
+7 / 27
+- CoebeefIII has begun.
+- "ImgCache" class is now "Display"
+- Started 3D scene Camera
+    .Including target-based movement
+    .Still need pyr
+- Started Skybox
+
+
+////////////////////////////////CoebeefII
+
+5 / 15 - 7 / 26
+- Big leaps:
+- Now feel ashamed that I haven't updated this in 2 months
+  but I need to now that so many things are changing due to the 3D switch
+
+
+- 3D is now supported
+- RtAudio serves as the module for real time audio processing
+- Started "COEDE", the scripting language
+    .Basic syntactic rules
+    .Error Checking
+
+- Added functions and vars for Sound module (SND)
+- Begun Soundfont parsing for Sound module
+- Added some more base functions for Entity class, such as parent / child relationships, angular relationships, positional, etc.
+
+
+
+5/7 - 5/14
+- Fixed/Finished Animation support for particles
+- Added ability to change particles upon emission
+-
+
+4/ 25 - 5 / 7
+- Fixed up particle setup
+- Added drawing particles with animations
+- Made particle creator
+
+
+4/ 24
+- Fixed errors regarding multi-frame images;
+- Added sequential rendering  of multi-frame images
+- extended export and append
+
+
+4 / 23
+
+- Reworked CIM writing and loading to support multiple frames!
+    utilize via 'export' and 'append'
+- Added some error handling to InputBuffer
+- Added append option for OutputBuffer
+- Added console commands, some hidden ones
+- Reworked console rendering to be handled by IMG rather than SYS
+- other minor things
+
+
+
+4 / 11
+
+- Rewrote CIM loading function. (much faster now!)
+- Replaced SDL_Color with new Color ADT,
+  supports inline int-to-Color-to-SDL_Color conversion
+
+- Rewrote reading and writing CIM and other files to be independent of endianness
+- Reworked Drawing functions to handle Colors instead of r,g,b,a ints
+
+
+
+
+
+3 / 18
+    -Added Support for .png
+    -Started work on images with alpha channel
+    -Started  work on particles with multiple blend options
+
+3/15
+    -Finished particles (custom image support)
+    -Started Paralax!!!
+
+3/4
+    -Fixed cout tracking of syslog
+
+3/3
+    Started Particles!!!!!!!!!!!
+        .particles cached at init().
+        .uses cached images as base
+        .accepts particle scripts and a custom path
+3/1
+    -Finished new var system!
+        .runtime error checking for custom vars
+        .support for atandardizing non-rudimentary types
+        .function-based access reduces syntax length
+    -Finished Maps!
+        .custom backgrounds
+        .ability to change scenes
+        .added user-available file to edit maps on
+        .can add normal and menu entities to specified location
+
+    2/20
+        -Started new reimplementation of variable system UGH
+        -Switched initializer of Entities to support CoebeefSys from the default declaration
+
+2/23
+    -Finished var switch!!
+    -Added error handling for var system.
+2/12
+    -added user-made entLists!!
+    -Fixed a dependency problem with CB_Window
+    -Throttled text handling
+    -Adjusted BUFFER_POS offsets for proper rendering (Text_ent)
+
+1/30
+
+    -Replaced capture bools in Window class with one var.
+    -Revised Window class Canvas, ready for internally run objects
+    -Found a bug in input handling. Need to rewrite to be protected
+    -Rewrote input handling ( SYS now handles)
+
+
+
+1/29
+    -Rewrote framelimiter (Old one was apparently not working at all!)
+    -Finished scroll bar for window class
+    -Finished window rendering target
+    -added fullscreen flag (Only for our resolution so far though...)
+
+
+1/20- 1/28
+    -Added image resizing!
+    -Added image rotation! (FUCK YEAR)
+    -Added Window utility class
+
+
+1/18 - 1/20
+    -Fixed an error with reading images that occured when the first pixel is white
+    -Added IEM (Internal Error Message) class for other classes that cant reach CBS
+    -Added error messages for Display
+    -Added IMG->drawImage();
+    -Added basic caching
+    -Added image lists for system and game use
+
+1/9 - 1/15/13
+    -Fixed a huge error overlooked with .cim compression...
+        (accidentally did not take in account the [likely]
+         possibility of the image having over 256 colors WHOOPS)
+    -Changed cim encoding from ARGB to RGBA
+    -Reversed color byte order
+    -Added IMG->SDLColorToInt()
+    -Fixed bad image reading.
+    -Fixed 8-bit , 16-bit, and NULL compression
+
+
+1/8/13
+    -Finished binary byte writing functions
+    -Discovered flaw in getPixel:
+        Only works if target image w * h is a power of 2. WHAT
+    -Fixed (Avoided) that flaw
+        Flaw occurs in 24Bit surface only
+        getPixel Requires either 8bit or 32bit surfaces now
+    -Finished writeCIM();
+
+1/3/13 - 1/6/13
+    - Added Degubber command input (sort of) use tab to toggle degubber, enter to type.
+    - Added drawRectangle alpha channel
+    - Added + Optimized Display::getPixel() for surfaces
+    - Started Coebeef IMage format (.cim) writing
+
+12/31/12
+    -Massive rewrite of the way the engine handles rendering
+        -Sprite class was removed entirely
+        -Fixed other big memory leak caused by old image handling
+    -Camera can move (arrow keys)
+    -Fixed a bug with catching key states
+
+12/30/12
+    -Added ability to see physical memory used (log view). SYS.physMem and SYS.dMem in bytes
+    -Fixed drawString
+    -Finished IMG::convertToTex()
+    -Fixed a major memory leak caused by IMG::convertToTex() though still suspicious data spikes

@@ -1,0 +1,30 @@
+Immediate ToDos
+===============
+- Animations.
+
+What we have so far:
+ASSIMP as the library of choice for loading them in.
+
+
+Following ASSIMP's structure, we will be supporting 2 types of animtions:
+
+Vertex-Based (deform) animations
+Node-Based (bone) animations
+
+
+Animations in general
+---------------------
+
+- Attached to AspectMesh
+- Specifies transforms
+
+Node-Based
+----------
+
+Requires a new bone class that specifies weights associated with faces.
+Any animation that specifies transforms for a bone (by name) will apply that 
+locally chained transform by the weight amount to that face 
+
+- Likely requires some shader work to have viable performance
+- Node instances need to be attached to the MeshObjects of Meshes 
+ 
