@@ -37,12 +37,6 @@ cp -r ../lib/* ./lib
 # assemble build
 mkdir ./build/lib
 cp ../build/lib/libdynacoe.a ./build/lib/
-if [ ! -f "../build/lib/libdynacoe-fallback.a" ]; then 
-    echo "WARNING: No fallback build available. Using regular build as the fallback.";
-    cp ../build/lib/libdynacoe.a  ./build/lib/libdynacoe-fallback.a
-else 
-    cp ../build/lib/libdynacoe-fallback.a  ./build/lib/
-fi
 cp ../build/lib/lib_compileropts ./build/lib/
 cp ../build/lib/lib_defines ./build/lib/
 cp ../build/lib/lib_incpaths ./build/lib/
