@@ -57,6 +57,10 @@ class Chain {
 
     Chain();
         
+    /// \name Instantiation
+    ///
+    /// A chain can be initalized from any of the following types:
+    ///\{
     Chain(const char *);
     Chain(char);
     Chain(int);
@@ -66,11 +70,16 @@ class Chain {
     Chain(const Vector &);
     Chain(const Chain &);
     Chain(const std::string & other);
-    Chain(const std::vector<Chain> &); // for static initializer lists, if desired
+    Chain(const std::vector<Chain> &); 
+    ///\}
+
     ~Chain();
 
     
-    /// \brief Easy conversion to other types
+    /// \name Numerical conversion to other types
+    ///
+    /// If the type has no correct conversion, a default 
+    /// value of 0 is used.
     ///\{
     int AsInt();
     uint32_t AsUInt32();
@@ -79,25 +88,23 @@ class Chain {
     ///\}
 
 
-    /// \name Appending
+    /// \break Appends *this with an input
     ///
-    /// Appends *this with an input
-    ///\{
     Chain & operator<<(const Chain &);
 
 
-    
-    const std::string & ToString() {
+
+    /// \brief Returns a std::string equivalent of this Chain.
+    ///
+    const std::string & ToString() const {
         return data;
     }
     
 
-    /// \name Assign a value to be the Chain
+    /// \brief Assign a value to be the Chain
     ///
-    /// \{
     Chain & operator=(const Chain &);
 
-    /// \}
 
 
     /// \brief copy constructor allowing for implicit conversion to std::string s.
@@ -109,17 +116,19 @@ class Chain {
 
     /// \name Translate the Chain to and from the Al Bhed language.
     ///
-    /// \{
+    ///\{
     std::string TranslateToAlBhed() const;
     std::string TranslateFromAlBhed() const;
-    /// \}
+    ///\}
 
 
-    /// \brief Goes to the next token in the Chain.
+    /// \name Goes to the next token in the Chain.
     /// If there are not more links in the chain,
     /// the current link is an empty Chain.
+    ///\{
     void NextLink();
     Chain & operator++(int);
+    ///\}
 
     /// \brief returns the current link;
     ///
@@ -144,7 +153,8 @@ class Chain {
     /// The default delimiters are space,
     /// newline, tab, and return.
     ///
-    void SetDelimiters(const std::string &);
+    /// @param chars A string of characters where each character is a delimiter.
+    void SetDelimiters(const std::string & chars);
 
 
 

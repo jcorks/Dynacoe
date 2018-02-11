@@ -53,7 +53,7 @@ using PadID = Dynacoe::LookupID;
 
 /// \brief Callback functor base class.
 /// To implement a callback signal, create a class that
-/// inherits from InputCallback
+/// inherits from this and give it to Input::AddListener()
 class ButtonListener {
   public:
     /// \brief Function called upon pressing of the button.

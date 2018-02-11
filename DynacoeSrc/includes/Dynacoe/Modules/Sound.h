@@ -58,6 +58,8 @@ class AudioBlock;
 /// corresponding audio is playing. Because typical playback systems are done on
 /// separate threads, the reflection of changes caused by the calling of
 /// these functions is not immediately guaranteed.
+///
+/// ActiveSound objects are produced by Sound::PlayAudio
 class ActiveSound {
   public:
     ActiveSound();
@@ -83,8 +85,8 @@ class ActiveSound {
     /// \brief Sets the progress in the sound to play from.
     ///
     /// @param f The place in the sound to continue playback from.
-    /// f is interpreted as a fraction of the progress of the song,
-    /// where 0 is the beginning of the song and 1 is the end of the song.
+    /// f is interpreted as a fraction of the progress of the sound,
+    /// where 0 is the beginning of the sound and 1 is the end of the sound.
     /// The value is clamped to this range.
     void Seek(float f);
 

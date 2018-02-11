@@ -506,23 +506,14 @@ ConsoleStream & ConsoleStream::operator=(const ConsoleStream & other) {
 
 
 
-ConsoleStream ConsoleStream::operator<<(const std::string & s) {
+ConsoleStream ConsoleStream::operator<<(const Chain & s) {
     ConsoleStream out(finish);
-    out.str = str+s;
+    out.str = str+s.ToString();
     str = "";
 
     return out;
 }
 
-ConsoleStream  ConsoleStream::operator<<(int i) {
-    return *this << (Chain()<<i);
-}
-ConsoleStream  ConsoleStream::operator<<(double i) {
-    return *this << (Chain()<<i);
-}
-ConsoleStream  ConsoleStream::operator<<(char i) {
-    return *this << (Chain()<<i);
-}
 
 ConsoleStream  ConsoleStream::operator<<(MessageType t) {
     type = t;

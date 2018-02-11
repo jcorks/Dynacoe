@@ -118,8 +118,8 @@ class AudioBlock : public Asset {
     /// an independent AudioBlock.
     ///
     /// The new AudioBlock consists of all samples from firstSample to endSample.
-    /// @param The first sample of the new block.
-    /// @param The last sample of the new block.
+    /// @param firstSample The first sample of the new block.
+    /// @param sendSample The last sample of the new block.
     AudioBlock * GetSubBlock(uint32_t  firstSample, uint32_t endSample);
 
 

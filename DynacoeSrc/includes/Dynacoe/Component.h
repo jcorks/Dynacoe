@@ -44,14 +44,38 @@ class Entity;
  * and addable object.
  *
  * To work, all Component s have hosts; when a host updates, all components do as well.
- * Like Entities, Components cna have a Draw and a Step function with an overloadable
+ * Like Entities, Components can have a Draw and a Step function with an overloadable
  * OnStep / OnDraw. In addition, all Component's also have event handling capabilities.
- * Setable with string, it is possible to maintain and assign functions to run on 
+ * Setable with strings, it is possible to maintain and assign functions to run on 
  * certain events and even define your own events for custom Components.
  * 
+ * Using Events
+ * ------------
+ *
+ * When making your own Components, you will typically also want to include 
+ * your own custom events. InstallEvent() is the protected function that adds 
+ * a new recognized event with the given name. Once installed, EmitEvent() should be called 
+ * at the appropriate time user functions should be run.
+ *
+ *
  */
 class Component {
   public:
+
+    /// \brief Convenience wrapper for defining event functions
+    ///
+    /// A VERY simple macro that avoids the need to have to write
+    /// the whole function header for a new event handler. You simply pass
+    /// in the name of your handler, and a function declaration will be
+    /// put in its place. The arguments are named as follows:
+    ///   argument 1 (Component *) -> "component"
+    ///   argument 2 (Entity::ID)  -> "self"
+    ///   argument 3 (Entity::ID)  -> "source"
+    ///
+    #define DynacoeEvent(_Name_) bool _Name_(Dynacoe::Component * component, Dynacoe::Entity::ID self, Dynacoe::Entity::ID source, const std::vector<std::string> & args)
+
+
+
 
     void Step();
     void Draw();
@@ -80,11 +104,11 @@ class Component {
     template<typename T>
     T * GetHostAs() const {return dynamic_cast<T*>(GetHost());}
 
-    /// \brief Returns a ID of the host. If there is non, an empty ID is returned.
+    /// \brief Returns a ID of the host. If there is none, an empty ID is returned.
     ///
     Entity::ID GetHostID() const {return host ? host->GetID() : Entity::ID();}
 
-    /// \brief Returns a string containing information on the state of the
+    /// \brief Returns a string containing human-readable information on the state of the
     /// component.
     ///
     virtual std::string GetInfo(){return "";}
@@ -115,11 +139,14 @@ class Component {
     /// way to the main handler (in other words, lets you know whether
     /// all the handlers allowed the event to happen)
     /// Source is passed to the handler and is usually the source of the event (but does not have to be)
-    bool EmitEvent(const std::string &, Entity::ID source = Entity::ID(), const std::vector<std::string> & args = {});
+    /// @param eventName Name of the event. This should match the name that was installed.
+    /// @param source Optional ID that indicates the source of the event. For example, in a collision, this may be the object collided with.
+    /// @param args Optional string vector with additional information to be used by the event.
+    bool EmitEvent(const std::string & eventName, Entity::ID source = Entity::ID(), const std::vector<std::string> & args = {});
 
     /// \brief Returns whether there exists at least one handler for the given event
     ///
-    bool CanHandleEvent(const std::string &);
+    bool CanHandleEvent(const std::string & eventName);
 
 
     /// \brief Adds a hook to the event. 
@@ -127,25 +154,25 @@ class Component {
     /// A hook happens at the end of a given event after all the
     /// handlers have been run. Hooks occur regardless of event handler propogation.
     /// (the return value is ignored for all hooks)
-    void InstallHook(const std::string &, EventHandler);
+    void InstallHook(const std::string & eventName, EventHandler);
     
     /// \brief Removes a hook added with InstallHook()
     ///
-    void UninstallHook(const std::string &, EventHandler);
+    void UninstallHook(const std::string & eventName, EventHandler);
 
     /// Adds a handler to an event. 
     ///
     /// Handlers that are added are run in LIFO order
     /// and their return values dictate whether the event should propogate.
     /// the last handler run for an event is always the main handler of the event.
-    void InstallHandler(const std::string &, EventHandler);
+    void InstallHandler(const std::string & eventName, EventHandler);
     
     /// \brief Removes a handler added with InstallHandler()
     ///
-    void UninstallHandler(const std::string &, EventHandler);
+    void UninstallHandler(const std::string & eventName, EventHandler);
 
 
-    /// \breif Returns a list of events that this eventsystem is able to process
+    /// \breif Returns a list of event names that this eventsystem is able to process
     ///
     std::vector<std::string> GetKnownEvents() const;
     ///\}
@@ -174,8 +201,8 @@ class Component {
     /// \breif Adds a new event to be recognized by the EventSystem.
     ///
     /// if mainHandler is nullptr, the event is still added, but has no default
-    /// handler
-    void InstallEvent(const std::string &, EventHandler mainHandler = nullptr);
+    /// handler is set. The default handler is always guaranteed to run first for the event.
+    void InstallEvent(const std::string & eventName, EventHandler mainHandler = nullptr);
 
     /// \brief removes a handler of an event
     ///
@@ -195,19 +222,6 @@ class Component {
     std::unordered_map<std::string, EventSet> handlers;
 };
 }
-
-/// \brief Convenience wrapper for defining event functions
-///
-/// A VERY simple macro that avoids the need to have to write
-/// the whole function header for a new event handler. You simply pass
-/// in the name of your handler, and a function declaration will be
-/// put in its place. The arguments are named as follows:
-///   argument 1 (Component *) -> "component"
-///   argument 2 (Entity::ID)  -> "self"
-///   argument 3 (Entity::ID)  -> "source"
-///
-#define DynacoeEvent(_Name_) bool _Name_(Dynacoe::Component * component, Dynacoe::Entity::ID self, Dynacoe::Entity::ID source, const std::vector<std::string> & args)
-
 
 
 #endif

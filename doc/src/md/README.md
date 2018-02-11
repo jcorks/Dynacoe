@@ -17,7 +17,7 @@ GitHub page: [http://github.com/jcorks/Dynacoe/](http://github.com/jcorks/Dynaco
 Status
 ------
 
-Version: 0.92.0
+Version: 0.96
 
 
 Why use Dynacoe?

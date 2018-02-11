@@ -105,7 +105,7 @@ class EntityIDTable {
 
 
   private:
-    uint64_t refCount;
+    int refCount;
     Entity * source;
     std::string idStr;
 };

@@ -110,7 +110,7 @@ class DataTable : public Component {
     /// passed into ReadState() turn the calling object into an exact copy 
     /// of this one.
     ///
-    /// WriteState()/ReadState() were intended to be used in conjuction to preserve data contents of 
+    /// WriteState() / ReadState() were intended to be used in tandem to preserve data contents of 
     /// the DataTable across program invocations. Along with writing the exact state of 
     /// the DataTable, the data includes header and checksum data to improve parity across 
     /// execution states.

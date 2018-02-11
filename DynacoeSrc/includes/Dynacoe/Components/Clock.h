@@ -51,7 +51,7 @@ namespace Dynacoe {
  *
  * The setup is made to be very much like a stopwatch.
  *
- * Supported component events:
+ * Supported Component events:
  * - clock-step: Called every step when the clock is active.
  * - clock-draw: Called every draw when the clock is active.
  * - clock-expire: Called when the clock expires
@@ -80,11 +80,11 @@ class Clock : public Component {
     ///
     int GetDuration();
 
-    /// \brief Resets the timer to an initial state.
+    /// \brief Resets the timer with the time it should expire.
     ///
     void Set(int msToExpire = -1);
 
-    /// \brief Resets the timer but with no time limit.
+    /// \brief Resets the timer with the previously used time limit.
     ///
     void Reset();
 

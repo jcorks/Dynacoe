@@ -214,12 +214,12 @@ class Display : public Backend {
 
 
     /// \brief Attaches the given framebuffer as the source of the display.
-    /// Any updates to the display reflect the context of the source framebuffer.
+    /// Any updates to the display reflect the content of the source framebuffer.
     /// Setting the source as nullptr will nullify any request for 
     /// updating.
     virtual void AttachSource(Framebuffer *) = 0;
     
-    /// \brief Returns the frame data to write to.
+    /// \brief Returns the frame data to read from.
     virtual Framebuffer * GetSource() = 0;
 
     /// \brief Updates display with input visual data that is 

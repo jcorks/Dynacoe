@@ -79,15 +79,28 @@ class Asset {
 
 ///
 /// \brief
-/// Handles all files loaded from and written to disk.
+/// Handles loading media.
+///
+/// When working with a multimedia project, you often will need to load in 
+/// different kinds of media with varying filetypes and sources. Assets allows 
+/// you to work with a common framework for all these types. In specifying the filename 
+/// and kind of media, Dynacoe will find the media, load it, and let you start working 
+/// with it right away. 
+///
+/// Any Dynacoe build could have additional supported media types as well. The supported 
+/// media types may always be queried using the SupportedLoadExtensions() function.
+///
+/// As well as loading, Dynacoe also supports exporting for some types. SupportedWriteExtensions()
+/// may be used for that purpose.
 ///
 
 class Assets : public Module {
   public:
 
-    /// \brief A classification of individual Assets.
+    /// \brief A classification of individual Assets.   
+    ///
     enum class Type {
-        Placeholder,
+        Placeholder,    ///< Not an action Type.
         Image,          ///< An Image.
         Font,           ///< A FontAsset.
         Audio,          ///< An AudioBlock.

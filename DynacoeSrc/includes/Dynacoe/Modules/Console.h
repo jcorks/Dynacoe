@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Entity.h>
 #include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Interpreter.h>
+#include <Dynacoe/Util/Chain.h>
 #include <map>
 
 class ConsoleInputStream;
@@ -46,7 +47,7 @@ class Shape2D;
 
 
 
-/// \brief Streams output to the console.
+/// \brief Streams output to the console. Normally not directly needed.
 class ConsoleStream {
   public:
   
@@ -69,10 +70,7 @@ class ConsoleStream {
     /// \name Stream Output
     /// 
     /// \{
-    ConsoleStream operator<<(const std::string &);
-    ConsoleStream operator<<(int str);
-    ConsoleStream operator<<(double str);
-    ConsoleStream operator<<(char str);
+    ConsoleStream operator<<(const Chain&);
     ConsoleStream operator<<(MessageType);
     ///\}
 

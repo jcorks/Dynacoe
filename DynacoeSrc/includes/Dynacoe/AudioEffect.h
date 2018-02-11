@@ -44,6 +44,8 @@ class AudioEffect {
     /// The data values are expected to be output as [-1, 1] in
     /// an interleaved channel format. If outside of these bounds,
     /// the data will be clamped to that range.
+    /// @param data A section of the stream data 
+    /// @param numvalues The number of float values in this section
     virtual void operator()(float * data, uint32_t numValues) const = 0;
 
   private:

@@ -59,8 +59,8 @@ class Camera : public Entity {
 
     /// \brief The type of Camera
     enum class Type {
-        Perspective3D, /// \brief Indicates use for 3D perspective viewing 
-        Orthographic2D /// \brief Indicates use for 2D orthographics viewing
+        Perspective3D, ///< Indicates use for 3D perspective viewing 
+        Orthographic2D ///< brief Indicates use for 2D orthographics viewing
     };
 
     void BindTransformBuffers(RenderBufferID mview, RenderBufferID proj);
@@ -92,21 +92,23 @@ class Camera : public Entity {
     /// \brief Converts a point representing a pixel on a display to
     /// a point in 3D space.
     ///
-    /// @param point2D The 2D point to convert.
-    /// @param disance The distance to project the Vector to. Since the source is 2D, the
+    /// @param point2D The point to convert.
+    /// @param disance The distance to project the Vector to. In the case of a 3D perspective camera: Since the source is 2D, the
     /// Z value is ignored. However, when projecting, since there is no source Z value,
     /// The actual depth from the Camera's point of view is undefined when projecting.
     /// Thus a distance from the viewpoint is needed.
-    Dynacoe::Vector TransformScreenToWorld(const Dynacoe::Vector & pointer2D, float distance);
+    Dynacoe::Vector TransformScreenToWorld(const Dynacoe::Vector & point, float distance);
 
-    /// \brief Converts a point in 3D space to a pixel position on the display.
+    /// \brief Converts a point in transformed space to a pixel position on the display.
     ///
-    /// @param point3D The source 3D point to project onto the Display.
-    Dynacoe::Vector TransformWorldToScreen(const Dynacoe::Vector &);
+    /// @param point The source point to project onto the Display.
+    Dynacoe::Vector TransformWorldToScreen(const Dynacoe::Vector & point);
 
 
     /// \brief Convenience function to set the rendering resultion
     ///
+    /// @param w Width in pixels
+    /// @param h Height in pixels
     void SetRenderResolution(int w, int h);
 
 

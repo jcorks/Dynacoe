@@ -60,7 +60,7 @@ class DataGrid : public Entity {
     DataGrid();
     ~DataGrid(){}
     
-    /// \brief Adds a new column with a title, a specified width, and an option color 
+    /// \brief Adds a new column with a title, a specified width, and an optional color 
     /// for the text.
     ///
     void AddColumn(const std::string & title, int width, const Color & color = Color("#EFEFEF"));

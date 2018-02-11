@@ -42,7 +42,8 @@ namespace Dynacoe {
 ///
 /// The debugger has very few interactive functions, as it is meant to mostly
 /// be controlled by the user while running the program. The main use is to
-/// explore the Entity / World hierarchy and view detailed information on Entities.
+/// explore the Entity hierarchy and view detailed information on Entities.
+/// By default, the debugger is activated by the key F3.
 class Debugger : public Module {
   public:
 

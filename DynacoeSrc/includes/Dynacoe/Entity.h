@@ -139,7 +139,7 @@ class Entity {
     const std::vector<Entity::ID> & GetChildren() const;
 
 
-    /// \brief Returns all Entities that are hierarcheical
+    /// \brief Returns all Entities that are within this Entity's hierarchy.
     std::vector<Entity::ID> GetAllSubEntities() const;
 
     /// \brief Returns the Entity with the given ID.
@@ -148,9 +148,9 @@ class Entity {
     bool Contains(Entity::ID);
 
 
-    /// \brief Returns all bound Entities with the name equivalent to the one given.
-    /// This function look in all sub-worlds as well.
-    /// The entity's IDs are returned
+    /// \brief Returns all bound Entities with the name equivalent to the one given within 
+    /// this Entity's hierarchy.
+    /// The Entity's IDs are returned.
     std::vector<Entity::ID> FindChildByName(const std::string &);
 
     /// \brief Updates all attached Entities.

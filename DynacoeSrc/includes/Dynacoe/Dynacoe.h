@@ -57,33 +57,12 @@ class Engine {
 
   public:
 
-    /// \brief Execution time designation.
-    ///
-    /// When attaching a World to the Engine itself, the World
-    /// is designated an UpdateClass. The UpdateClass determines
-    /// what set of Engine-managed worlds will run first.
-    /// Within an update class, the Entity Priority mechanism is still active.
-    /// By default, all Worlds attached by the Engine are the Normal class.
-    /// Most of the time, this is the most appropriate. However, there are some cases
-    /// where it is useful to guarantee that a specific set of Entities are run
-    /// or drawn before or after another set of Entities. UpdateClasses provide this.
-    /// Consider a pause menu or Heads-up Display, where you always want them to be drawn
-    /// on top of the scene objects.
-    ///
-    /// The UpdateClasses are run in order.
-    enum class UpdateClass {
-        First, ///< Always runs first.
-        Early, ///< Runs after First, but before Normal.
-        Normal,///< Runs after Early, but Before Late.
-        Late,  ///< Runs after Normal, but Before Last.
-        Last,  ///< Always runs last.
-    };
 
     /// \brief Initializes all Dynacoe assets.
     ///
     /// Upon encountering an irrecoverable error, the statup
-    /// function will return
-    /// No assets should be used prior to calling this function.
+    /// function will return 0. Otherwise, it will return 1.
+    /// No other functions should be used prior to calling this function.
     ///
     ///
     static int Startup();
@@ -93,10 +72,10 @@ class Engine {
     ///
     /// A module is an updatable unit that is managed before and after
     /// the updating of entities. It is appropriate for behavior that should
-    /// not interfere with the entity scope. FOr example, the Graphics, Sys, Console,
-    /// interface are managed through modules.
+    /// not interfere with the entity scope. FOr example, the Graphics
+    /// interface is managed through a module.
     ///
-    /// This function installsv
+    /// This function adds a new module to the Engine. See Module.h
     static void AddModule(Module *);
 
 
