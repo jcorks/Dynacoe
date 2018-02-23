@@ -57,7 +57,6 @@ class OpenGLFB : public Dynacoe::Framebuffer {
     std::string Version();
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 
   private:
     GLRenderTarget * rt;

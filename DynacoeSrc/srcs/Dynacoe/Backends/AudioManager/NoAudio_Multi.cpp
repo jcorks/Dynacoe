@@ -52,7 +52,4 @@ std::string NoAudioManager::Version() {return "v1.0";}
 bool NoAudioManager::Valid() {return true;}
 
 
-std::string NoAudioManager::RunCommand(const std::string &, uint8_t *) {
-    return "";
-}
 

@@ -35,6 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/Display/Display.h>
 #include <Dynacoe/Backends/Display/OpenGLFramebuffer_Multi.h>
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget.h>
+#include <Dynacoe/Modules/Console.h>
+#include <Dynacoe/Modules/Assets.h>
+#include <Dynacoe/Image.h>
+#include <Dynacoe/Interpreter.h>
+
 #include <X11/Xatom.h>
 
 
@@ -58,8 +63,52 @@ static int xlibErrHandler(Display *, XErrorEvent *);
 
 
 /* OpenGLFBDisplay methods */
+class Command_GLFB_dump : public Dynacoe::Interpreter::Command {
+  public:
+    Dynacoe::OpenGLFBDisplay * fb;
+    Command_GLFB_dump(Dynacoe::OpenGLFBDisplay * in) {
+        fb = in;
+    }
+    
+    std::string operator()(const std::vector<std::string> & args) {
+        if (args.size() < 2) {
+            return "Usage: dump [path to png]";
+        }
+        
+        std::string path = args[1];
+        fb->QueueDump(path, 0);
+        return "Ok.";
+    }
+    
+    std::string Help() const {
+        return "";
+    }
+    
+};
 
 
+class Command_GLFB_dump_delay : public Dynacoe::Interpreter::Command {
+  public:
+    Dynacoe::OpenGLFBDisplay * fb;
+    Command_GLFB_dump_delay(Dynacoe::OpenGLFBDisplay * in) {
+        fb = in;
+    }
+    
+    std::string operator()(const std::vector<std::string> & args) {
+        if (args.size() < 3) {
+            return "Usage: dump-delay [seconds to wait] [path to png]";
+        }
+        
+        std::string path = args[1];
+        fb->QueueDump(path, atoi(args[2].c_str()));
+        return "Ok.";
+    }
+    
+    std::string Help() const {
+        return "";
+    }
+    
+};
 
 
 
@@ -173,7 +222,26 @@ std::vector<Dynacoe::Framebuffer::Type> Dynacoe::OpenGLFBDisplay::SupportedFrame
 void Dynacoe::OpenGLFBDisplay::Update() {
     if (!framebuffer) return;
     framebufferImage = (*(GLRenderTarget**)framebuffer->GetHandle())->GetTexture();
-
+    if (!dumpQueue.empty()) {
+        if (dumpWait.top() <= 0) {
+        
+            
+            if(Dump(dumpQueue.top())) {
+                Console::Info() << "Dumped frame to " << dumpQueue.top() << "\n";
+            } else {
+                Console::Info() << "Failed to dump frame to " << dumpQueue.top() << "\n";
+            }
+            dumpQueue.pop();
+            dumpWait.pop();
+        } else {
+            if (cycleTime != time(NULL)) {
+                int wait = dumpWait.top();
+                dumpWait.pop();
+                dumpWait.push(wait-1);
+                cycleTime = time(NULL);
+            } 
+        }
+    }
     // consume only configure events to get resizes.
     // Merely egnore all other event types and put them
     // back into the event queue.
@@ -240,6 +308,8 @@ void Dynacoe::OpenGLFBDisplay::RemoveCloseCallback(CloseCallback * cb) {
 /* Implementation methods */
 
 Dynacoe::OpenGLFBDisplay::OpenGLFBDisplay() {
+    GetInterpreter()->AddCommand("dump",       new Command_GLFB_dump(this));
+    GetInterpreter()->AddCommand("dump-delay", new Command_GLFB_dump_delay(this));
 
     viewX = 0;
     viewY = 0;
@@ -398,8 +468,12 @@ void Dynacoe::OpenGLFBDisplay::drawFrame(int w, int h) {
     }
 
     int dims[4];
+    int isBlending;
     glGetIntegerv(GL_VIEWPORT, dims);
-
+    glGetIntegerv(GL_BLEND, &isBlending);
+    
+    if (isBlending)
+        glDisable(GL_BLEND);
 
 
     #if( defined DC_BACKENDS_LEGACYGL_X11)
@@ -534,7 +608,9 @@ void Dynacoe::OpenGLFBDisplay::drawFrame(int w, int h) {
 
     glXSwapBuffers(dpy, win);
     glViewport(dims[0], dims[1], dims[2], dims[3]);
-
+    if (isBlending) {
+        glEnable(GL_BLEND);
+    }
 
 
 
@@ -754,10 +830,50 @@ int xlibErrHandler(Display * d, XErrorEvent * e) {
 std::string Dynacoe::OpenGLFBDisplay::Name() {return "OpenGLFBDisplay (For X11)";}
 std::string Dynacoe::OpenGLFBDisplay::Version() {return "v1.0";}
 
-
-std::string Dynacoe::OpenGLFBDisplay::RunCommand(const std::string &, uint8_t *) {
-    return "";
+void Dynacoe::OpenGLFBDisplay::QueueDump(const std::string & str, int wait) {
+    dumpQueue.push(str);
+    dumpWait.push(wait);
 }
 
+bool Dynacoe::OpenGLFBDisplay::Dump(const std::string & path) {
+    GLint curTex;
+    glActiveTexture(GL_TEXTURE0 + display_active_texture);
+
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &curTex);
+    glBindTexture(GL_TEXTURE_2D, framebufferImage);
+    //Directly retrieve texture bytes (RGBA);
+    int width, height;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,  &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    uint32_t numBytes = width*height*4;
+    uint8_t * data = new uint8_t[numBytes];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    for(uint32_t i = 0; i < width*height; ++i) {
+        *(data+i*4+3) = 255;
+    }
+
+    // dump it to an image
+    AssetID id = Dynacoe::Assets::New(Dynacoe::Assets::Type::Image, "dump-texture");
+    if (id == AssetID()) {
+        delete[] data;
+        return false;
+    }
+
+
+
+    {
+        Image & img = Dynacoe::Assets::Get<Image>(id);
+        img.frames.push_back(Image::Frame(width, height, std::vector<uint8_t>(data, data+numBytes)));
+        if (!Dynacoe::Assets::Write(id, "png", path)) {
+            Dynacoe::Assets::Remove(id);
+            delete[] data;
+            return false;
+        }
+        Dynacoe::Assets::Remove(id);
+    }
+    delete[] data;
+    return true;
+}
 
 #endif

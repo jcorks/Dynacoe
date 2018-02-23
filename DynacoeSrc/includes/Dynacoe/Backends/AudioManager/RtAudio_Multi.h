@@ -65,7 +65,6 @@ class RtAudioManager : public AudioManager {
     std::string Version();
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 
     RtAudioManager();
     ~RtAudioManager();

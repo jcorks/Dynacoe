@@ -78,7 +78,7 @@ class TextureManager {
 
     void GetTextureData(int tex, uint8_t*);
 
-    
+    int GetLastNewID() { return lastID; }
     
     void ComputeTextureBindingData(const std::vector<std::pair<int, int>> & textures, RenderBuffer * out, RenderBuffer * info);
 
@@ -107,6 +107,7 @@ class TextureManager {
     int subTexH;
     std::set<int> inactiveTex;
     std::vector<int> lastBindings;
+    int lastID;
     
     
 

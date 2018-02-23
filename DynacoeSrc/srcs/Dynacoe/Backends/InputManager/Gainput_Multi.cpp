@@ -349,9 +349,7 @@ std::string Dynacoe::GainputManager::Version() { return std::string("v1.0 (Gainp
                                              + std::string(")"); }
 
 
-std::string Dynacoe::GainputManager::RunCommand(const std::string &, uint8_t *) {
-    return "";
-}
+
 
 
 #endif

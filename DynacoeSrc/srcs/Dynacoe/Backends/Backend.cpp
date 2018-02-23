@@ -51,6 +51,29 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
+
+class Command_Backend_RerouteHelp : public Interpreter::Command {
+  public:
+    Backend * backend;
+    Command_Backend_RerouteHelp(Backend * in) {
+        backend = in;
+    }
+    std::string operator()(const std::vector<std::string> & argvec) {
+        return backend->RunCommand("help");
+    }
+    
+    std::string Help() const { return ""; }
+};
+
+Backend::Backend() {
+    commander = new Interpreter;
+    commander->AddCommand("", new Command_Backend_RerouteHelp(this));
+}
+
+Backend::~Backend() {
+    delete commander;
+}
+
 Backend * Backend::CreateDefaultRenderer() {
     #if(defined DC_BACKENDS_SHADERGL_X11 | defined DC_BACKENDS_SHADERGL_WIN32)
     return new ShaderGLRenderer();
@@ -97,4 +120,9 @@ Backend * Backend::CreateDefaultFramebuffer() {
     return new OpenGLFB();
     #endif
     return new NoFB();
+}
+
+
+std::string Backend::RunCommand(const std::string & command) {
+    return commander->RunCommand(command);
 }

@@ -37,6 +37,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Components/Shape2D.h>
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Modules/Input.h>
+#include <Dynacoe/Modules/Sound.h>
+#include <Dynacoe/Modules/ViewManager.h>
+#include <Dynacoe/Camera.h>
 #include <Dynacoe/Components/Mutator.h>
 #include <Dynacoe/Components/Object2D.h>
 #include <Dynacoe/Util/Math.h>
@@ -195,10 +198,40 @@ Backend * Console::GetBackend() {
 
 
 
-
+class InputRepeater  {
+  public:
+      
+    InputRepeater() {
+        key = Keyboard::Key_space;
+        accumulator = 0;
+    }
+    
+    void Update() {
+        if (Input::GetState(key)) {
+            accumulator++;
+        } else {
+            accumulator = 0;
+        }        
+    }
+    
+    bool Query() {
+        return (accumulator == 1 || (accumulator > 24 && accumulator%2 == 0));
+    }
+    Dynacoe::Keyboard key;
+    
+  private:
+    int accumulator;
+};
 
 class ConsoleInputStream : public Entity {
   public:
+      
+    InputRepeater left;
+    InputRepeater right;
+    InputRepeater up;
+    InputRepeater down;
+    InputRepeater back;
+    
 
     ConsoleInputStream() {
         inputStringAspect.SetTextColor("white");
@@ -214,9 +247,22 @@ class ConsoleInputStream : public Entity {
         AddComponent(&inputStringAspect);
         AddComponent(&cursorStringAspect);
 
+        up.key = Keyboard::Key_up;
+        down.key = Keyboard::Key_down;
+        left.key = Keyboard::Key_left;
+        right.key = Keyboard::Key_right;
+        back.key = Keyboard::Key_backspace;
+
     }
 
     void OnStep() {
+        left.Update();
+        right.Update();
+        down.Update();
+        up.Update();
+        back.Update();
+
+        
         int character;
         bool changed = false;
         static float saturation = 0.f;
@@ -224,34 +270,39 @@ class ConsoleInputStream : public Entity {
         saturation += .04;
         node.local.position = Vector(0, Graphics::GetRenderCamera().Height() - 12);
 
-
+        
 
         // Cursor control
-        if (Input::IsPressed(Keyboard::Key_left)) {
+        
+        if (left.Query()) {
             cursorIter--;
-            saturation = 0.f;
+            saturation = 0.f;            
+        }
+        
+        if (right.Query()) {
+            cursorIter++;
+            saturation = 0.f;            
         }
 
-        if (Input::IsPressed(Keyboard::Key_right)) {
-            cursorIter++;
-            saturation = 0.f;
-        }
+
         Math::Clamp(cursorIter, 0, inputString.size());
 
 
         // history control:
         // moves the old commadn to the active command slot
-        if (Input::IsPressed(Keyboard::Key_up)) {
+        if (up.Query()) {
             historyIter--;
             changed = true;
             saturation = 0.f;
         }
 
-        if (Input::IsPressed(Keyboard::Key_down)) {
+        if (down.Query()) {
             historyIter++;
             changed = true;
             saturation = 0.f;
         }
+        
+
 
         if (changed) {
             Math::Clamp(historyIter, 0, history.size());
@@ -270,14 +321,6 @@ class ConsoleInputStream : public Entity {
         if (character = Input::GetLastUnicode()) {
             if (character == '\n') {
             } else if (character == '\b') {
-                if (cursorIter > 0) {
-                    saturation = 0.f;
-                    inputString =
-                        inputString.substr(0, cursorIter-1) +
-
-                        inputString.substr(cursorIter, std::string::npos);
-                    cursorIter--;
-                }
             } else {
                 saturation = 0.f;
                 inputString =
@@ -286,6 +329,17 @@ class ConsoleInputStream : public Entity {
                     inputString.substr(cursorIter, std::string::npos);
 
                 cursorIter++;
+            }
+            changed = true;
+        }
+        if (back.Query()) {
+            if (cursorIter > 0) {
+                saturation = 0.f;
+                inputString =
+                    inputString.substr(0, cursorIter-1) +
+
+                    inputString.substr(cursorIter, std::string::npos);
+                cursorIter--;
             }
             changed = true;
         }
@@ -897,6 +951,106 @@ class Command_ViewID : public Interpreter::Command {
 };
 
 
+class Command_BackendRenderer : public Interpreter::Command {
+  public:
+
+    std::string operator()(const std::vector<std::string> & argvec) {
+        std::string forward = "";
+        for(uint32_t i = 1; i < argvec.size(); ++i) {
+            forward += argvec[i];
+            forward += " ";
+        }
+        return Graphics::GetRenderer()->RunCommand(forward);
+    }
+    std::string Help() const {
+        return "Forwards a command to the current renderer backend. Commands here are platform-dependent.";
+    }
+
+};
+
+class Command_BackendAudio : public Interpreter::Command {
+  public:
+
+    std::string operator()(const std::vector<std::string> & argvec) {
+        std::string forward = "";
+        for(uint32_t i = 1; i < argvec.size(); ++i) {
+            forward += argvec[i];
+            forward += " ";
+        }
+        return Sound::GetManager()->RunCommand(forward);
+    }
+    std::string Help() const {
+        return "Forwards a command to the current Audio backend. Commands here are platform-dependent.";
+    }
+
+};
+
+
+
+class Command_BackendDisplay : public Interpreter::Command {
+  public:
+
+    std::string operator()(const std::vector<std::string> & argvec) {
+        auto views = ViewManager::ListViews();
+        if (argvec.size() < 2) {
+            return std::string() + "Usage: display [id] [command]. Need to specify index (" + Chain(views.size()).ToString() + " available.)";
+        }
+        
+        uint32_t id = Chain(argvec[1]).AsUInt32();
+        if (id >= views.size()) {
+            return "Error: " + argvec[1] + " is not a valid display ID";
+        }
+        Display * display = ViewManager::Get(views[id]);
+        std::string forward = "";
+        for(uint32_t i = 2; i < argvec.size(); ++i) {
+            forward += argvec[i];
+            forward += " ";
+        }
+        return "[Display " + Chain(id).ToString() + "]:" + display->RunCommand(forward);
+    }
+    std::string Help() const {
+        return "Forwards a command to the current Display backend. Commands here are platform-dependent.";
+    }
+
+};
+
+class Command_BackendFramebuffer : public Interpreter::Command {
+  public:
+
+    std::string operator()(const std::vector<std::string> & argvec) {
+        std::string forward = "";
+        for(uint32_t i = 1; i < argvec.size(); ++i) {
+            forward += argvec[i];
+            forward += " ";
+        }
+        
+        
+        return Graphics::GetRenderCamera().GetFramebuffer()->RunCommand(forward);
+    }
+    std::string Help() const {
+        return "Forwards a command to the Framebuffer of the current camera in use. Commands here are platform-dependent.";
+    }
+
+};
+
+
+class Command_BackendInput : public Interpreter::Command {
+  public:
+
+    std::string operator()(const std::vector<std::string> & argvec) {
+        std::string forward = "";
+        for(uint32_t i = 1; i < argvec.size(); ++i) {
+            forward += argvec[i];
+            forward += " ";
+        }
+        return Input::GetManager()->RunCommand(forward);
+    }
+    std::string Help() const {
+        return "Forwards a command to the current Input backend. Commands here are platform-dependent.";
+    }
+
+};
+
 
 class EntityModCommand : public Interpreter::Command {
 
@@ -1041,7 +1195,6 @@ void Console::AddCommand(const std::string & str, Interpreter::Command * cmd) {
 
 
 
-
 // some built-in commands for the console
 void Console::AddDefaultCommands() {
     interp->AddCommand("ask",     new Command_Ask);
@@ -1051,6 +1204,13 @@ void Console::AddDefaultCommands() {
     interp->AddCommand("print",   new Command_Print);
     interp->AddCommand("mod",     new EntityModCommand);
     interp->AddCommand("view-id", new Command_ViewID);
+    
+    interp->AddCommand("renderer",    new Command_BackendRenderer);
+    interp->AddCommand("audio",       new Command_BackendAudio);
+    interp->AddCommand("framebuffer", new Command_BackendFramebuffer);
+    interp->AddCommand("input",       new Command_BackendInput);
+    interp->AddCommand("display",     new Command_BackendDisplay);
+    
     //interp->AddCommand("backend", new Command_BackendExt);
 
 }

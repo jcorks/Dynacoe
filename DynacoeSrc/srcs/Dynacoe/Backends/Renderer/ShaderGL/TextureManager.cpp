@@ -681,6 +681,7 @@ int TextureManager::getNewTex() {
     int out = *(inactiveTex.begin());
     inactiveTex.erase(inactiveTex.begin());
     //cout << "Returning inactive id " << out << endl;
+    lastID = out;
     return out;
 }
 

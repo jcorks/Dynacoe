@@ -835,9 +835,6 @@ std::string OpenGLFBDisplay::Name() {return "OpenGLFBDisplay (For WINAPI)";}
 std::string OpenGLFBDisplay::Version() {return "v1.0";}
 
 
-std::string OpenGLFBDisplay::RunCommand(const std::string &, uint8_t * d) {
-    return "";
-}
 
 
 

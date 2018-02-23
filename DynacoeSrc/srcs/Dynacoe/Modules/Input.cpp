@@ -625,6 +625,10 @@ void Input::getUnicode() {
 
 }
 
+InputManager * Input::GetManager() {
+    return manager;
+}
+
 
 
 

@@ -64,14 +64,12 @@ std::string Interpreter::RunCommand(const std::string & in_src) {
     if (command == "help") {
         str++;
         std::string helpPage = str.GetLink();
-        if (helpPage == "") {
-            return "Syntax: help [cmd]\n";
-        }
 
         auto helpCmd = commands.find(helpPage.c_str());
-        if (helpCmd == commands.end()) {
+        if (helpCmd == commands.end() || !helpPage.size()) {
             Chain c = "";            
-            c << "\"" << helpPage.c_str() << "\" does not exist as a command.\n";
+            if (helpPage.size()) 
+                c << "\"" << helpPage.c_str() << "\" does not exist as a command.\n";
             c << "Here are the list of available commands:\n";
             auto listIter = commands.begin();
             while(listIter != commands.end()) {

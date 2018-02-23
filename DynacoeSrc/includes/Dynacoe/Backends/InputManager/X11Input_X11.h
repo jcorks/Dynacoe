@@ -45,7 +45,6 @@ class X11InputManager : public InputManager {
     std::string Name();
     std::string Version();
     bool Valid();
-    std::string RunCommand(const std::string &, uint8_t *);
 
 
     bool IsSupported(InputType);

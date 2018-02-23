@@ -416,9 +416,6 @@ class Renderer : public Backend {
     // Should the framebuffer not match one of the given types, the framebuffer
     // attachment will fail
     virtual std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers() = 0;
-
-
-
 };
 
 

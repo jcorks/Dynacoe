@@ -103,7 +103,7 @@ class Console : public Module {
     ///
     enum class MessageMode{
         Standard, ///< Every console line added results in a message that briefly appears on screen. This is the default.
-        None,     ///< Console output is only added to the console log.
+        Disabled,     ///< Console output is only added to the console log.
     };
 
     /// \brief Marks the ending of the line.

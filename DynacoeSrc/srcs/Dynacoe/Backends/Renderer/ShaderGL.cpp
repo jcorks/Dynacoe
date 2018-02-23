@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget.h>
 #include <Dynacoe/Backends/Renderer/StaticState.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/GLVersionQuery.h>
+#include <Dynacoe/Modules/Assets.h>
+#include <Dynacoe/Image.h>
 
 
 #include <cstring>
@@ -58,13 +60,138 @@ const int DBUFFER_LIGHT_INDEX_LIGHT_DATA      = 256*4;
 
 
 
+
+
 #include <cstdlib>
 #include <iostream>
 
 using namespace std;
 using namespace Dynacoe;
 
+
+/// command interpretation
+
+class Command_SGR_help : public Interpreter::Command {
+  public:
+    ShaderGLRenderer * ref;
+    Command_SGR_help(ShaderGLRenderer * input) {
+        ref = input;
+    }
+    std::string operator()(const std::vector<std::string> & args) {
+        return Chain()
+            << "Renderer info:\n\n" 
+            << "Name: " << ref->Name() << "\n"
+            << "Version: " << ref->Version() << "\n"   
+            << "Shader Language: " << ref->ProgramGetLanguage() << "\n\n"
+            << "Light count: " << ref->NumLights() << "\n\n"
+
+            << "Dynamic Renderer:\n"
+            << "    avg :" << ref->diagnostic_dynamic_vtex_per_render_avg << " vtex per render\n"
+            << "    low : " << ref->diagnostic_dynamic_vtex_per_render_min << " vtex per render\n"
+            << "    high: " << ref->diagnostic_dynamic_vtex_per_render_max << " vtex per render\n" 
+            << "    " << ref->diagnostic_dynamic_vtex_render_last << " draws/s (ideal: ~framerate)\n\n"
+            
+            << "Static Renderer:\n"
+            << "    avg :" << ref->diagnostic_static_object_avg_indices << " vtex per render\n" 
+            << "    " << ref->diagnostic_static_object_count_per_second_last << " objects/s (ideal: ~framerate)\n\n"
+        ;
+    }
+    
+    std::string Help() const {return "";}
+        
+};
+
+// retrives available texture information
+class Command_SGR_texture : public Interpreter::Command {
+  public:
+    ShaderGLRenderer * ref;
+    Command_SGR_texture(ShaderGLRenderer * input) {
+        ref = input;
+    }
+    
+    typedef std::string (*TextureCommand)(const std::vector<std::string> & args);
+
+    
+
+    std::string TextureCommand_GetInfo(const std::vector<std::string> & args) const {
+        TextureManager * texture = ref->GetTextureManager();
+        return Chain() 
+            << "TextureManager info:\n" 
+            << "Dimensions: " << texture->GetTextureW() << "x" << texture->GetTextureH() << " (~" << (texture->GetTextureW()*texture->GetTextureH()*8) / (1024) << "KB of VRAM)\n"
+            << "Filter Mode (at the time of command interpretation): " << (int)texture->GetFilter() << "\n"
+            << "OpenGL atlas texture handle: " << Chain(texture->GetTexture()) << "\n"
+            << "\n"
+            << "Commands:\n"
+            << " last-id" 
+            << " extract [id] [path to image]\n"
+            << " delete [id] \n";
+    }
+    
+    std::string TextureCommand_GetLastID(const std::vector<std::string> & args) const {
+        return Chain() << "Newest texture id:\n" << ref->GetTextureManager()->GetLastNewID() << "\n";
+        
+    }
+    
+    std::string TextureCommand_ExtractTexture(const std::vector<std::string> & args) const {
+        if (args.size() != 4) {
+            return "Usage: texture extract [id] [path to image]\n";
+        }
+        int handle = Chain(args[2]).AsUInt32();
+        std::string path = args[3];
+        
+        
+
+        uint32_t width = ref->GetTextureWidth(handle);
+        uint32_t height = ref->GetTextureHeight(handle);
+        uint32_t numBytes = width*height*4;
+        uint8_t * data = new uint8_t[numBytes];
+        ref->GetTexture(handle, data);
+
+        // dump it to an image
+        AssetID id = Assets::New(Assets::Type::Image, "dump-texture");
+        if (id == AssetID()) {
+            return "Temporary image creation failed";
+        }
+
+
+        {
+            Image & img = Assets::Get<Image>(id);
+            img.frames.push_back(Image::Frame(width, height, std::vector<uint8_t>(data, data+numBytes)));
+            if (!Assets::Write(id, "png", path)) {
+                return "Failed to write texture.";
+            }
+        }
+        Assets::Remove(id);
+
+        delete[] data;
+        return "Done.";
+        
+        
+    }
+
+
+    
+    std::string operator()(const std::vector<std::string> & args) {
+        std::string cmd = args.size() < 2 ? "" : args[1];
+        if (cmd == "extract") {
+            return TextureCommand_ExtractTexture(args);
+        } else if (cmd == "last-id") {
+            return TextureCommand_GetLastID(args);
+        
+        } else {
+            return TextureCommand_GetInfo(args);            
+        }
+    }
+    
+    std::string Help() const {return  TextureCommand_GetInfo({});}
+};
+
+
 ShaderGLRenderer::ShaderGLRenderer() {
+    GetInterpreter()->AddCommand("info",    new Command_SGR_help(this));
+    GetInterpreter()->AddCommand("texture", new Command_SGR_texture(this));
+    
+
     attachedDisplay = nullptr;
 
     createContext();
@@ -80,6 +207,24 @@ ShaderGLRenderer::ShaderGLRenderer() {
     dynamic =      CreateDynamicProgram();
     dynamic->AttachTextureManager(texture);
     glClearColor(.1, 0, .07, 1.f);
+    
+    
+    diagnostic_dynamic_vtex_per_render_avg = 0;
+    diagnostic_dynamic_vtex_per_render_min = 10000000000;
+    diagnostic_dynamic_vtex_per_render_max = 0;
+    diagnostic_dynamic_vtex_per_render_accumulated_avg = 0;
+    diagnostic_dynamic_vtex_per_render_accumulated_avg_ct = 0;
+    diagnostic_dynamic_vtex_render_last = 0;
+    diagnostic_dynamic_vtex_render_frame_time = time(NULL);
+    diagnostic_dynamic_vtex_render_per_frame = 0;
+    
+    diagnostic_static_object_avg_indices = 0;
+    diagnostic_static_object_avg_indices_ct = 0;
+    diagnostic_static_object_count_per_second = 0;
+    diagnostic_static_object_avg_indices_acc = 0;
+    diagnostic_static_object_count_per_second_last = 0;
+    diagnostic_static_object_count_time = time(NULL);
+    
 }
 
 
@@ -158,7 +303,23 @@ Dynacoe::Framebuffer * ShaderGLRenderer::GetTarget() {
 
 void ShaderGLRenderer::RenderDynamicQueue() {
     framebufferCheck();
-    if (dynamic->Render(drawMode)) {
+    uint32_t count = dynamic->Render(drawMode);
+    diagnostic_dynamic_vtex_per_render_accumulated_avg += count;
+    diagnostic_dynamic_vtex_per_render_accumulated_avg_ct++;
+    if (diagnostic_dynamic_vtex_per_render_accumulated_avg_ct > 20) {
+        diagnostic_dynamic_vtex_per_render_avg = diagnostic_dynamic_vtex_per_render_accumulated_avg / diagnostic_dynamic_vtex_per_render_accumulated_avg_ct;
+        diagnostic_dynamic_vtex_per_render_accumulated_avg = diagnostic_dynamic_vtex_per_render_avg;
+        diagnostic_dynamic_vtex_per_render_accumulated_avg_ct = 1;
+    }
+    if (diagnostic_dynamic_vtex_per_render_min > count && count) diagnostic_dynamic_vtex_per_render_min = count;
+    if (diagnostic_dynamic_vtex_per_render_max < count) diagnostic_dynamic_vtex_per_render_max = count;
+    diagnostic_dynamic_vtex_render_per_frame++;
+    if (diagnostic_dynamic_vtex_render_frame_time != time(NULL)) {
+        diagnostic_dynamic_vtex_render_last = diagnostic_dynamic_vtex_render_per_frame;
+        diagnostic_dynamic_vtex_render_per_frame = 0;
+        diagnostic_dynamic_vtex_render_frame_time = time(NULL);
+    }
+    if (count) {
         (*(GLRenderTarget**)framebuffer->GetHandle())->Invalidate();
     }
 }
@@ -227,7 +388,28 @@ void ShaderGLRenderer::RemoveBuffer(RenderBufferID id) {
 
 void ShaderGLRenderer::RenderStatic(StaticState * obj) {
     framebufferCheck();
+    
+    
+    
     if (!(obj->indices && obj->indices->size())) return;
+
+    diagnostic_static_object_avg_indices_acc += obj->indices->size();
+    diagnostic_static_object_avg_indices_ct++;
+    if (diagnostic_static_object_avg_indices_ct > 100) {
+        diagnostic_static_object_avg_indices = diagnostic_static_object_avg_indices_acc / diagnostic_static_object_avg_indices_ct;
+        diagnostic_static_object_avg_indices_acc = diagnostic_static_object_avg_indices;
+        diagnostic_static_object_avg_indices_ct = 1;
+    }
+
+
+    diagnostic_static_object_count_per_second++;
+    if (diagnostic_static_object_count_time != time(NULL)) {
+        diagnostic_static_object_count_per_second_last = diagnostic_static_object_count_per_second;
+        diagnostic_static_object_count_per_second = 0;
+        diagnostic_static_object_count_time = time(NULL);
+    }
+
+
     ProgramID program = obj->program;
     RenderBufferID vertexID = obj->vertices;
     static StaticProgram * progRef            = nullptr;
@@ -489,17 +671,19 @@ std::string ShaderGLRenderer::Name() {return "Shader OpenGL";}
 std::string ShaderGLRenderer::Version() {return "v1.0 (OpenGL 2.0/3.1)";}
 
 
-std::string ShaderGLRenderer::RunCommand(const std::string & command, uint8_t * data = nullptr) {
-    if (command == "update") {
-        glFinish();
-    }
-    return "";
-}
 
 
 bool ShaderGLRenderer::IsSupported(Capability) {
     return true;
 }
+
+
+
+
+
+
+
+
 
 
 

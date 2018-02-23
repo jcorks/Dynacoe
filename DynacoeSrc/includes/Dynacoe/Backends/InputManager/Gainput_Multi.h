@@ -86,7 +86,6 @@ class GainputManager : public InputManager {
     void SetFocus(Display*);
     Display * GetFocus();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 
   private:
 

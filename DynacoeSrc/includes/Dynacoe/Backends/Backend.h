@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <string>
 #include <vector>
+#include <Dynacoe/Interpreter.h>
 
 namespace Dynacoe {
 
@@ -55,7 +56,9 @@ namespace Dynacoe {
 class Backend {
   public:
     
-    virtual ~Backend(){}
+    Backend();
+    
+    virtual ~Backend();
 
     // Identifies the backend
     virtual std::string Name() = 0;
@@ -71,13 +74,17 @@ class Backend {
     // Runs an implementation-dependent command of some kind.
     // THe most helpful implementations will have output regardless of 
     // whether the command is recofgnized.
-    virtual std::string RunCommand(const std::string & command, uint8_t * data = nullptr) = 0;
+    std::string RunCommand(const std::string & command);
 
     static Backend * CreateDefaultRenderer();
     static Backend * CreateDefaultAudioManager();
     static Backend * CreateDefaultInputManager();
     static Backend * CreateDefaultDisplay();
     static Backend * CreateDefaultFramebuffer();
+  private:
+    Interpreter * commander;
+  protected:
+    Interpreter * GetInterpreter() {return commander;};
 };
 }
 

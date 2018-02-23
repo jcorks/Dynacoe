@@ -48,7 +48,7 @@ bool EncodePNG::operator()(Asset * src, const std::string & str, const std::stri
     Image * img = (Image*)src;
 
     std::vector<uint8_t> frame = img->frames[0].GetData();
-    uint32_t height = img->frames[0].Width();
+    uint32_t height = img->frames[0].Height();
     uint32_t width  = img->frames[0].Width();
     uint8_t ** rows = new uint8_t*[height];
     for(uint32_t i = 0; i < height; ++i) {

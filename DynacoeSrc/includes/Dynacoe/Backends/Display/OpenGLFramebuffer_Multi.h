@@ -62,6 +62,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include <vector>
+#include <stack>
 #include <Dynacoe/Backends/Display/Display.h>
 
 
@@ -78,7 +79,6 @@ class OpenGLFBDisplay : public Dynacoe::Display {
     std::string Version();
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 
     void Resize(int, int);
     void SetPosition(int, int);
@@ -111,6 +111,9 @@ class OpenGLFBDisplay : public Dynacoe::Display {
     DisplayHandleType GetSystemHandleType();
     void * GetLastSystemEvent();
     DisplayEventType GetSystemEventType();
+    
+    bool Dump(const std::string &);
+    void QueueDump(const std::string &, int delay);
     
   private:
     
@@ -181,7 +184,9 @@ class OpenGLFBDisplay : public Dynacoe::Display {
         VertexColor = 1,
         VertexUVs = 2,
     };
-    
+    std::stack<std::string> dumpQueue;
+    std::stack<int> dumpWait;
+    time_t cycleTime;
 
 };
 

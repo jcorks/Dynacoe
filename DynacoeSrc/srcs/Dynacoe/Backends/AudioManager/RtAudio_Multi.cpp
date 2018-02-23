@@ -338,9 +338,6 @@ std::string RtAudioManager::Version() {return "v1.0 (RtAudio ver. 4.1.1)";}
 bool RtAudioManager::Valid() {return true;}
 
 
-std::string RtAudioManager::RunCommand(const std::string &, uint8_t *) {
-    return "";
-}
 
 
 #endif

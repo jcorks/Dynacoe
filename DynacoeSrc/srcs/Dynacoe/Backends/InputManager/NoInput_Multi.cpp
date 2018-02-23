@@ -52,7 +52,4 @@ std::string NoInputManager::Name() { return "Dummy Input"; }
 std::string NoInputManager::Version() { return "v1.0"; }
 
 
-std::string NoInputManager::RunCommand(const std::string &, uint8_t *) {
-    return "";
-}
 

@@ -48,7 +48,6 @@ class NoFB : public Dynacoe::Framebuffer {
     std::string Version(){return "v1.0";}
     bool Valid() { return true;}
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
   protected:
     bool OnResize(void *, int, int){return false;};
     void OnFilterChange(bool){}

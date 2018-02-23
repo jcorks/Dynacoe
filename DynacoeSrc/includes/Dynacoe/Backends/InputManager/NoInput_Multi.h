@@ -54,7 +54,6 @@ class NoInputManager : public InputManager {
     Display * GetFocus();
     void SetFocus(Display*);
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 };
 }
 

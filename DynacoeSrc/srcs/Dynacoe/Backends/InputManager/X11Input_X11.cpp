@@ -56,9 +56,6 @@ std::string Dynacoe::X11InputManager::Name() { return "X11Input Manager";}
 std::string Dynacoe::X11InputManager::Version() { return "0.1";}
 bool Dynacoe::X11InputManager::Valid() { return true; }
 
-std::string Dynacoe::X11InputManager::RunCommand(const std::string & command, uint8_t * data) {
-    return "";
-}
 
 Dynacoe::X11InputManager::X11InputManager() {
     static bool initializedMappings;

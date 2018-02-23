@@ -68,7 +68,6 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     std::string Version();
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data);
 
     void QueueDynamicVertices(const DynamicVertex *, uint32_t numEntries, DynamicTransformID);
     DynamicTransformID CacheDynamicTransform(float *);
@@ -115,7 +114,24 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     void AttachTarget(Dynacoe::Framebuffer *);
     Dynacoe::Framebuffer * GetTarget();
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers();
+    TextureManager * GetTextureManager() { return texture; }
 
+
+    double   diagnostic_dynamic_vtex_per_render_accumulated_avg;
+    uint32_t diagnostic_dynamic_vtex_per_render_accumulated_avg_ct;
+    uint32_t diagnostic_dynamic_vtex_per_render_avg;
+    uint32_t diagnostic_dynamic_vtex_per_render_min;
+    uint32_t diagnostic_dynamic_vtex_per_render_max;
+    uint32_t diagnostic_dynamic_vtex_render_per_frame;
+    uint32_t diagnostic_dynamic_vtex_render_last;
+    time_t   diagnostic_dynamic_vtex_render_frame_time;
+    uint32_t diagnostic_static_object_count_per_second;
+    time_t   diagnostic_static_object_count_time;
+    uint32_t diagnostic_static_object_count_per_second_last;
+    double   diagnostic_static_object_avg_indices_acc;
+    uint32_t diagnostic_static_object_avg_indices_ct;
+    uint32_t diagnostic_static_object_avg_indices;
+    
   private:
     void gl3warning(const char *);
     void gl3fatal(const char *);
@@ -184,6 +200,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     float * lightDataSrc;
     float * lightDataSrc2;
     void SyncLightBuffer();
+    
     
 
 };

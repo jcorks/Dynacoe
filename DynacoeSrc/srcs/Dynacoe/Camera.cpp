@@ -304,10 +304,11 @@ AssetID Camera::CopyDisplay() {
     data.resize(fb->Width() * fb->Height() * 4);
     fb->GetRawData(&data[0]);
 
+    /*
     for(uint32_t i = 0; i < fb->Width()*fb->Height(); ++i) {
         data[i*4+3] = 255;
     }
-
+    */
     AssetID out = Assets::New(Assets::Type::Image);
     Image & img = Assets::Get<Image>(out);
     img.frames.push_back(Image::Frame(

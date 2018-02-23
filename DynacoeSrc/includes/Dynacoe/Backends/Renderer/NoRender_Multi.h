@@ -42,7 +42,6 @@ class NoRenderer : public Renderer {
     std::string Version(){return "v1.0";}
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr);
 
     void QueueDynamicVertices(const DynamicVertex *, uint32_t numEntries, DynamicTransformID){}
     DynamicTransformID CacheDynamicTransform(float *) {return DynamicTransformID();}

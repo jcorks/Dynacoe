@@ -191,6 +191,11 @@ class Input : public Module {
     /// \brief Update the state of input. This is done for you.
     ///
     static void Update();
+    
+    
+    /// \brief Returns the system-dependent object that handles input requests.
+    /// 
+    static InputManager * GetManager();
 
   private:
 

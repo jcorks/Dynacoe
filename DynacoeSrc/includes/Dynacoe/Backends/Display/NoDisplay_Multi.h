@@ -46,7 +46,6 @@ class NoDisplay : public Display {
     std::string Version();
     bool Valid();
 
-    std::string RunCommand(const std::string & command, uint8_t * data = nullptr){};
 
     void Resize(int, int);
     void SetPosition(int, int);
