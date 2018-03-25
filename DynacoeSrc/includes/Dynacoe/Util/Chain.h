@@ -84,6 +84,7 @@ class Chain {
     int AsInt();
     uint32_t AsUInt32();
     uint64_t AsUInt64();
+    float AsFloat();
     double AsDouble();
     ///\}
 

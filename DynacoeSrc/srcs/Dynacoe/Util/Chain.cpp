@@ -295,8 +295,13 @@ uint64_t Chain::AsUInt64() {
 
 double Chain::AsDouble() {
     double out = 0.0;
-    sscanf(data.c_str(), "%f", &out);
+    sscanf(data.c_str(), "%lf", &out);
     return out;
 }
 
+float Chain::AsFloat() {
+    float out = 0.0;
+    sscanf(data.c_str(), "%f", &out);
+    return out;
+}
 
