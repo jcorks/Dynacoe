@@ -448,7 +448,7 @@ void Console::Init() {
     messageRoot->Attach(messages->GetID());
     Engine::AttachManager(messages->GetID());
     mainGrid->Attach(streamIn->GetID());
-    mainGrid->AddColumn("_Console", 1, {.8f, 1.f, .9f, 1.f});
+    mainGrid->AddColumn("", 1, {.8f, 1.f, .9f, 1.f});
 }
 
 void Console::InitAfter() {
@@ -496,8 +496,9 @@ void Console::RunAfter()  {
 
     if ((Input::IsHeld(Keyboard::Key_lshift) ||
          Input::IsHeld(Keyboard::Key_rshift)) &&
-        Input::IsPressed(Keyboard::Key_tab)) 
-        shown = !shown;
+        Input::IsPressed(Keyboard::Key_tab))
+        if (!locked)
+            shown = !shown;
 
 
 
@@ -604,6 +605,7 @@ bool Console::IsVisible() {
 }
 
 void Console::Show(bool b) {
+    if (locked) return;
     shown = b;
 }
 
@@ -631,7 +633,6 @@ std::string Console::GetLine(uint32_t i) {
     if (i < 0) i = 0;
     if (i >= GetNumLines()) i = GetNumLines()-1;
 
-    return "";
     return mainGrid->Get(0, i);
 }
 
