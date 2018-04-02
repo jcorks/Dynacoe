@@ -141,7 +141,6 @@ class EntityLimbo {
 };
 
 static EntityLimbo * limbo = nullptr;
-static map<uint64_t, uint64_t> ent2Entity;
 
 
 template<typename T>
@@ -240,7 +239,10 @@ std::vector<Entity::ID> Entity::GetAllSubEntities() const {
 }
 
 bool Entity::Contains(Entity::ID ID) {
-    return ent2Entity[ID.Value()] != GetID().Value();
+    Entity * other = ID.Identify();
+    if (!other) return false;
+    if (!other->HasParent()) return false;
+    return &other->GetParent() == this;
 }
 
 
@@ -412,14 +414,12 @@ void Entity::Draw() {
 void Entity::priorityListAdd(Entity::ID curEnt) {
     auto it = lower_bound(PriorityList.begin(), PriorityList.end(), curEnt, Before<Entity::ID>{});
     PriorityList.insert(it, curEnt);
-    ent2Entity[curEnt.Value()] = GetID().Value();
 }
 
 
 
 void Entity::priorityListRemove(int i) {
     auto it = PriorityList.begin() + i;
-    ent2Entity[(*it).Value()] = 0;
     PriorityList.erase(it);
 }
 
@@ -605,10 +605,10 @@ void Entity::SetName(const string & str) {
 
 void Entity::SetPriority(Priority p) {
     if (world) {
+        Entity::ID worldID = world->GetID();
         world->Detach(id);
         priority = p;
-        priorityListAdd(id);
-        world = this;
+        worldID.Identify()->Attach(id);
     } else {
         priority = p;
     }
