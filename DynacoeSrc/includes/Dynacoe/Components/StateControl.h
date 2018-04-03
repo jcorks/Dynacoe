@@ -81,16 +81,19 @@ class StateControl : public Component {
         ///  
         StateLoop(Component::EventHandler step=nullptr, 
                   Component::EventHandler draw=nullptr, 
-                  Component::EventHandler init=nullptr) : Step(step), Draw(draw), Init(init){}
+                  Component::EventHandler init=nullptr,
+                  void * data_=nullptr) : Step(step), Draw(draw), Init(init), data(data_){}
 
         Component::EventHandler Step;
         Component::EventHandler Draw;
         Component::EventHandler Init;
+        void * data;
 
         bool operator==(const StateLoop & other) {
             return (Step == other.Step &&
                     Draw == other.Draw &&
-                    Init == other.Init);
+                    Init == other.Init && 
+                    data == other.data);
         }
 
     };

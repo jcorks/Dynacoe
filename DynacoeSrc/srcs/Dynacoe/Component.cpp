@@ -72,14 +72,14 @@ bool Component::EmitEvent(const std::string & ev, Entity::ID source, const std::
     EventSet fns = eventHandlers->second;
     bool retval = true;
     for(int64_t i = fns.handlers.size()-1; i >= 0; --i) {
-        if (!fns.handlers[i](this, GetHostID(), source, args)) {
+        if (!fns.handlers[i].first(fns.handlers[i].second, this, GetHostID(), source, args)) {
             retval = false;
             break;
         }
     }
 
     for(size_t i = 0; i < fns.hooks.size(); ++i) {
-       fns.hooks[i](this, GetHostID(), source, args);
+       fns.hooks[i].first(fns.hooks[i].second, this, GetHostID(), source, args);
     }
 
     return retval;
@@ -94,13 +94,13 @@ bool Component::CanHandleEvent(const std::string & s) {
 
 
 
-void Component::InstallEvent(const std::string & name, EventHandler h) {
+void Component::InstallEvent(const std::string & name, EventHandler h, void * data) {
     if (handlers.find(name) != handlers.end()) {
         Dynacoe::Console::Error() << "Component " << GetTag() << " error: cannot install \"" << name << "\", event is already installed.\n";
         return;
     }
     if (h) 
-        handlers[name].handlers.push_back(h);
+        handlers[name].handlers.push_back({h, data});
     else 
         handlers[name] = EventSet();
 }
@@ -122,13 +122,13 @@ std::vector<std::string> Component::GetKnownEvents() const {
 }
 
 
-void Component::InstallHandler(const std::string & name, EventHandler h) {
+void Component::InstallHandler(const std::string & name, EventHandler h, void * data) {
     auto fns = handlers.find(name);
     if (fns == handlers.end()) {
         Dynacoe::Console::Error() << "Component " << GetTag() << " error: cannot add handler for \"" << name << "\": event is not installed.\n";
         return;
     }
-    fns->second.handlers.push_back(h);
+    fns->second.handlers.push_back({h, data});
 }
 
 void Component::UninstallHandler(const std::string & name, EventHandler h) {
@@ -136,7 +136,7 @@ void Component::UninstallHandler(const std::string & name, EventHandler h) {
     if (localHandlers == handlers.end()) return;
 
     for(size_t i = 0; i < localHandlers->second.handlers.size(); ++i) {
-        if (localHandlers->second.handlers[i] == h) {
+        if (localHandlers->second.handlers[i].first == h) {
             localHandlers->second.handlers.erase(localHandlers->second.handlers.begin()+i);
         }
     }
@@ -146,13 +146,13 @@ void Component::UninstallHandler(const std::string & name, EventHandler h) {
 
 
 
-void Component::InstallHook(const std::string & name, EventHandler h) {
+void Component::InstallHook(const std::string & name, EventHandler h, void * data) {
     auto fns = handlers.find(name);
     if (fns == handlers.end()) {
         Dynacoe::Console::Error() << "Component: cannot add hook for \"" << name << "\": event is not installed.\n";
         return;
     }
-    fns->second.hooks.push_back(h);
+    fns->second.hooks.push_back({h, data});
 }
 
 void Component::UninstallHook(const std::string & name, EventHandler h) {
@@ -160,7 +160,7 @@ void Component::UninstallHook(const std::string & name, EventHandler h) {
     if (localHandlers == handlers.end()) return;
 
     for(size_t i = 0; i < localHandlers->second.hooks.size(); ++i) {
-        if (localHandlers->second.hooks[i] == h) {
+        if (localHandlers->second.hooks[i].first == h) {
             localHandlers->second.hooks.erase(localHandlers->second.hooks.begin()+i);
         }
     }

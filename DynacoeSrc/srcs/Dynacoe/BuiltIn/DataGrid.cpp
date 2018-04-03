@@ -41,7 +41,7 @@ DynacoeEvent(DataGrid::master_click) {
 
         i += grid->viewIndex;
         std::vector<std::string> argsH = {(Chain() << i)};
-        grid->clickCallback(component, self, source, argsH);
+        grid->clickCallback(nullptr, component, self, source, argsH);
     }
     return true;
 }

@@ -72,7 +72,7 @@ class Component {
     ///   argument 2 (Entity::ID)  -> "self"
     ///   argument 3 (Entity::ID)  -> "source"
     ///
-    #define DynacoeEvent(_Name_) bool _Name_(Dynacoe::Component * component, Dynacoe::Entity::ID self, Dynacoe::Entity::ID source, const std::vector<std::string> & args)
+    #define DynacoeEvent(_Name_) bool _Name_(void * functionData, Dynacoe::Component * component, Dynacoe::Entity::ID self, Dynacoe::Entity::ID source, const std::vector<std::string> & args)
 
 
 
@@ -129,7 +129,7 @@ class Component {
     ///
     /// The return value tells the event system to propogate the event
     /// thats currently being processed.
-    using EventHandler = bool (*)(Component * component, Entity::ID self, Entity::ID source, const std::vector<std::string> & args);
+    using EventHandler = bool (*)(void *, Component * component, Entity::ID self, Entity::ID source, const std::vector<std::string> & args);
 
 
 
@@ -154,7 +154,7 @@ class Component {
     /// A hook happens at the end of a given event after all the
     /// handlers have been run. Hooks occur regardless of event handler propogation.
     /// (the return value is ignored for all hooks)
-    void InstallHook(const std::string & eventName, EventHandler);
+    void InstallHook(const std::string & eventName, EventHandler, void * data = nullptr);
     
     /// \brief Removes a hook added with InstallHook()
     ///
@@ -165,7 +165,7 @@ class Component {
     /// Handlers that are added are run in LIFO order
     /// and their return values dictate whether the event should propogate.
     /// the last handler run for an event is always the main handler of the event.
-    void InstallHandler(const std::string & eventName, EventHandler);
+    void InstallHandler(const std::string & eventName, EventHandler, void * data = nullptr);
     
     /// \brief Removes a handler added with InstallHandler()
     ///
@@ -202,7 +202,7 @@ class Component {
     ///
     /// if mainHandler is nullptr, the event is still added, but has no default
     /// handler is set. The default handler is always guaranteed to run first for the event.
-    void InstallEvent(const std::string & eventName, EventHandler mainHandler = nullptr);
+    void InstallEvent(const std::string & eventName, EventHandler mainHandler = nullptr, void * data = nullptr);
 
     /// \brief removes a handler of an event
     ///
@@ -216,8 +216,8 @@ class Component {
     Entity * host;
 
     struct EventSet {
-        std::vector<EventHandler> hooks;
-        std::vector<EventHandler> handlers;
+        std::vector<std::pair<EventHandler, void*>> hooks;
+        std::vector<std::pair<EventHandler, void*>> handlers;
     };
     std::unordered_map<std::string, EventSet> handlers;
 };

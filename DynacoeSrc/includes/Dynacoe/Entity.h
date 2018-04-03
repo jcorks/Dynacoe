@@ -415,9 +415,7 @@ class Entity {
     ///
     void Remove();
 
-    /// \brief Resets the state of the entity.
-    ///
-    void Reset();
+
 
 
 

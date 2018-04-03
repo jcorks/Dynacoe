@@ -113,7 +113,7 @@ void StateControl::OnStep() {
     if (queuedInit) {
         for(int64_t i = loops.size()-1; i >= 0; --i) {
             state = &loops[i];
-            if (state->Init) state->Init(this, GetHostID(), Entity::ID(), {});
+            if (state->Init) state->Init(state->data, this, GetHostID(), Entity::ID(), {});
             if (midTerminate) return;
         }
         queuedInit = false;      
@@ -133,7 +133,7 @@ void StateControl::OnStep() {
         }
         
         // execute all from the end of the state loop
-        state->Step(this, GetHostID(), Entity::ID(), {});
+        state->Step(state->data, this, GetHostID(), Entity::ID(), {});
         if (midTerminate) return;        
     }
 
@@ -151,7 +151,7 @@ void StateControl::OnDraw() {
         state = &loops[i];
         
         if (state->Draw) {
-            state->Draw(this, GetHostID(), Entity::ID(), {});
+            state->Draw(state->data, this, GetHostID(), Entity::ID(), {});
             if (midTerminate) return;
         }        
         

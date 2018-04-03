@@ -68,7 +68,8 @@ class Scheduler : public Dynacoe::Component {
         const std::string &     name, 
         uint32_t                intervalMS, 
         Component::EventHandler task,
-        uint32_t                initialDelay=0
+        uint32_t                initialDelay=0,
+        void *                  data = nullptr
     );
 
 

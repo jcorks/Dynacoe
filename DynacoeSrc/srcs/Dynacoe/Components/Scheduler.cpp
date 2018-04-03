@@ -43,6 +43,7 @@ struct Dynacoe::TaskM {
     std::string name;
     uint32_t interval;
     Clock timer;
+    void * data;
 };
 
 
@@ -65,12 +66,13 @@ Scheduler::~Scheduler() {
 
 
 
-void Scheduler::StartTask(const std::string & name, uint32_t intervalMS, Component::EventHandler task, uint32_t initialDelay) {
+void Scheduler::StartTask(const std::string & name, uint32_t intervalMS, Component::EventHandler task, uint32_t initialDelay, void * data) {
     TaskM * t = new TaskM();
     t->name = name;
     t->timer.Set(intervalMS+initialDelay);
     t->task = task;
     t->interval = intervalMS;
+    t->data = data;
     tasks->insert(t);
 }
 
@@ -137,7 +139,7 @@ void Scheduler::OnStep() {
         task = *iter++;
 
         if (task->timer.IsExpired()) {
-            if(task->task(this, host->GetID(), Entity::ID(), {})) {
+            if(task->task(nullptr, this, host->GetID(), Entity::ID(), {})) {
                 task->timer.Set(task->interval);
             } else {
                 toBeRemoved.push_back(task->name);
