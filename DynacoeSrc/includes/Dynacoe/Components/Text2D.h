@@ -119,12 +119,12 @@ class Text2D : public Render2D {
     Vector GetDimensions();
 
 
-
+    void OnDraw();
+    std::string GetInfo();
 
   private:
-    std::string GetInfo();
       
-    void OnDraw();
+
 
     void ReRender();
     

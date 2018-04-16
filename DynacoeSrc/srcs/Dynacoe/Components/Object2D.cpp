@@ -88,8 +88,8 @@ class Dynacoe::CollisionManager : public Entity {
         
         if (!aHost || !bHost) return;
         
-        Node * aNode = &aHost->node;
-        Node * bNode = &bHost->node;
+        Node * aNode = aHost->QueryComponent<Node>();;
+        Node * bNode = bHost->QueryComponent<Node>();;
 
         // perhaps we could still allow this depending?
         if (!aNode || !bNode) return;
@@ -206,7 +206,7 @@ class Dynacoe::CollisionManager : public Entity {
         while(setIter != objs.end()) {
             obj = *setIter++;
             if (!obj->GetHost()) return;
-            hNode = &obj->GetHost()->node;
+            hNode = obj->GetHost()->QueryComponent<Node>();
 
             offset = hNode->global.position;
             for(int i = 0; i < obj->colliders.size(); ++i) {
@@ -294,7 +294,7 @@ void Object2D::OnStep() {
 void Object2D::Update() {
     if (!GetHost()) return;
     if (!GetHost()->IsStepping()) return;
-    Node * node = &GetHost()->node;
+    Node * node = GetHost()->QueryComponent<Node>();
     if (!node) return;
     
     EmitEvent("on-move");
@@ -315,7 +315,7 @@ void Object2D::AddVelocity(double factor, double direction) {
 
 void Object2D::AddVelocityTowards(double factor, const Dynacoe::Vector & p) {
     if (!GetHost()) return;
-    Node * n = &GetHost()->node;
+    Node * n = GetHost()->QueryComponent<Node>();
     Vector delta;    
     Vector src = n->global.position;
     
@@ -331,7 +331,7 @@ void Object2D::SetVelocity(double factor, double direction) {
 
 void Object2D::SetVelocityTowards(double factor, const Dynacoe::Vector & p) {
     if (!GetHost()) return;
-    Node * n = &GetHost()->node;
+    Node * n = GetHost()->QueryComponent<Node>();
     Vector delta;
     Vector src = n->global.position;
     delta.x = p.x - src.x;
@@ -375,7 +375,7 @@ void Object2D::SetSpeed(double speed) {
 
 Vector Object2D::GetNextPosition() {
     if (!GetHost()) return Vector();
-    Node * n = &GetHost()->node;
+    Node * n = GetHost()->QueryComponent<Node>();
     Vector newPos;
     
     Vector p = n->global.position;
@@ -435,14 +435,14 @@ Object2D::ContactID Object2D::AddContactPolygon(const vector<Vector> & pts) {
 void Object2D::runCollisions() {
     if (!collisionActive || !GetHost()->HasParent()) return;
     Entity & world = GetHost()->GetParent();
-    Node * node = &GetHost()->node;
+    Node * node = GetHost()->QueryComponent<Node>();
     // Search through all entities
     auto worldChildren = world.GetChildren();
     for(int i = 0; i < worldChildren.size(); ++i) {
         Entity * e = worldChildren[i].Identify();
         if (e == GetHost() || &world != &e->GetParent() || &world != &GetHost()->GetParent()) continue;
         Object2D * otherCollider = (e->QueryComponent<Object2D>());
-        Node * otherNode = &e->node;
+        Node * otherNode = e->QueryComponent<Node>();
         // if the entity has a collider...
         if (otherCollider) {
             // Check if any of the other collider's contact boxes hit any of our contact boxes

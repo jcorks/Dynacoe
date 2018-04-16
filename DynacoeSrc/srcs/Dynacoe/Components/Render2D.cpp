@@ -60,7 +60,7 @@ void Render2D::SetPolygon(Renderer::Polygon p) {
 }
 
 void Render2D::OnAttach() {
-    node.SetManualParent(&GetHost()->node);
+    node.SetManualParent(GetHost()->QueryComponent<Node>());
     node.OnAttach();
 }
 

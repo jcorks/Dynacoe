@@ -281,7 +281,7 @@ const TransformMatrix & Node::GetGlobalTransform() {
 
 
 void Node::UpdateModelTransforms(RenderBufferID modelTransform) {
-    normalTransform = Graphics::GetCamera3D().node.GetGlobalTransform() * globalTransform;
+    normalTransform = Graphics::GetCamera3D().QueryComponent<Node>()->GetGlobalTransform() * globalTransform;
     normalTransform.Inverse();
     //normalTransform.Transpose();
     //normalTransform.ReverseMajority();

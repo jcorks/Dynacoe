@@ -236,7 +236,7 @@ Renderer::Polygon RenderMesh::GetRenderPrimitive() {
 
 
 void RenderMesh::OnAttach() {
-    node.SetManualParent(&GetHost()->node);
+    node.SetManualParent(GetHost()->QueryComponent<Node>());
 }
 
 void RenderMesh::OnStep() {

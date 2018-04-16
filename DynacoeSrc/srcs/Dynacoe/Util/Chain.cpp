@@ -275,7 +275,7 @@ void Chain::GoToFirst() {
 
 
 int Chain::AsInt() {
-    int out;
+    int out = 0;
     sscanf(data.c_str(), "%d", &out);
     return out;
 }

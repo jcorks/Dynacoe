@@ -245,10 +245,14 @@ std::string GUI::GetInfo() {
 }
 
 void GUI::OnAttach() {
-    node.SetManualParent(&GetHost()->node);
+    node.SetManualParent(GetHost()->QueryComponent<Node>());
 }
 
 
 void GUI::SetTooltipText(const std::string & t) {
     tooltipText = t;
+}
+
+const std::string & GUI::GetTooltipText() const {
+    return tooltipText;
 }

@@ -129,7 +129,7 @@ class GUI : public Component {
     
     /// \brief Returns the currently set tooltip text. The default is the empty string.
     ///
-    std::string GetTooltipText();
+    const std::string & GetTooltipText() const;
 
 
     
