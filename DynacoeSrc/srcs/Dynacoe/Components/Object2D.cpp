@@ -399,7 +399,7 @@ void Object2D::DrawColliders(const Color & c) {
 
 
 
-Object2D::ContactID Object2D::AddContactBox(const Dynacoe::Vector & offset,
+Object2D::ContactPoly & Object2D::AddContactBox(const Dynacoe::Vector & offset,
                            int w, int h) {
 
     vector<Vector> pts;
@@ -410,7 +410,7 @@ Object2D::ContactID Object2D::AddContactBox(const Dynacoe::Vector & offset,
     return AddContactPolygon(pts);
 }
 
-Object2D::ContactID Object2D::AddContactPolygon(const vector<Vector> & pts) {
+Object2D::ContactPoly & Object2D::AddContactPolygon(const vector<Vector> & pts) {
 
     ContactPoly * c = new ContactPoly(pts.size());
     float greatestLocalSpan = 0.f;
@@ -424,9 +424,15 @@ Object2D::ContactID Object2D::AddContactPolygon(const vector<Vector> & pts) {
         greatestColliderSpan = greatestLocalSpan;
 
     colliders.push_back(c);
-    ContactID id;
-    id.index = colliders.size() - 1;
-    return id;
+    return *c;
+}
+
+
+void Object2D::ClearAllContacts() {
+    for(size_t i = 0; i < colliders.size(); ++i) {
+        delete colliders[i];
+    }
+    colliders.clear();
 }
 
 // Aternate:
@@ -517,21 +523,6 @@ bool Object2D::willCollide(Object2D * other) {
     return false;
 }
 
-
-bool Object2D::IsVectorCollided(const Dynacoe::Vector & p) {
-    /*
-    Vector guess = p - GetHost()->pos;
-    ContactBox b;
-    for(int i = 0; i < colliders.size(); ++i) {
-        b = colliders[i];
-        if (Params::isWithinBounds(guess, b.offset,
-                                      b.w, b.h)) {
-            return true;
-        }
-    }
-    */
-    return false;
-}
 
 
 bool Object2D::IsLineCollided(const Vector & p1_, const Vector & p2_) {

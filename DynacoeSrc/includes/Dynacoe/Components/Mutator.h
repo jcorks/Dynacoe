@@ -106,9 +106,6 @@ class Mutator : public Component {
     ///
     void SetMutationDestination(int mutationIndex, float newValue);
 
-    /// \brief Returns the number of mutation functions set.
-    ///
-    int MutationCount();
 
 
     /// \brief Begins the mutation lifetime.

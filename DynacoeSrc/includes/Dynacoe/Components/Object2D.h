@@ -61,11 +61,11 @@ class Object2D : public Component {
             public:
                 /// \brief Returns the number of points that make up the polygon.
                 ///
-                int GetNumVectors();
+                int GetNumVectors() const;
         
                 /// \brief Returns the i'th point.
                 ///
-                Dynacoe::Vector GetVector(int i);
+                Dynacoe::Vector GetVector(int i) const;
 
                 /// \brief Updates the value of the i'th point.
                 ///
@@ -84,16 +84,7 @@ class Object2D : public Component {
         };
 
 
-        class ContactID {
-            public:
-                ContactID() : index(-1) {}
-            private:
-                friend class Object2D;
-                int index;
-
-
-        };
-
+ 
 
 
 
@@ -164,19 +155,19 @@ class Object2D : public Component {
 
         /// \brief Adds a collision box relative to the origin of the host Entity.
         ///
-        ContactID AddContactBox(const Dynacoe::Vector & offset,
+        ContactPoly & AddContactBox(const Dynacoe::Vector & offset,
                            int w, int h);
-
 
 
 
         /// \brief Adds a polygon defined by 2D points in space to act as a collision bound.
         ///
-        ContactID AddContactPolygon(const std::vector<Dynacoe::Vector> &);
+        ContactPoly & AddContactPolygon(const std::vector<Dynacoe::Vector> &);
 
-        /// \brief Returns a reference to the Contact Polygon that defines the area of contact specific to the given ID
-        /// 
-        ContactPoly & GetContactPoly(ContactID);
+
+
+        /// \brief Removes the specified contact polygon
+        void ClearAllContacts();
 
         /// \brief  Sets whether or not this collider should detect collisions.
         ///        
@@ -185,9 +176,7 @@ class Object2D : public Component {
         /// for permanently stationary objects.
         void SeekCollisions(bool doIt) { collisionActive = doIt; }
 
-        /// \brief Returns true if the given point falls within a stored contact polygon.
-        ///
-        bool IsVectorCollided(const Dynacoe::Vector &);
+
 
         /// \brief Returns true if the given line segment defined by two points
         /// instersects any point in any contact polygons.

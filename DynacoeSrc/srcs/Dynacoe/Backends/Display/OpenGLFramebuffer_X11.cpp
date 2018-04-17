@@ -823,7 +823,7 @@ int xlibErrHandler(Display * d, XErrorEvent * e) {
 
 
     cout << endl << "Dynacoe::X11 Error: " << bufferErr << endl;
-    assert(0);
+    //assert(0);
     return 0;
 }
 
