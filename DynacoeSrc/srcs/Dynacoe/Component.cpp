@@ -44,7 +44,7 @@ Component::Component(const std::string & tag_) {
 }
 
 void Component::SetHost(Entity * h) {
-    if (!host) { host = h; }
+    host = h;
 }
 
 void Component::Draw() {

@@ -77,6 +77,6 @@ Shader::Status Shader::GetStatus() {
     return status;
 }
 
-std::string GetShaderLanguage() {
+std::string Shader::GetShaderLanguage() {
     return Graphics::GetRenderer()->ProgramGetLanguage();
 }

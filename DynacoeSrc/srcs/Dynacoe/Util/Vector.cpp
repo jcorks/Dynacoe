@@ -78,8 +78,8 @@ Dynacoe::Vector::Vector(const std::vector<float> & pts) {
 
 Dynacoe::Vector::Vector(const std::string & str) {
     Dynacoe::Chain c;
-    c.SetDelimiters(" \n\t\r,.<>(){}[]");
     c = str;
+    c.SetDelimiters(" \n\t\r,<>(){}[]");
 
     float source[3];
     source[0] = source[1] = source[2] = 0.f;

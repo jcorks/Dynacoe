@@ -644,6 +644,7 @@ Component * Entity::AddComponent(Component * c, UpdateClass timeC) {
 void Entity::RemoveComponent(const string & tag) {
     for(size_t i = 0; i < components.size(); ++i) {
         if (components[i]->GetTag() == tag) {
+            components[i]->SetHost(nullptr);
             components.erase(components.begin() + i);
             break;
         }
@@ -651,6 +652,7 @@ void Entity::RemoveComponent(const string & tag) {
 
     for(size_t i = 0; i < componentsBefore.size(); ++i) {
         if (componentsBefore[i]->GetTag() == tag) {
+            componentsBefore[i]->SetHost(nullptr);
             componentsBefore.erase(componentsBefore.begin() + i);
             return;
         }
@@ -659,6 +661,7 @@ void Entity::RemoveComponent(const string & tag) {
 
     for(size_t i = 0; i < componentsAfter.size(); ++i) {
         if (componentsAfter[i]->GetTag() == tag) {
+            componentsAfter[i]->SetHost(nullptr);
             componentsAfter.erase(componentsAfter.begin() + i);
             return;
         }
@@ -671,6 +674,7 @@ void Entity::RemoveComponent(const string & tag) {
 void Entity::RemoveComponent(const Component * c) {
     for(size_t i = 0; i < components.size(); ++i) {
         if (components[i] == c) {
+            components[i]->SetHost(nullptr);
             components.erase(components.begin() + i);
             break;
         }
@@ -679,6 +683,7 @@ void Entity::RemoveComponent(const Component * c) {
 
     for(size_t i = 0; i < componentsBefore.size(); ++i) {
         if (componentsBefore[i] == c) {
+            componentsBefore[i]->SetHost(nullptr);
             componentsBefore.erase(componentsBefore.begin() + i);
             break;
         }
@@ -686,6 +691,7 @@ void Entity::RemoveComponent(const Component * c) {
 
     for(size_t i = 0; i < componentsAfter.size(); ++i) {
         if (componentsAfter[i] == c) {
+            componentsAfter[i]->SetHost(nullptr);
             componentsAfter.erase(componentsAfter.begin() + i);
             break;
         }

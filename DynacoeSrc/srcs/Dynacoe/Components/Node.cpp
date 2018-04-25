@@ -205,10 +205,6 @@ void Node::updateTransform() {
     Entity * host = GetHost();
 
 
-    if (host && host->GetName() == "ImageExample") {
-        host = GetHost();
-    }
-
 
     global.position = globalTransform.Transform({0, 0, 0});
 
