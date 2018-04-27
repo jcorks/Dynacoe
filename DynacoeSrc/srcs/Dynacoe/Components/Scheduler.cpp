@@ -139,7 +139,7 @@ void Scheduler::OnStep() {
         task = *iter++;
 
         if (task->timer.IsExpired()) {
-            if(task->task(nullptr, this, host->GetID(), Entity::ID(), {})) {
+            if(task->task(task->data, this, host->GetID(), Entity::ID(), {})) {
                 task->timer.Set(task->interval);
             } else {
                 toBeRemoved.push_back(task->name);
