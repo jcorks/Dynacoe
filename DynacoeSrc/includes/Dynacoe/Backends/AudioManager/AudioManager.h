@@ -61,7 +61,7 @@ class AudioManager : public Backend {
     // it is recommended to try again.
     virtual bool Connect() = 0;
 
-    // Sets the number of samples per thousandth of a second.
+    // Sets the number of samples second.
     // The default is 44100.
     virtual void SetSampleRate(uint32_t) = 0;
 
@@ -73,10 +73,15 @@ class AudioManager : public Backend {
     // in an interleaved channel format. In most device setups, the 
     // odd samples are for the left speaker, and the
     // even samples are for the right speaker
-    // In the case that the AudioManager cannot hold anymore data, returns the number of 
-    // sampels that were not able to be stored. each sample is a floating point number
-    // normalized between -1 and 1.
-    virtual uint32_t PushData(float * data, uint32_t numSamples) = 0;
+    // each sample is a floating point number
+    // and expected to be normalized between -1 and 1.
+    virtual void PushData(float * data, uint32_t numSamples) = 0;
+
+
+    // returns the number of samples pending to be consumed
+    virtual uint32_t PendingSamplesCount() = 0;
+
+
 
     // Returns whether or not the AudioManager is in an underrun state
     virtual bool Underrun() = 0;

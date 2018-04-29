@@ -133,19 +133,6 @@ class Sound : public Module {
 
 
 
-    /// \brief Writes the total recorded audio output buffer
-    /// into an AudioBlock.
-    ///
-    static AssetID WriteRecording();
-
-    /// \brief Specifies whether or not the audio output buffer
-    /// should be copied into an internal buffer;
-    ///
-    static void RecordOutput(bool doIt);
-
-
-
-
 
     /// \brief Returns whether or not an instance of the sample is playing
     ///

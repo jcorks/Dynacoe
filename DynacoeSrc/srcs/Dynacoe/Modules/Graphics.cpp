@@ -483,6 +483,10 @@ void Graphics::storeFont() {
 
 void Graphics::SetCamera3D(Camera & c) {
     state.currentCamera3D = c.GetID();
+    state.currentCamera3D.IdentifyAs<Camera>()->BindTransformBuffers(
+        drawBuffer->GetStaticViewingMatrixID(),
+        drawBuffer->GetStaticProjectionMatrixID()
+    );
 }
 
 void Graphics::SetCamera2D(Camera & c) {

@@ -50,7 +50,6 @@ class AudioEffect {
 
   private:
     friend class Sound;
-    ~AudioEffect(){}
 };
 }
 

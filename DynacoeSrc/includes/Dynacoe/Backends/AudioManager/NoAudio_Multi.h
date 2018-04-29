@@ -42,7 +42,8 @@ class NoAudioManager : public AudioManager {
     bool Connect();
     void SetSampleRate(uint32_t);
     uint32_t GetSampleRate();
-    uint32_t PushData(float * data, uint32_t numSamples);
+    void PushData(float * data, uint32_t numSamples);
+    uint32_t PendingSamplesCount();
     bool Underrun();
     void EnableOutput(bool doIt);
     void SetVolumeMultiplier(float);

@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/Math.h>
 #include <Dynacoe/Util/Time.h>
 #include <Dynacoe/AudioBlock.h>
+#include <Dynacoe/Dynacoe.h>
+
 #include <set>
 #include <cassert>
 #include <cmath>
@@ -46,7 +48,8 @@ DEALINGS IN THE SOFTWARE.
 
 #define WAV_HEADER_SIZE 44
 #define AudioSample_LIMIT 32767
-#define BUFFER_SIZE 512
+#define BUFFER_SIZE 2048
+#define CHANNEL_COUNT 32
 #include <cstdio>
 
 
@@ -237,14 +240,12 @@ class AudioProcessorIO {
 
     enum class Command {
         DumpAllSamples,
-        RecordBegin,
-        RecordEnd
+
     };
 
     enum class StateFlag {
         None,
         Active = 1,
-        Recording = 2,
     };
 
     uint32_t status;
@@ -286,14 +287,14 @@ class AudioProcessor {
         manager = (AudioManager *) Backend::CreateDefaultAudioManager();
         manager->Connect();
 
-        outputBufferSize = 1024; //512*2; //1024*7;
+        outputBufferSize = 1024*80; //512*2; //1024*7;
         outputBuffer = (float*)new char[outputBufferSize];
         memset(outputBuffer, 0, outputBufferSize);
-        outputBufferSamplesLeft = 0;
+
         client = c;
 
         // ALL channels
-        for(uint32_t i = 0; i <= 255; ++i) {
+        for(uint32_t i = 0; i < CHANNEL_COUNT; ++i) {
             AudioEffectChannel buffer;
 
             // allocates buffer. Is never destroyed intentionally.
@@ -305,12 +306,12 @@ class AudioProcessor {
         *c = io;
 
         // start processing
-        thread = new std::thread(ThreadControl);
+        //thread = new std::thread(ThreadControl);
         #ifdef DC_OS_WINDOWS
             #include <windows.h>
 
-            HANDLE h = (HANDLE) ((std::thread*)thread)->native_handle();
-            SetThreadPriority(h, THREAD_PRIORITY_TIME_CRITICAL);
+            //HANDLE h = (HANDLE) ((std::thread*)thread)->native_handle();
+            //SetThreadPriority(h, THREAD_PRIORITY_TIME_CRITICAL);
         #endif
     }
 
@@ -324,22 +325,7 @@ class AudioProcessor {
                 }
                 break;
 
-              case AudioProcessorIO::Command::RecordEnd:
-                AudioBlock * out;
-                out = new AudioBlock("$Audio::Recording");
-                out->Define(&outputBufferCopy[0], outputBufferCopy.size());
-                if (lastRecording)
-                    delete lastRecording;
 
-                lastRecording = out;
-                io.status &= ~(uint32_t)AudioProcessorIO::StateFlag::Recording;
-                break;
-
-
-              case AudioProcessorIO::Command::RecordBegin:
-                outputBufferCopy.clear();
-                io.status &= (uint32_t)AudioProcessorIO::StateFlag::Recording;
-                break;
             }
         }
         io.commands.Clear();
@@ -348,8 +334,37 @@ class AudioProcessor {
 
     // Pushes played audio to the audio manager
     void ProcessAudio() {
+        
+        // Before the frame officially starts, we want to determine how 
+        // many frames we wish to deliver to the audio manager
+        uint32_t count = manager->PendingSamplesCount();
+        int FPS = Dynacoe::Engine::GetDiagnostics().currentFPS;
+        if (FPS == 0) FPS = Dynacoe::Engine::GetMaxFPS();
+        uint32_t sampleRate = manager->GetSampleRate();
+        uint32_t idealRate = (sampleRate/FPS)*1.1; //1.1 gives us a little leeway but shouldnt cause too much lag
 
-        if (audio_processor_mutex.try_lock()) {
+        
+        if (count > 2*idealRate) { // already pretty backed up, so we can relax the rate a little
+            samplesThisIteration = idealRate*.5;
+            //std::cout << "!!Buffer too full! dropping a frame\n";
+        } else if (count < .5*idealRate){ // buffer too low so lets up the numder of delivered frames
+            //std::cout << "!!Buffer too empty! adding an extra frame\n";
+            samplesThisIteration = idealRate*2;
+        } else { // normal. within tolerance
+            samplesThisIteration = idealRate;
+        }
+        //std::cout << count << "frames waiting\n";
+        
+        
+
+        if (samplesThisIteration*2 >= outputBufferSize/(sizeof(float))) samplesThisIteration = (outputBufferSize/sizeof(float)-1)*2;
+
+
+        //Dynacoe::Console::Info() << "Samples this iteration: " << samplesThisIteration << "\n";
+
+
+        //if (audio_processor_mutex.try_lock()) {
+            io.channels = client->channels;
 
 
             // first xfer the new sounds over here.
@@ -386,11 +401,11 @@ class AudioProcessor {
             client->status = io.status;
 
 
-            audio_processor_mutex.unlock();
+            //audio_processor_mutex.unlock();
 
             // if we have any incoming commands, they'll be processed here.
             RunCommands();
-        }
+        //}
 
 
         ProcessStreamChunks();
@@ -399,16 +414,6 @@ class AudioProcessor {
 
 
 
-
-        if (((int)io.status) & ((int)AudioProcessorIO::StateFlag::Recording)) {  // feedback buffer of the data processed
-            AudioSample nextSample;
-            for(unsigned int i = 0; i < outputBufferSize/2;) {
-                // convert back to normal samples
-                ((uint16_t*)&nextSample)[0] = (uint16_t)(outputBuffer[i++]+1)*UINT16_MAX;
-                ((uint16_t*)&nextSample)[1] = (uint16_t)(outputBuffer[i++]+1)*UINT16_MAX;
-                outputBufferCopy.push_back(nextSample);
-            }
-        }
 
 
 
@@ -419,18 +424,16 @@ class AudioProcessor {
   private:
     float * outputBuffer;
     uint32_t outputBufferSize;
-    uint32_t outputBufferSamplesLeft;
+    uint32_t samplesThisIteration;
 
 
-    AudioBlock * lastRecording;
-    std::vector<AudioSample> outputBufferCopy;
 
     AudioProcessorIO io;
     AudioProcessorIO * client;
 
-    void * thread;
+    //void * thread;
 
-    static void ThreadControl() {
+    /*static void ThreadControl() {
         try {
             // TODO: determine good, stable sleep amount
             while(1) {
@@ -440,7 +443,7 @@ class AudioProcessor {
         } catch(std::exception & e) {
             exit(1);
         }
-    }
+    }*/
 
 
     void CommitProcessedData() {
@@ -451,39 +454,9 @@ class AudioProcessor {
         // do not do any further processing and just focus on pushing to
         // the AudioManager.
 
-        // to the audio manager, samples are floats
-        //int bytesToGet = (.001 * timer.GetTimeSince() * manager->GetSampleRate())*(sizeof(float)*2;
-        //int bytesToGet = outputBufferSamplesLeft*sizeof(float);
-        //if (bytesToGet > outputBufferSize) bytesToGet = outputBufferSize;
-        //int bytesToGet = 100;
 
-        //uint32_t bufferSamplesCurrent = outputBufferSamplesLeft;
-
-
-        //if (outputBufferSamplesLeft*sizeof(AudioSample) >= bytesToGet) {
-        uint32_t samplesProcessedTotal = 0;
-
-
-
-        while(outputBufferSamplesLeft) {
-
-            uint32_t samplesProcessed = (outputBufferSamplesLeft) - manager->PushData(outputBuffer, outputBufferSamplesLeft);
-
-            outputBufferSamplesLeft -= samplesProcessed;
-            uint32_t bytesProcessed = samplesProcessed*sizeof(float);
-            // now that the beginning has been consumed, move the buffer down
-
-            memmove(outputBuffer, outputBuffer+(samplesProcessed), outputBufferSize-(bytesProcessed));
-            memset(outputBuffer+((outputBufferSize-bytesProcessed)/(sizeof(float))), 0, bytesProcessed);
-
-            samplesProcessedTotal += samplesProcessed;
-        }
-
-
-
-        if (outputBufferSamplesLeft) {
-            printf("Buffer was too full..\n");
-        }
+        manager->PushData(outputBuffer, samplesThisIteration);
+        memset(outputBuffer, 0, samplesThisIteration*sizeof(float)*2);
 
 
     }
@@ -496,25 +469,20 @@ class AudioProcessor {
 
 
 
-        /*
-        if (count) {
-            printf("Added %d chunks (%d total)\n", count, chunkIndex.size());
-        }
-        */
 
         // If there are no stream objects to process, just get OUTTA HERE
         int total = io.current.GetCount();
         //set<AudioEffectChannel *> effectChannels;
-        uint8_t channelVisited[256];
-        memset(channelVisited, 0, 256);
+        uint8_t channelVisited[CHANNEL_COUNT];
+        memset(channelVisited, 0, CHANNEL_COUNT);
 
 
         // Each pass, up to outputBufferSize samples are processed
         // for audio manager consumption
 
 
-        uint32_t numAudioSamples = outputBufferSize/(sizeof(AudioSample)*2);
-        uint32_t numManagerSamples = outputBufferSize/(sizeof(float));
+        uint32_t numAudioSamples = samplesThisIteration;
+        uint32_t numManagerSamples = samplesThisIteration*2;
         AudioEffectChannel * effectBuffer;
 
         float leftPan;
@@ -592,7 +560,7 @@ class AudioProcessor {
 
 
         // finally apply to the master channel buffer
-        for(uint32_t i = 0; i <= 255; ++i) {
+        for(uint32_t i = 0; i < CHANNEL_COUNT; ++i) {
             if (!channelVisited[i]) continue;
 
 
@@ -613,7 +581,6 @@ class AudioProcessor {
 
 
 
-        outputBufferSamplesLeft += numManagerSamples;
 
         //printf("Waiting on %f KB of audio\n", (outputBufferSamplesLeft/ (float) 1024));
     }
@@ -628,7 +595,7 @@ class AudioProcessor {
 
 
         // and perform clipping
-        for(uint32_t i = 0; i < outputBufferSize/sizeof(float); ++i) {
+        for(uint32_t i = 0; i < samplesThisIteration/2; ++i) {
             Math::Clamp(outputBuffer[i], -1.f, 1.f);
         }
     }
@@ -659,7 +626,7 @@ class AudioClient {
     uint32_t GetSampleRate();
 
     void UpdateMain() {
-
+        processor->ProcessAudio();
     }
 
 
@@ -685,6 +652,11 @@ class AudioClient {
         }
     }
 
+    void Reset(uint8_t channel) {
+        AudioEffectChannel * c = &io.channels.Get(channel);
+        c->effectChain.Clear();
+    }
+
 
     // sets the volume for the givne effect channel
     void ChannelSetVolume(uint8_t channel, float v) {
@@ -700,24 +672,6 @@ class AudioClient {
         Math::Clamp(buffer->panning, 0.f, 1.f);
     }
 
-
-
-    // record data
-    void RecordBegin() {
-        io.commands.Push(AudioProcessorIO::Command::RecordBegin);
-    }
-    void RecordEnd() {
-        io.commands.Push(AudioProcessorIO::Command::RecordEnd);
-    }
-
-
-
-    // retrieves an audio block of the last recording
-    AudioBlock * GetLastRecording() {
-        // TODO: need to transfer from processor ._.
-        return nullptr;
-
-    }
 
 
 
@@ -973,43 +927,37 @@ void Sound::ChannelSetPanning(uint8_t channel, float v) {
 
 
 
+void Sound::ChannelAddEffect(const AudioEffect * ef, uint8_t ch) {
+    a->AddEffect((AudioEffect *)ef, ch);
+}
 
+void Sound::ChannelRemoveEffect(const AudioEffect * ef, uint8_t ch) {
+    a->RemoveEffect((AudioEffect *)ef, ch);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AssetID Sound::WriteRecording() {
-    AssetID out = Assets::New(Assets::Type::Audio, "$exportedAudioBlock");
-    AudioBlock & block = Assets::Get<AudioBlock>(out);
-    block.AppendBlock(a->GetLastRecording());
-    return out;
+void Sound::ChannelReset(uint8_t ch) {
+    a->Reset(ch);
 }
 
 
 
 
-void Sound::RecordOutput(bool doIt) {
-    if (doIt)
-        a->RecordBegin();
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

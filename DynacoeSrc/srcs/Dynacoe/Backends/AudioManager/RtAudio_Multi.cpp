@@ -55,7 +55,8 @@ class Dynacoe::StreamBuffer {
     
 
     StreamBuffer() {
-        iter = 0;
+        iterRead = 0;
+        iterWrite = 0;
         data = new float[BufferSize_c];
         size = BufferSize_c;
         occupied = false;
@@ -66,50 +67,56 @@ class Dynacoe::StreamBuffer {
     // puts as many floats onto this stream until full.
     // If there isn't enough room in the buffer, the number of
     // overflow float values is returned
-    uint32_t PushData(float * src, uint32_t numVals) {
-        uint32_t valuesCopied = (numVals < size - iter ? numVals : size - iter);
-        memcpy(data+iter, src, sizeof(float)*valuesCopied);
-        iter += valuesCopied;
-        return numVals - valuesCopied;
+    void PushData(float * src, uint32_t numVals) {
+        for(uint32_t i = 0; i < numVals; ++i) {
+            data[(i+iterWrite)%BufferSize_c] = src[i];
+        }
+        iterWrite += numVals;
+        iterWrite = iterWrite%BufferSize_c;
     }
+
+    
+
 
     // Requests the reading of numVals floats into target.
     // target must point to a buffer that holds at least sizeof(float)*numVals bytes.
     // The number of bytes read is returned.        
     uint32_t PopData(float * target, uint32_t numVals) {
-        uint32_t valuesCopied = (numVals > iter ? iter : numVals);
-        memcpy(target, data, valuesCopied*sizeof(float));
-        memmove(data, data+valuesCopied, sizeof(float) * (size - valuesCopied));
-        iter -= valuesCopied;
-        return valuesCopied;
+        for(uint32_t i = 0; i < numVals; ++i) {
+            if ((i+iterRead)%BufferSize_c == iterWrite) {
+                numVals = i;
+                break;
+            }
+            target[i] = data[(i+iterRead)%BufferSize_c];
+        }
+        iterRead += numVals;
+        iterRead = iterRead%BufferSize_c;
+        
+        std::cout << "processed " << numVals << " flt, r=" << iterRead << " w=" << iterWrite << "\n";
+        return numVals;
     }
 
-    // returns the number of values left before this stream buffer is full
-    int32_t NumValsLeft() {
-        return size - iter;
+
+    int32_t Size() {        
+        return (iterRead > iterWrite ? (iterWrite-iterRead)+BufferSize_c : iterWrite-iterRead);
     }
 
-    int32_t Size() {
-        return iter;
-    }
-
-    // returns the raw buffer
-    float * Get() {
-        return data;
-    }
 
 
     void Reset() {
-        iter = 0;
+        iterRead = 0;
+        iterWrite = 0;
     }
   private:
 
     
-    static const int BufferSize_c  = 4096*2;
+    static const int BufferSize_c  = 1024*1024;
 
 
     float * data;
-    int iter;
+    int iterRead;
+    int iterWrite;
+
     int size;
     bool occupied;
 
@@ -139,23 +146,17 @@ uint32_t RtAudioManager::GetSampleRate() {
     return sampleRate;
 }
 
-uint32_t RtAudioManager::PushData(float * data, uint32_t numSamples) {
+void RtAudioManager::PushData(float * data, uint32_t numSamples) {
     //bufferMutex.lock();
-
-
-
-    // THis only occurs if all buffers are full
-    if (!streamQueue->NumValsLeft()) { 
-        //bufferMutex.unlock();
-        return numSamples;
-    }
-
-
-    numSamples = streamQueue->PushData(data, numSamples);
+    streamQueue->PushData(data, numSamples*2);
 
     //bufferMutex.unlock();
-    return numSamples;
 }
+
+uint32_t RtAudioManager::PendingSamplesCount() {
+    return streamQueue->Size()/2;
+}
+
 
 bool RtAudioManager::Underrun() {
     //if (isUnderrun)
@@ -193,7 +194,7 @@ float RtAudioManager::GetCurrentOutputSample() {
 /* internal */
 
 const int RtAudio_n_internal_buffers_c = 1;
-const int RtAudio_n_internal_buffer_size_c = 1024;
+const int RtAudio_n_internal_buffer_size_c = 256;
 RtAudioManager::RtAudioManager() {
 
     rtParams.deviceId = 0;
@@ -302,7 +303,7 @@ int RtAudioManager::StreamCallback(
 
 
     RtAudioManager * audio = (RtAudioManager*) userData;
-    //audio->bufferMutex.lock();
+
     
 
     float * targetBuffer = (float*)oBuffer;   
@@ -318,16 +319,11 @@ int RtAudioManager::StreamCallback(
         for(int i = nBufferFrames*2-underrunFloats; i < nBufferFrames*2; ++i) {
             targetBuffer[i]   = audio->GetUnderrunSample();
         }
+        //cout << "UNDERRUNs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+
     }
 
     audio->isUnderrun = underrunFloats;  
-    //if (audio->isUnderrun)
-    //    std::cout << "[Dynacoe::RtAudio::Callback:] underrun!" << std::endl;
-    //audio->bufferMutex.unlock();
-
-    
-
-    //std::cout << "[Dynacoe::RtAudio::Callback:] Processed " << nBufferFrames  << " samples" << std::endl;
 
     return 0;
   
