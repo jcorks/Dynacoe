@@ -141,7 +141,7 @@ Asset * DecodeWAV::operator()(
 
     out->Append((AudioSample*)(&data[0]), size/sizeof(AudioSample));
     
-    out->SetVolume(.9);
+    out->SetVolume(1);
     
 
 

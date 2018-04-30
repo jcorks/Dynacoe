@@ -65,8 +65,17 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 using namespace std;
 
+static float panning_to_multiplier_l(float panning) {
+    float leftPan = (2 - panning*2);
+    Math::Clamp(leftPan, 0.f, 1.f);
+    return leftPan;
+}
 
-
+static float panning_to_multiplier_r(float panning) {
+    float rightPan = panning*2;
+    Math::Clamp(rightPan, 0.f, 1.f);
+    return rightPan;
+}
 
 
 // Bare-bones resizing array that has the following properties:
@@ -208,6 +217,8 @@ struct AudioEffectChannel {
     void Zero() {
         memset(data, 0, sizeBytes);
     }
+    
+
 
     float * data;
     uint32_t sizeBytes;
@@ -494,11 +505,8 @@ class AudioProcessor {
 
 
             AudioBlock * sample = streamData->chunk;
-            leftPan = (2 - streamData->client.panning*2);
-            rightPan =     streamData->client.panning*2;
-
-            Math::Clamp(leftPan, 0.f, 1.f);
-            Math::Clamp(rightPan, 0.f, 1.f);
+            leftPan  = panning_to_multiplier_l(streamData->client.panning);
+            rightPan = panning_to_multiplier_r(streamData->client.panning);
 
 
             // First check to see if the sample has already been exhausted.
@@ -531,14 +539,7 @@ class AudioProcessor {
             // so here we are iterating over AudioSamples...
 
             uint32_t samplesProcessed = 0;
-            //std::cout << "@ " << streamData->sampleIndex << " out of " << streamData->duration << std::endl;
             for(uint32_t i = 0; i < numAudioSamples && (i+streamData->processor.sampleIndex) < streamData->processor.duration; ++i) {
-                /*
-                if (i%2)
-                    effectBuffer->data[i] = sample->GetSample( (((i/2) + streamData->sampleIndex))).NormalizedR() * (sample->GetVolume() / 256.0) *  sample->GetPanning();
-                else
-                    effectBuffer->data[i] = sample->GetSample( (((i/2) + streamData->sampleIndex))).NormalizedL() * (sample->GetVolume() / 256.0) *  (1.f - sample->GetPanning());
-                */
 
 
 
@@ -551,6 +552,8 @@ class AudioProcessor {
 
 
             }
+
+
             //std::cout << "Prepared " << samplesProcessed << " samples to effect buffer" << std::endl;
             streamData->processor.sampleIndex += samplesProcessed;
         }
@@ -565,6 +568,8 @@ class AudioProcessor {
 
 
             AudioEffectChannel * buffer = &io.channels.Get(i);
+            float leftPan  = panning_to_multiplier_l(buffer->panning);
+            float rightPan = panning_to_multiplier_r(buffer->panning);
 
             // then, apply all channel effects sequentially.
             for(uint32_t i = 0; i < buffer->effectChain.GetCount(); ++i) {
@@ -573,7 +578,7 @@ class AudioProcessor {
 
             // and xfer to main mix
             for(uint32_t i = 0; i < numManagerSamples; ++i) {
-                outputBuffer[i] += (i%2==0? (1.f-buffer->panning) : buffer->panning) * buffer->volume * buffer->data[i];
+                outputBuffer[i] += (i%2==0 ? leftPan : rightPan) * buffer->volume * buffer->data[i];
             }
         }
 

@@ -92,7 +92,7 @@ class Dynacoe::StreamBuffer {
         iterRead += numVals;
         iterRead = iterRead%BufferSize_c;
         
-        std::cout << "processed " << numVals << " flt, r=" << iterRead << " w=" << iterWrite << "\n";
+        //std::cout << "processed " << numVals << " flt, r=" << iterRead << " w=" << iterWrite << "\n";
         return numVals;
     }
 
@@ -197,7 +197,6 @@ const int RtAudio_n_internal_buffers_c = 1;
 const int RtAudio_n_internal_buffer_size_c = 256;
 RtAudioManager::RtAudioManager() {
 
-    rtParams.deviceId = 0;
     rtParams.nChannels = 2;
     rtParams.firstChannel =  0;    
 
@@ -207,7 +206,7 @@ RtAudioManager::RtAudioManager() {
 
     
     sampleRate = 44100;
-    volume = .5f;
+    volume = 1.f;
     enabled = false;
 
     #ifdef DC_BACKENDS_RTAUDIO_WIN32
@@ -217,9 +216,10 @@ RtAudioManager::RtAudioManager() {
     #elif defined(DC_BACKENDS_RTAUDIO_OSS)
         rtAudio = new RtAudio(RtAudio::LINUX_OSS);
     #endif
+    rtParams.deviceId = rtAudio->getDefaultOutputDevice();
+    connected = false;
 
     streamQueue = new StreamBuffer;
-    OpenStream();
     
     
 }
@@ -227,8 +227,14 @@ RtAudioManager::RtAudioManager() {
 
 
 void RtAudioManager::OpenStream() {
+    if (connected) {
+        return;
+
+    }
     try {
         unsigned int bufferSize = RtAudio_n_internal_buffer_size_c;
+        cout << "[Dynacoe::RtAudio]: " << "Attempting to open stream..." << endl;
+
         rtAudio->openStream(
             &rtParams,
             nullptr,
@@ -244,8 +250,8 @@ void RtAudioManager::OpenStream() {
         //cout << "[Dynacoe::RtAudio]: " << "Stream opened" << endl;       
     } catch(RtAudioError & e) {
         connected = false;
-        cout << "[Dynacoe::RtAudio]: " << "Stream open failed!" << endl;
-        
+        cout << "[Dynacoe::RtAudio]: " << "Stream open failed:" << e.getMessage() << endl;
+        //rtAudio->closeStream();
     }
 }
 
@@ -297,9 +303,12 @@ int RtAudioManager::StreamCallback(
   void * userData) {
     
 
-    if (status)
-        cout << "UNDERRUN" << endl;
-
+    if (status & RTAUDIO_INPUT_OVERFLOW) {
+        cout << "Audio manager: internal overflow!" << endl;
+        return 0;
+    } else if (status & RTAUDIO_OUTPUT_UNDERFLOW) {
+        cout << "Audio manager: output underflow! (framerate too low to compensate?): " << nBufferFrames << endl;
+    }
 
 
     RtAudioManager * audio = (RtAudioManager*) userData;
