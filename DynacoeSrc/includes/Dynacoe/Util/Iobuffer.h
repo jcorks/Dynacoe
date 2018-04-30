@@ -173,7 +173,7 @@ class OutputBuffer {
 
     /// \brief Returns a copy of the queued data.
     ///    
-    std::vector<uint8_t> const GetData();
+    std::vector<uint8_t> GetData();
 
     /// \brief Returns the size of the queued data in bytes.
     ///    

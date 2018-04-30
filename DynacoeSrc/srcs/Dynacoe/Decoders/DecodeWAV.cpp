@@ -55,7 +55,9 @@ Asset * DecodeWAV::operator()(
 
     AudioBlock * out = new AudioBlock(fileName);
     InputBuffer buf;
-    buf.OpenBuffer(std::vector<uint8_t>(buffer, buffer+sizeB));
+    std::vector<uint8_t> dataSrc(sizeB);
+    memcpy(&dataSrc[0], buffer, sizeB);
+    buf.OpenBuffer(dataSrc);
     if (buf.ReachedEnd()) {
         Console::Warning() <<"failed to load file " << fileName << "! Is it there?\n";
         return NULL;

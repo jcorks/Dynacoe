@@ -670,13 +670,12 @@ Text2D::Text2D(const std::string & str, const Color & clr) : Render2D("Text2D") 
     modeInst = nullptr;
 
     if (!defaultFont.Valid()) {
+        std::vector<uint8_t> v(sizeof(__console_otf_h_buffer));
+        memcpy(&v[0], __console_otf_h_buffer, v.size());
         defaultFont = Assets::LoadFromBuffer(
             "otf",
             "DYNACOE_console.otf",
-            std::vector<uint8_t>(
-                __console_otf_h_buffer,
-                __console_otf_h_buffer+sizeof(__console_otf_h_buffer)
-            )
+            v
         );
     }
     SetTextColor(clr);

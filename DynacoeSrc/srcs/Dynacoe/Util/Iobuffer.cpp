@@ -92,8 +92,10 @@ void OutputBuffer::WriteBytes(const std::vector<uint8_t> & data) {
 
 
 
-std::vector<uint8_t> const OutputBuffer::GetData() {
-    return std::vector<uint8_t>(buffer, buffer+operationalSize);
+std::vector<uint8_t> OutputBuffer::GetData() {
+    std::vector<uint8_t> b(operationalSize);
+    memcpy(&b[0], buffer, operationalSize);
+    return b;
 }
 
 int OutputBuffer::Size() {
@@ -248,7 +250,9 @@ std::vector<uint8_t> InputBuffer::ReadBytes(uint32_t n) {
     int bytesToRead = std::min(n, (uint32_t) size - bufferPos); 
     uint8_t * target = (uint8_t *) readN(n);
     if (!n) return std::vector<uint8_t>();
-    std::vector<uint8_t> out(target, target+bytesToRead);
+    std::vector<uint8_t> out;
+    out.resize(bytesToRead);
+    memcpy(&out[0], target, bytesToRead);
     if (n > immediate_size_c)
         delete[] target;
     return out;
