@@ -368,7 +368,7 @@ class AudioProcessor {
         
         
 
-        if (samplesThisIteration*2 >= outputBufferSize/(sizeof(float))) samplesThisIteration = (outputBufferSize/sizeof(float)-1)*2;
+        if (samplesThisIteration*2 >= outputBufferSize/(sizeof(float))) samplesThisIteration = (outputBufferSize/sizeof(float)-1)/2;
 
 
         //Dynacoe::Console::Info() << "Samples this iteration: " << samplesThisIteration << "\n";
