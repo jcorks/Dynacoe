@@ -205,6 +205,7 @@ struct AudioEffectChannel {
         sizeBytes = 0;
         volume = 1.f;
         panning = .5f;
+        keepAwake = false;
     };
 
     void SetSize(uint32_t bytes) {
@@ -224,6 +225,7 @@ struct AudioEffectChannel {
     uint32_t sizeBytes;
     float volume;
     float panning;
+    bool keepAwake;
 
     // TODO:
     StateArray<AudioEffect*> effectChain;
@@ -564,10 +566,9 @@ class AudioProcessor {
 
         // finally apply to the master channel buffer
         for(uint32_t i = 0; i < CHANNEL_COUNT; ++i) {
-            if (!channelVisited[i]) continue;
-
-
             AudioEffectChannel * buffer = &io.channels.Get(i);
+            if (!channelVisited[i] && !buffer->keepAwake) continue;
+            
             float leftPan  = panning_to_multiplier_l(buffer->panning);
             float rightPan = panning_to_multiplier_r(buffer->panning);
 
@@ -660,6 +661,11 @@ class AudioClient {
     void Reset(uint8_t channel) {
         AudioEffectChannel * c = &io.channels.Get(channel);
         c->effectChain.Clear();
+    }
+
+    void KeepAwake(uint8_t channel, bool ka) {
+        AudioEffectChannel * c = &io.channels.Get(channel);
+        c->keepAwake = ka;
     }
 
 
@@ -944,6 +950,9 @@ void Sound::ChannelReset(uint8_t ch) {
     a->Reset(ch);
 }
 
+void Sound::ChannelKeepAwake(uint8_t ch, bool ka) {
+    a->KeepAwake(ch, ka);
+}
 
 
 

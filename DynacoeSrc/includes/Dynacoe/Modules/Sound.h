@@ -186,6 +186,14 @@ class Sound : public Module {
     /// \brief Removes all effects from a channel.
     /// This does not delete the AudioEffects given to the channel.
     static void ChannelReset(uint8_t channel);
+    
+    /// \brief Keeps the stream active for the given channel.
+    /// By default, channels will only be active if there are samples playing through it 
+    /// This is normally fine, execpt this means effects will stop once no samples are 
+    /// being processed through a channel. For something like reverberation, this 
+    /// would cut off meaningful information from being output. Keeping the channel 
+    /// awake sacrifices performance for making more quality  
+    static void ChannelKeepAwake(uint8_t, bool doIt);
 
     /// \brief Sets the volume for the given channel
     /// 0.f denotes minimum volume and 1.f maximum.
