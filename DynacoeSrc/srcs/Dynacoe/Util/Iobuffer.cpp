@@ -55,22 +55,13 @@ OutputBuffer::~OutputBuffer() {
 }
 
 void OutputBuffer::resize() {
-    if (!buffer) {
-        buffer = new uint8_t[1];
-        size = 1;
-    }
 
-    uint8_t * newBuffer = new uint8_t[size*2];
-    for(int i = 0; i < size*2; i++) {
-        newBuffer[i] = 0;
-    }
+    uint32_t newSize = (size+1)*2;
+    uint8_t * newBuffer = new uint8_t[newSize];
+    memset(newBuffer, size, 0);
+    memcpy(newBuffer, buffer, size);
 
-
-    for(int i = 0; i < size; i++) {
-        newBuffer[i] = buffer[i];
-    }
-
-    size = size*2;
+    size = newSize;
     delete[] buffer;
     buffer = newBuffer;
 }
@@ -248,12 +239,12 @@ void * InputBuffer::readN(int num) {
 
 std::vector<uint8_t> InputBuffer::ReadBytes(uint32_t n) {
     int bytesToRead = std::min(n, (uint32_t) size - bufferPos); 
-    uint8_t * target = (uint8_t *) readN(n);
-    if (!n) return std::vector<uint8_t>();
+    uint8_t * target = (uint8_t *) readN(bytesToRead);
+    if (!target) return std::vector<uint8_t>();
     std::vector<uint8_t> out;
     out.resize(bytesToRead);
     memcpy(&out[0], target, bytesToRead);
-    if (n > immediate_size_c)
+    if (bytesToRead > immediate_size_c)
         delete[] target;
     return out;
     
