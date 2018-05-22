@@ -45,10 +45,17 @@ DEALINGS IN THE SOFTWARE.
     #ifndef GLEW_STATIC
     #define GLEW_STATIC
     #endif
-    #include <glew.h>
+    #ifdef _MBCS 
+        #include <GL/glew.h>    
+        #include <GL/wglew.h>
+    #else
+        #include <glew.h>
+        #include <wglew.h>
+    #endif
+
     #include <GL/gl.h>
     #include <windows.h>
-#include <wglew.h>
+
 #endif
     
 #ifndef GLVERSIONQUERY_H_INCLUDED

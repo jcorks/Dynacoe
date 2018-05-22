@@ -68,9 +68,9 @@ bool Material::State::operator==(const State & other) {
 }
 
 Material::State::State() {
-    ambient = {.1, .1, .1, 1.f};
-    diffuse = {.5, .5, .5, 1.f};
-    specular = {.73, .8, .85, 1.f};
+    ambient = {.1f, .1f, .1f, 1.f};
+    diffuse = {.5f, .5f, .5f, 1.f};
+    specular = {.73f, .8f, .85f, 1.f};
 
 
     specularAmount = 1.f;

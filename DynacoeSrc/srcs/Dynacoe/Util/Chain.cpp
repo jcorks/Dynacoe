@@ -191,6 +191,7 @@ Chain & Chain::operator=(const Chain & target) {
         cLink = new std::string();
         (*cLink) = *target.cLink;
     }
+    return *this;
 }
 
 Chain & Chain::operator++(int nothing) {

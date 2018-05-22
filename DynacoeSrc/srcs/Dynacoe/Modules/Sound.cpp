@@ -103,6 +103,7 @@ class StateArray {
         }
         dataSize = other.dataSize;
         memcpy(data, other.data, other.dataSize);
+        return *this;
     }
 
     StateArray(const StateArray & other) : StateArray() {

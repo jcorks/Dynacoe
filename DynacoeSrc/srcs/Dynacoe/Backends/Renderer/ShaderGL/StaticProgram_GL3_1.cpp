@@ -444,9 +444,10 @@ void StaticProgram_GL3_1::SetVertexBinding(int vertexBufferID) {
 void StaticProgram_GL3_1::printShaderLog(int shaderID) {
     int logLength;
     glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &logLength);
-    char l[logLength+1];
+    std::string l;
+    l.resize(logLength);
 
-    glGetShaderInfoLog(shaderID, logLength, &logLength, l);
+    glGetShaderInfoLog(shaderID, logLength, &logLength, &l[0]);
     
     log += std::string(l);
 }
@@ -454,9 +455,10 @@ void StaticProgram_GL3_1::printShaderLog(int shaderID) {
 void StaticProgram_GL3_1::printProgramLog(int shaderID) {
     int logLength;
     glGetProgramiv(shaderID, GL_INFO_LOG_LENGTH, &logLength);
-    char l[logLength+1];
+    std::string l;
+    l.resize(logLength);
 
-    glGetProgramInfoLog(shaderID, logLength, &logLength, l);
+    glGetProgramInfoLog(shaderID, logLength, &logLength, &l[0]);
     
     log += std::string(l);
 }

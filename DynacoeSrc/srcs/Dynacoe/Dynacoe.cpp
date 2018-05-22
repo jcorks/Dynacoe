@@ -61,14 +61,14 @@ std::string Engine::Version() {
     #ifdef DYNACOE_GIT_LINEAR_COUNT
         std::string count = DYNACOE_GIT_LINEAR_COUNT;
     #else
-        std::string count = "???"
+        std::string count = "???";
     #endif
 
 
     #ifdef DYNACOE_GIT_HASH
         std::string hash = DYNACOE_GIT_HASH;
     #else
-        std::string hash = "[unknown hash]"
+        std::string hash = "[unknown hash]";
     #endif
 
     return std::string() +

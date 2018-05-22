@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/Renderer/ShaderGL/RenderBuffer_Tex.h>
 #include <cstring>
 #include <cfloat>
+#include <algorithm>
 using namespace Dynacoe;
 
 

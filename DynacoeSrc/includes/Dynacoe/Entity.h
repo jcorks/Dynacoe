@@ -507,23 +507,10 @@ class Entity {
 
     ///\}
 
-    void * operator new(std::size_t) throw(std::bad_alloc);
-    void * operator new(std::size_t, const std::nothrow_t &) throw();
-    void * operator new(std::size_t, void * ptr) throw();
-
-    void operator delete(void * ptr) throw();
-    void operator delete(void * ptr, const std::nothrow_t &) throw();
-    void operator delete(void * ptr, void *) throw();
-
-
-    // never defined.
-    void * operator new[](std::size_t) throw(std::bad_alloc);
-    void * operator new[](std::size_t, const std::nothrow_t &) throw();
-    void * operator new[](std::size_t, void * ptr) throw();
-
-    void operator delete[](void * ptr) throw();
-    void operator delete[](void * ptr, const std::nothrow_t &) throw();
-    void operator delete[](void * ptr, void *) throw();
+    void * operator new(std::size_t);
+    void * operator new[](std::size_t);
+    void operator delete(void * ptr);
+    void operator delete[](void * ptr);
 
 
   private:

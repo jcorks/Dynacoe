@@ -62,6 +62,7 @@ TransformMatrix::TransformMatrix(const TransformMatrix & matr) {
 
 TransformMatrix & TransformMatrix::operator=(const TransformMatrix & matr) {
     memcpy(data, matr.data, sizeof(float)*16);
+    return *this;
 }
 
 TransformMatrix::TransformMatrix(float * d) {

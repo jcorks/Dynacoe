@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #define H_DC_FRAMEBUFFER_INCLUDED
 
 #include <Dynacoe/Backends/Backend.h>
-
 namespace Dynacoe {
 
 

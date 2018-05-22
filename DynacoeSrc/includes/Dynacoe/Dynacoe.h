@@ -142,7 +142,6 @@ class Engine {
 
   private:
 
-    friend class DebugWindow;
 
 
 

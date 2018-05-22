@@ -146,7 +146,7 @@ class EParticle : public Entity {
                 Image & im = Assets::Get<Image>(img);
                 if (frame > im.frames.size() - 1)
                     frame = 0;
-                center = {im.CurrentFrame().Width(), im.CurrentFrame().Height()};
+                center = {(float)im.CurrentFrame().Width(), (float)im.CurrentFrame().Height()};
             }
 
 

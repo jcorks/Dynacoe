@@ -102,10 +102,10 @@ void FillBar::SetDims(int w, int h) {
     height = h;
 
     if (border) {
-        borderUp->   QueryComponent<Node>()->local.position = {border, 0};
-        borderDown-> QueryComponent<Node>()->local.position = {border, height - border};
-        borderLeft-> QueryComponent<Node>()->local.position = {0, 0};
-        borderRight->QueryComponent<Node>()->local.position = {width - border, 0};
+        borderUp->   QueryComponent<Node>()->local.position = {(float)border, 0.f};
+        borderDown-> QueryComponent<Node>()->local.position = {(float)border, (float)height - border};
+        borderLeft-> QueryComponent<Node>()->local.position = {0.f, 0.f};
+        borderRight->QueryComponent<Node>()->local.position = {(float)width - border, 0.f};
 
 
         borderUp->QueryComponent<Shape2D>()->   FormRectangle(width - border*2, border);
@@ -122,7 +122,7 @@ void FillBar::SetDims(int w, int h) {
 
 void FillBar::SetBorder(int px) {
     border = px;
-    empty->QueryComponent<Node>()->local.position = {px, px};
+    empty->QueryComponent<Node>()->local.position = {(float)px, (float)px};
     SetFill(fraction);
     SetDims(width, height);
 }

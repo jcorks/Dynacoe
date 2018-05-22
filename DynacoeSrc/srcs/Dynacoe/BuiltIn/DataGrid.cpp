@@ -237,7 +237,7 @@ void Dynacoe::DataGrid::RefreshView() {
     if (visibleRows.size() < rowCount) {
         int pad = (height - scrollHeight) / 2;
         float position = viewIndex / (float) unseenRows;
-        Vector scrollDim = {scroll_width_c, scrollHeight < 3 ? 3 : scrollHeight};
+        Vector scrollDim = {(float)scroll_width_c, (float) (scrollHeight < 3 ? 3 : scrollHeight)};
         scroll.node.local.position.x = spanWidth-scroll_width_c;
         scroll.node.local.position.y = (position * (pad*2));
         scroll.FormRectangle(scrollDim.x, scrollDim.y);

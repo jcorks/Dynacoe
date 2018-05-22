@@ -488,9 +488,10 @@ void DynamicProgram_GL2_0::PrepareShader() {
     int logLength;
     if (!success) {
         glGetShaderiv(fragShaderID, GL_INFO_LOG_LENGTH, &logLength);
-        char log[logLength];
+        std::string log;
+        log.resize(logLength);
 
-        glGetShaderInfoLog(fragShaderID, logLength, &logLength, log);
+        glGetShaderInfoLog(fragShaderID, logLength, &logLength, &log[0]);
         std::cout << log << std::endl;
         assert(0);
     }
@@ -499,9 +500,10 @@ void DynamicProgram_GL2_0::PrepareShader() {
     glGetShaderiv(vertShaderID, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderiv(fragShaderID, GL_INFO_LOG_LENGTH, &logLength);
-        char log[logLength];
+        std::string log;
+        log.resize(logLength);
 
-        glGetShaderInfoLog(fragShaderID, logLength, &logLength, log);
+        glGetShaderInfoLog(fragShaderID, logLength, &logLength, &log[0]);
         std::cout << log << std::endl;
         assert(0);
     }
@@ -543,9 +545,10 @@ void DynamicProgram_GL2_0::PrepareShader() {
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
     if (!success) {
-        char l[logLength+1];
+        std::string l;
+        l.resize(logLength);
 
-        glGetProgramInfoLog(program, logLength, &logLength, l);
+        glGetProgramInfoLog(program, logLength, &logLength, &l[0]);
 
         std::cout << std::string(l) << std::endl;;
 

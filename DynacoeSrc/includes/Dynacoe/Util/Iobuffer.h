@@ -217,7 +217,7 @@ template <typename T>
 T Dynacoe::InputBuffer::Read() {
     T object;
     std::vector<uint8_t> data = ReadBytes(sizeof(T));
-    if (!data.size()) return object;
+    if (!data.size()) return T();
     memcpy(&object, &data[0], sizeof(object));
     return object;
 }

@@ -35,7 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Util/Iobuffer.h>
 #ifdef DC_SUBSYSTEM_WIN32
-    #include "libpng12/png.h"
+    #ifdef _MBCS
+        #include <png.h>
+    #else
+        #include "libpng12/png.h"
+    #endif
 #else
     #define PNG_SKIP_SETJMP_CHECK // libpng already includes setjmp.h
     #include <libpng/png.h>

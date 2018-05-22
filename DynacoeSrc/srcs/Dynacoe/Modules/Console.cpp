@@ -440,8 +440,8 @@ void Console::Init() {
     mainGridRoot->node.local.rotation.x = 180;
     mainGridRoot->node.local.rotation.y = 180;
 
-    mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8};
-    mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8};
+    mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
+    mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
 
     Engine::AttachManager(mainGridRoot->GetID());
     Entity * messageRoot = Entity::CreateReference<Entity>();

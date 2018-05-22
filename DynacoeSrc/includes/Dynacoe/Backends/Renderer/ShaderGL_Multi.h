@@ -45,7 +45,11 @@ DEALINGS IN THE SOFTWARE.
 #ifdef DC_BACKENDS_SHADERGL_X11
     #include <GL/glew.h>
 #else
-    #include <glew.h>
+    #ifdef _MBCS 
+        #include <GL/glew.h>    
+    #else
+        #include <glew.h>
+    #endif
 #endif
 #include <Dynacoe/Backends/Renderer/ShaderGL/DynamicProgram.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/TextureManager.h>

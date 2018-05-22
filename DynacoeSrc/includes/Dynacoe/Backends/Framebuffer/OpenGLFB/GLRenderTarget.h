@@ -40,8 +40,13 @@ DEALINGS IN THE SOFTWARE.
 #ifdef DC_SUBSYSTEM_X11
     #include <GL/glew.h>
 #else
-    #include <glew.h>
+    #ifdef _MBCS 
+        #include <GL/glew.h>    
+    #else
+        #include <glew.h>
+    #endif
 #endif
+#include <stdint.h>
 
 namespace Dynacoe {
 class GLRenderTarget {

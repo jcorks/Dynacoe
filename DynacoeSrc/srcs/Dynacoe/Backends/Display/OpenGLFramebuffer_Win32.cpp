@@ -746,9 +746,10 @@ void OpenGLFBDisplay::setupDisplayProgram() {
             cout << "[Dynacoe::OpenGLFBDisplay]: Fragment shader failed to compile:" << endl;
             int logLength;
             glGetShaderiv(fragID, GL_INFO_LOG_LENGTH, &logLength);
-            char log[logLength];
+            std::string log;
+            log.resize(logLength);
 
-            glGetShaderInfoLog(fragID, logLength, &logLength, log);
+            glGetShaderInfoLog(fragID, logLength, &logLength, &log[0]);
             cout << log << endl;
             assert(0);
         }
@@ -759,8 +760,9 @@ void OpenGLFBDisplay::setupDisplayProgram() {
             cout << "[Dynacoe::OpenGLFBDisplay]: Vertex shader failed to compile:" << endl;
             int logLength;
             glGetShaderiv(vertID, GL_INFO_LOG_LENGTH, &logLength);
-            char log[logLength];
-            glGetShaderInfoLog(vertID, logLength, &logLength, log);
+            std::string log;
+            log.resize(logLength);
+            glGetShaderInfoLog(vertID, logLength, &logLength, &log[0]);
             cout << log << endl;
             assert(0);
         }            

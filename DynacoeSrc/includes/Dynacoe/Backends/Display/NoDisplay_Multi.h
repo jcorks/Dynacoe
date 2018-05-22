@@ -72,10 +72,10 @@ class NoDisplay : public Display {
     void AttachSource(Dynacoe::Framebuffer *){}
     Dynacoe::Framebuffer * GetSource(){return nullptr;}
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){
-        std::vector<Dynacoe::Framebuffer::Type>({
+        return {
             Dynacoe::Framebuffer::Type::RGBA_PixelArray,
             Dynacoe::Framebuffer::Type::GLFBPacket
-        });
+        };
     }
 
     DisplayHandleType GetSystemHandleType();

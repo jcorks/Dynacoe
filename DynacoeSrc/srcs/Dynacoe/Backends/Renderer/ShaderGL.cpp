@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Modules/Assets.h>
 #include <Dynacoe/Image.h>
 
+#include <ctime>
 
 #include <cstring>
 #include <cassert>
@@ -551,7 +552,7 @@ class LightData {
 
 class CompareLightData {
   public:
-    bool operator()(LightData * const & a, LightData * const & b) {
+    bool operator()(LightData * const & a, LightData * const & b) const {
         return *a < *b;
     }
 };

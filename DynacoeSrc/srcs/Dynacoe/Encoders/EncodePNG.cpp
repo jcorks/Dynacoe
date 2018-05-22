@@ -35,7 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #ifdef DC_SUBSYSTEM_X11
     #include <libpng/png.h>
 #else
-    #include "libpng12/png.h"
+    #ifdef _MBCS
+        #include <png.h>
+    #else
+        #include "libpng12/png.h"
+    #endif
 #endif
 #include <Dynacoe/Image.h>
 

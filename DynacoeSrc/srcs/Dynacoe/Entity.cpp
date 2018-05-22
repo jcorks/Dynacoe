@@ -781,28 +781,14 @@ std::vector<Entity::ID> Entity::GetAll() {
 
 
 
-void * Entity::operator new(std::size_t size) throw(std::bad_alloc) {
+void * Entity::operator new(std::size_t size) {
     return new char[size];
 }
 
-void * Entity::operator new(std::size_t size, const std::nothrow_t &) throw() {
-    return new char[size];
-}
-
-void * Entity::operator new(std::size_t size, void * p2) throw() {
-    return p2;
-}
 
 
-
-void Entity::operator delete(void * ptr) throw() {
+void Entity::operator delete(void * ptr)  {
     delete[] (char*) ptr;
 }
 
-void Entity::operator delete(void * ptr, const std::nothrow_t &) throw() {
-    delete[] (char*) ptr;
-}
 
-void Entity::operator delete(void * ptr, void * ptr2) throw() {
-    delete[] (char*) ptr;
-}

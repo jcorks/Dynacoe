@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Util/Iobuffer.h>
 #include <fstream>
-
+#include <algorithm>
 using namespace Dynacoe;
 using namespace std;
 

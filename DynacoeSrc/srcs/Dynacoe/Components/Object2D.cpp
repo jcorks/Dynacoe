@@ -52,7 +52,7 @@ using namespace Dynacoe;
 using namespace std;
 
 //void Object2D::NullCollision(Entity::ID, Entity::ID) {}
-DynacoeEvent(Object2D::NullCollision) {}
+DynacoeEvent(Object2D::NullCollision) {return false;}
 
 // private class that manages all collisions
 class Dynacoe::CollisionManager : public Entity {

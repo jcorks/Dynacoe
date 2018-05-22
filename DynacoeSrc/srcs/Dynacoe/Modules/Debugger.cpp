@@ -297,7 +297,7 @@ DebugWindow::DebugWindow() {
 
 
     // location / link
-    base = {0, grab_bar_height_c};
+    base = {0, (float)grab_bar_height_c};
     AddComponent(&linkBar);
     linkBar.node.local.position = Vector(back_button_width_c, 0) + base;
     linkBar.FormRectangle(default_w_c - back_button_width_c, location_row_height_c);
@@ -727,8 +727,8 @@ void DebugWindow::OnStep() {
             return;
         }
         node.local.position += {
-            Input::MouseXDelta(),
-            Input::MouseYDelta()
+            (float)Input::MouseXDelta(),
+            (float)Input::MouseYDelta()
         };
     }
 }
