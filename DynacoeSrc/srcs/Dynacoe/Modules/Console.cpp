@@ -61,7 +61,7 @@ using namespace Dynacoe;
 
 static DataGrid * mainGrid = nullptr;
 static Entity * mainGridRoot = nullptr;
-
+static DynacoeEvent((*commandCallback)) = nullptr;
 static bool console_overflow = false;
 const uint32_t console_text_limit_line_c = 80;
 Interpreter * Console::interp = nullptr;
@@ -517,7 +517,8 @@ void Console::RunAfter()  {
                 std::string inputString = streamIn->Consume();
                 ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Normal <<  ">" << inputString << "\n";
                 if (!inputString.empty()) {
-                    Console::Info() << interp->RunCommand(inputString) << '\n';
+                    if (!(commandCallback && !commandCallback(nullptr, nullptr, Entity::ID(), Entity::ID(), {inputString})))
+                        Console::Info() << interp->RunCommand(inputString) << '\n';
                 }
             }
         }
@@ -1195,6 +1196,9 @@ void Console::AddCommand(const std::string & str, Interpreter::Command * cmd) {
 }
 
 
+void Console::SetCommandCallback(DynacoeEvent(ev)) {
+    commandCallback = ev;
+}
 
 // some built-in commands for the console
 void Console::AddDefaultCommands() {

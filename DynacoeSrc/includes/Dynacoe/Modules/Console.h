@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Interpreter.h>
 #include <Dynacoe/Util/Chain.h>
+#include <Dynacoe/Component.h>
 #include <map>
 
 class ConsoleInputStream;
@@ -175,7 +176,14 @@ class Console : public Module {
     ///
     static MessageMode GetOverlayMessageMode();
 
-
+    /// \brief Sets a callback to be run for all user-entered commands, regardless of 
+    /// command issued. Whether to process the command normally is returned.
+    ///
+    /// If specified, the console, before normally processing the command, 
+    /// will call this function first to determine whether to continue.
+    /// The compiled input string is given as the first argument of args.
+    /// If the callback returns false, no further action is taken.
+    static void SetCommandCallback(DynacoeEvent((*)));
 
 
   private:
@@ -222,6 +230,7 @@ class Console : public Module {
     static void PostMessageConsole(const std::string & c, ConsoleStream::MessageType);
     static std::vector<std::pair<std::string, ConsoleStream::MessageType>> stream;
     static Interpreter * interp;
+    
 
   public:
     std::string GetName() {return "Console";}
