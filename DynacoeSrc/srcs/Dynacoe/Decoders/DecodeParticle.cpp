@@ -60,19 +60,25 @@ Asset * DecodeParticle::operator()(
     }
 
     // wasteful but whatever; needs to be changed down the line.
-    Chain fileData(input.ReadString(input.Size()).c_str());
-    fileData.SetDelimiters(" \n\t\r:");
+    Chain lines(input.ReadString(input.Size()).c_str());
+    lines.SetDelimiters("\n\r");
 
     //p->getAssetName();
 
     std::string keyword;
     float value;
     std::string valueStr;
-    while (fileData.LinksLeft()) {
-        keyword  = fileData.GetLink(); fileData++;
-        valueStr = fileData.GetLink(); fileData++;
+    Chain line;
+    line.SetDelimiters(" \t:");
+    while (lines.LinksLeft()) {
+        line = lines.GetLink(); lines++;
+        line.SetDelimiters(" \t:");
+        keyword  = line.GetLink(); line++;
+        valueStr = line.GetLink(); line++;
         value    = atof(valueStr.c_str());
-
+        
+        // # comments
+        if (keyword.size() && keyword[0] == '#')continue;
     
         if (keyword == "image_name") {
             p->Image_name = valueStr.c_str();
