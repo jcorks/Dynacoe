@@ -242,7 +242,6 @@ static Table<AudioStreamObject *> activeSounds;
 static std::vector<LookupID> activeSoundIDs;
 
 
-
 // data exchanged between the clinet and the processor
 class AudioProcessorIO {
   public:
@@ -634,6 +633,33 @@ class AudioClient {
 
     void UpdateMain() {
         processor->ProcessAudio();
+
+        // need a better process.. There are much more efficient ways to do this
+        auto list = activeSoundIDs;
+        auto source = io.current;
+
+        for(uint32_t i = 0; i < list.size(); ++i) {
+            auto current = activeSounds.Find(list[i]);
+            for(uint32_t n = 0; n < source.GetCount(); ++n) {
+                if (current == source.Get(n)) {
+                    source.Remove(n);
+                    list.erase(list.begin()+i);
+                    i--;
+                    break;
+                }
+            }
+        }
+        
+        for(uint32_t i = 0; i < list.size(); ++i) {
+            for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
+                if (activeSoundIDs[n] == list[i]) {
+                    activeSoundIDs.erase(activeSoundIDs.begin()+n);
+                    break;
+                }
+            }
+            activeSounds.Remove(list[i]);
+        }
+        
     }
 
 
