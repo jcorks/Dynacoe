@@ -202,7 +202,7 @@ RtAudioManager::RtAudioManager() {
 
     rtOpts.numberOfBuffers = RtAudio_n_internal_buffers_c;
     rtOpts.streamName = "Dynacoe-RtAudioStream";
-    rtOpts.flags = RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_ALSA_USE_DEFAULT;
+
 
     
     sampleRate = 44100;
@@ -211,8 +211,11 @@ RtAudioManager::RtAudioManager() {
 
     #ifdef DC_BACKENDS_RTAUDIO_WIN32
         rtAudio = new RtAudio(RtAudio::WINDOWS_DS);
+        rtOpts.flags = RTAUDIO_SCHEDULE_REALTIME;
+        rtOpts.priority = 0;
     #elif defined(DC_BACKENDS_RTAUDIO_ALSA)
         rtAudio = new RtAudio(RtAudio::LINUX_ALSA);
+        rtOpts.flags = RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_ALSA_USE_DEFAULT;
     #elif defined(DC_BACKENDS_RTAUDIO_OSS)
         rtAudio = new RtAudio(RtAudio::LINUX_OSS);
     #endif
