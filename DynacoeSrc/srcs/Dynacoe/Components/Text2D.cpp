@@ -726,7 +726,7 @@ void Text2D::SetSpacingMode(SpacingMode m) {
 
 
     modeInst =    fontCache.Get(fontSize, (FT_Face*)fontFace, fontSpacing);
-
+    modeInst->SetMode(fontSpacing);
     ReRender();
 }
 

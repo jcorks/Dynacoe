@@ -215,7 +215,9 @@ RtAudioManager::RtAudioManager() {
         rtOpts.priority = 0;
     #elif defined(DC_BACKENDS_RTAUDIO_ALSA)
         rtAudio = new RtAudio(RtAudio::LINUX_ALSA);
-        rtOpts.flags = RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_ALSA_USE_DEFAULT;
+        rtOpts.flags = RTAUDIO_SCHEDULE_REALTIME | RTAUDIO_ALSA_USE_DEFAULT;
+        rtOpts.priority = 0;
+
     #elif defined(DC_BACKENDS_RTAUDIO_OSS)
         rtAudio = new RtAudio(RtAudio::LINUX_OSS);
     #endif

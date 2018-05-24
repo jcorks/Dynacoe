@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/Time.h>
 #include <Dynacoe/AudioBlock.h>
 #include <Dynacoe/Dynacoe.h>
+#include <Dynacoe/Components/Mutator.h>
 
 #include <set>
 #include <cassert>
@@ -207,6 +208,7 @@ struct AudioEffectChannel {
         volume = 1.f;
         panning = .5f;
         keepAwake = false;
+        limiterScale = 1.f;
     };
 
     void SetSize(uint32_t bytes) {
@@ -226,6 +228,7 @@ struct AudioEffectChannel {
     uint32_t sizeBytes;
     float volume;
     float panning;
+    float limiterScale;
     bool keepAwake;
 
     // TODO:
@@ -294,7 +297,6 @@ class AudioProcessor {
 
 
     AudioManager * manager;
-
     AudioProcessor(AudioProcessorIO * c) {
         instance = this;
         manager = (AudioManager *) Backend::CreateDefaultAudioManager();
@@ -303,7 +305,7 @@ class AudioProcessor {
         outputBufferSize = 1024*80; //512*2; //1024*7;
         outputBuffer = (float*)new char[outputBufferSize];
         memset(outputBuffer, 0, outputBufferSize);
-
+        limiterScale = 1.f;
         client = c;
 
         // ALL channels
@@ -438,7 +440,7 @@ class AudioProcessor {
     float * outputBuffer;
     uint32_t outputBufferSize;
     uint32_t samplesThisIteration;
-
+    float limiterScale;
 
 
     AudioProcessorIO io;
@@ -486,8 +488,9 @@ class AudioProcessor {
         // If there are no stream objects to process, just get OUTTA HERE
         int total = io.current.GetCount();
         //set<AudioEffectChannel *> effectChannels;
-        uint8_t channelVisited[CHANNEL_COUNT];
-        memset(channelVisited, 0, CHANNEL_COUNT);
+        uint16_t channelVisited[CHANNEL_COUNT];
+        memset(channelVisited, 0, CHANNEL_COUNT*2);
+
 
 
         // Each pass, up to outputBufferSize samples are processed
@@ -528,9 +531,8 @@ class AudioProcessor {
             // if not written to set this pass, zero it out.
             if (!channelVisited[streamData->client.channel]) {
                 effectBuffer->Zero();
-                channelVisited[streamData->client.channel] = true;
             }
-
+            channelVisited[streamData->client.channel]++;
 
             // Now we know we have a good sound chunk to work with.
 
@@ -548,8 +550,6 @@ class AudioProcessor {
                 effectBuffer->data[i*2  ] +=  leftPan  * streamData->client.volume * sample->GetSample(i + streamData->processor.sampleIndex).NormalizedL();
                 effectBuffer->data[i*2+1] +=  rightPan * streamData->client.volume * sample->GetSample(i + streamData->processor.sampleIndex).NormalizedR();
 
-                assert(i*2*sizeof(float) < effectBuffer->sizeBytes);
-                assert((i*2+1)*sizeof(float) < effectBuffer->sizeBytes);
                 samplesProcessed++;
 
 
@@ -572,15 +572,46 @@ class AudioProcessor {
             float leftPan  = panning_to_multiplier_l(buffer->panning);
             float rightPan = panning_to_multiplier_r(buffer->panning);
 
-            // then, apply all channel effects sequentially.
-            for(uint32_t i = 0; i < buffer->effectChain.GetCount(); ++i) {
-                (*buffer->effectChain.Get(i))(buffer->data, buffer->sizeBytes / (sizeof(float)*2));
+            // scan for limiting needs
+            float highest = 0;
+            for(uint32_t n = 0; n < numManagerSamples; ++n) {                
+                buffer->data[n] = ((i%2==0 ? leftPan : rightPan) * buffer->volume * buffer->data[n]);
+                if (fabs(buffer->data[n]) > highest)
+                    highest = fabs(buffer->data[n]);
+            }
+            
+            // current limiter is not enough
+            if ((highest * buffer->limiterScale) > 1.f) {
+                buffer->limiterScale = 1 / highest;
+            }
+            
+            // aply limiter (and phase it out)
+            if (buffer->limiterScale < 1.f) {
+                for(uint32_t n = 0; n < numManagerSamples; ++n) {                
+                    buffer->data[n] *= buffer->limiterScale;
+                }    
+                
+                buffer->limiterScale = Mutator::StepTowards(buffer->limiterScale, 1.f, .1);
+                //printf("[%d]LIMITER: %f\n", i, buffer->limiterScale);
             }
 
-            // and xfer to main mix
-            for(uint32_t i = 0; i < numManagerSamples; ++i) {
-                outputBuffer[i] += (i%2==0 ? leftPan : rightPan) * buffer->volume * buffer->data[i];
+
+
+
+            // then, apply all channel effects sequentially.
+            for(uint32_t n = 0; n < buffer->effectChain.GetCount(); ++i) {
+                (*buffer->effectChain.Get(n))(buffer->data, buffer->sizeBytes / (sizeof(float)*2));
             }
+            
+            
+
+            // and xfer to main mix
+            for(uint32_t n = 0; n < numManagerSamples; ++n) {
+                outputBuffer[n] += buffer->data[n];
+            }
+
+            
+
         }
 
 
@@ -590,7 +621,7 @@ class AudioProcessor {
 
         //printf("Waiting on %f KB of audio\n", (outputBufferSamplesLeft/ (float) 1024));
     }
-
+    
     void ProcessMasterChannel() {
 
         // Phase II: Master channel handling
@@ -600,9 +631,25 @@ class AudioProcessor {
         // HERE
 
 
-        // and perform clipping
-        for(uint32_t i = 0; i < samplesThisIteration/2; ++i) {
-            Math::Clamp(outputBuffer[i], -1.f, 1.f);
+        // and perform limiting
+        float highest = 0;
+        for(uint32_t i = 0; i < samplesThisIteration; ++i) {
+            if (fabs(outputBuffer[i]) > highest)
+                highest = fabs(outputBuffer[i]);
+        }
+        
+        // needs better limiting
+        if (highest * limiterScale > 1.f) {
+            limiterScale = 1/highest;
+        }
+
+        // limit if needed
+        if (limiterScale < 1.f) {
+            for(uint32_t i = 0; i < samplesThisIteration; ++i) {
+                outputBuffer[i] *= limiterScale;
+            }
+            limiterScale = Mutator::StepTowards(limiterScale, 1.f, .1);
+            //printf("MASTER_LIMITER: %f\n", limiterScale);
         }
     }
 
@@ -735,7 +782,7 @@ class AudioClient {
         AudioBlock * target = &Assets::Get<AudioBlock>(i);
 
         AudioStreamObject * object = new AudioStreamObject(target);
-        object->client.channel;
+        object->client.channel = channel %CHANNEL_COUNT;
         object->client.volume = volume;
         object->client.panning = panning;
 
