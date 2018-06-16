@@ -368,6 +368,19 @@ int Input::GetLastUnicode() {
     return out;
 }
 
+static std::vector<UnicodeListener*> unicodeListeners;
+void Input::AddUnicodeListener(UnicodeListener * listener) {
+    unicodeListeners.push_back(listener);
+}
+
+void Input::RemoveUnicodeListener(UnicodeListener * listener) {
+    for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+        if (unicodeListeners[i] == listener) {
+            unicodeListeners.erase(unicodeListeners.begin()+i);
+            return;
+        }
+    }
+}
 
 
 
@@ -563,7 +576,7 @@ bool Input::IsShiftMod() {
 void Input::getUnicode() {
     // Go through a - z
     InputDevice * kb = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
-
+    lastUnicode = 0;
     for(int i = (int)Keyboard::Key_a; i < (int)Keyboard::Key_z + 1; ++i) {
         if (Input::IsPressed((Keyboard)i)) {
             lastUnicode = i - (int)Keyboard::Key_a + 'a';
@@ -622,7 +635,11 @@ void Input::getUnicode() {
     if (Input::IsPressed(Keyboard::Key_enter)) lastUnicode = '\n';
     if (Input::IsPressed(Keyboard::Key_backspace)) lastUnicode = '\b';
     if (Input::IsPressed(Keyboard::Key_space)) lastUnicode = ' ';
-
+    if (lastUnicode) {
+        for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+            unicodeListeners[i]->OnNewUnicode(lastUnicode);
+        }
+    }
 }
 
 InputManager * Input::GetManager() {

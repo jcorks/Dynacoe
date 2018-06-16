@@ -52,13 +52,18 @@ Entity::ID Model::Create() {
 }
 
 Model::~Model() {
+    Clear();
+    
+}
+
+void Model::Clear() {
     for(uint32_t i = 0; i < meshes.size(); ++i) {
         delete meshes[i];
         delete materials[i];
     }
-    
+    meshes.clear();
+    materials.clear();
 }
-
 
 void Model::AddSection() {
     Mesh * newM = new Mesh();

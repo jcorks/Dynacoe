@@ -68,6 +68,15 @@ class ButtonListener {
     virtual void OnRelease(){};
 };
 
+/// \brief Callbacck functor for unicode values from a user's keyboard.
+///
+class UnicodeListener {
+  public:    
+    /// \brief An incoming unicode value.
+    ///
+    virtual void OnNewUnicode(int unicodeValue){};
+};
+
 /// \brief Singleton class for querying input devices
 ///
 class Input : public Module {
@@ -101,6 +110,9 @@ class Input : public Module {
     /// Once this is called, it will return 0 unless another
     /// unicode key is pressed on the keyboard input
     static int GetLastUnicode();
+
+    static void AddUnicodeListener(UnicodeListener *);
+    static void RemoveUnicodeListener(UnicodeListener *);
 
     /// \name  IsHeld
     /// Returns whether or not the input is currently being held.

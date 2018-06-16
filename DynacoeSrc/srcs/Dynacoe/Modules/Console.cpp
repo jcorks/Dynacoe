@@ -223,6 +223,14 @@ class InputRepeater  {
     int accumulator;
 };
 
+class ConsoleInputStream;
+class ConsoleUnicodeListener : public UnicodeListener {
+  public:
+    ConsoleUnicodeListener(ConsoleInputStream *);
+    void OnNewUnicode(int);
+  private:
+    ConsoleInputStream * src;
+};
 class ConsoleInputStream : public Entity {
   public:
       
@@ -246,6 +254,7 @@ class ConsoleInputStream : public Entity {
         AddComponent(&bg);
         AddComponent(&inputStringAspect);
         AddComponent(&cursorStringAspect);
+        Input::AddUnicodeListener(new ConsoleUnicodeListener(this));
 
         up.key = Keyboard::Key_up;
         down.key = Keyboard::Key_down;
@@ -253,6 +262,26 @@ class ConsoleInputStream : public Entity {
         right.key = Keyboard::Key_right;
         back.key = Keyboard::Key_backspace;
 
+    }
+    
+    void UnicodeAddRequest(int ch) {
+        if (!Console::IsVisible()) return;
+        
+        
+        int character = ch;
+        if (character == '\n') {
+        } else if (character == '\b') {
+        } else {
+            //saturation = 0.f;
+            inputString =
+                inputString.substr(0, cursorIter) +
+                (char)character +
+                inputString.substr(cursorIter, std::string::npos);
+
+            cursorIter++;
+        }
+        inputStringAspect.text = Chain() << "$  " << inputString;
+        //changed = true;
     }
 
     void OnStep() {
@@ -263,7 +292,7 @@ class ConsoleInputStream : public Entity {
         back.Update();
 
         
-        int character;
+        
         bool changed = false;
         static float saturation = 0.f;
         cursorStringAspect.color = (Color(255, 255, 255, 255*(.5*(1+sin(saturation)))));
@@ -317,21 +346,7 @@ class ConsoleInputStream : public Entity {
 
 
 
-        // control input addition and deletion
-        if (character = Input::GetLastUnicode()) {
-            if (character == '\n') {
-            } else if (character == '\b') {
-            } else {
-                saturation = 0.f;
-                inputString =
-                    inputString.substr(0, cursorIter) +
-                    (char)character +
-                    inputString.substr(cursorIter, std::string::npos);
 
-                cursorIter++;
-            }
-            changed = true;
-        }
         if (back.Query()) {
             if (cursorIter > 0) {
                 saturation = 0.f;
@@ -383,6 +398,14 @@ class ConsoleInputStream : public Entity {
     std::vector<std::string> history;
     int historyIter;
 };
+
+ConsoleUnicodeListener::ConsoleUnicodeListener(ConsoleInputStream * src_) {
+    src = src_;
+}
+
+void ConsoleUnicodeListener::OnNewUnicode(int un) {
+    src->UnicodeAddRequest(un);
+}
 
 
 

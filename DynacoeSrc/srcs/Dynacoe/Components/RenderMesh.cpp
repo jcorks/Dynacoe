@@ -204,8 +204,10 @@ void RenderMesh::RenderSelf(Renderer * renderer) {
     for(uint32_t i = 0; i < meshes.size(); ++i) {        
         Mesh * m = meshes[i];
         for(uint32_t n = 0; n < m->NumObjects(); ++n) {
-            m->PopulateState(&state, n);
-            renderer->RenderStatic(&state);
+            if (m->NumVertices() && m->NumObjects()) {
+                m->PopulateState(&state, n);
+                renderer->RenderStatic(&state);
+            }
         }
     }
     
