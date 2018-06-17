@@ -85,7 +85,22 @@ class Object2D : public Component {
 
 
  
+        class Collider {
+          public:
 
+            void FromRectangle(const Dynacoe::Vector & p0, const Dynacoe::Vector & p1,
+                               const Dynacoe::Vector & p2, const Dynacoe::Vector & p3);
+                               
+            void FromPolygon(const std::vector<Dynacoe::Vector> &);
+            
+            void FromCircle(float radius, uint32_t numPoints=8);
+            
+            
+            const std::vector<Dynacoe::Vector> & GetSmear(const Dynacoe::Vector & before, const Dynacoe::Vector & after);
+            const std::vector<Dynacoe::Vector> & GetBoundingBox();
+            
+            
+        }
 
 
         Object2D();
