@@ -51,9 +51,13 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 using namespace std;
 
+
+
 //void Object2D::NullCollision(Entity::ID, Entity::ID) {}
 DynacoeEvent(Object2D::NullCollision) {return false;}
 
+
+/*
 // private class that manages all collisions
 class Dynacoe::CollisionManager : public Entity {
   public:
@@ -241,10 +245,10 @@ class Dynacoe::CollisionManager : public Entity {
 
 CollisionManager *              Object2D::collisionManager;
 
+*/
 
 
-
-
+static CollisionManager * manager = NULL;
    
 
 
@@ -263,7 +267,7 @@ Object2D::Object2D() : Component("Object2D") {
 }
 
 Object2D::~Object2D() {
-    collisionManager->RemoveObject(this);
+    collisionManager->UnregisterObject2D(this);
     for(uint32_t i = 0; i < colliders.size(); ++i) {
         delete colliders[i];
     }
@@ -275,19 +279,12 @@ void Object2D::OnAttach() {
         collisionManager = Entity::Create<CollisionManager>().IdentifyAs<CollisionManager>();
         Engine::AttachManager(collisionManager->GetID());
     }
-    collisionManager->AddObject(this);
+    collisionManager->RegisterObject2D(this);
 }
 
 
 
 void Object2D::OnStep() {
-
-    // per-instance implementation
-    /*
-    runCollisions();
-
-    Update();
-    */
 
 }
 

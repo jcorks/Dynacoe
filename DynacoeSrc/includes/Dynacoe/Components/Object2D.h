@@ -55,52 +55,38 @@ class CollisionManager;
 class Object2D : public Component {
     public:
         
-        /// \brief Defines a collidable region.
-        ///
-        class ContactPoly {
-            public:
-                /// \brief Returns the number of points that make up the polygon.
-                ///
-                int GetNumVectors() const;
-        
-                /// \brief Returns the i'th point.
-                ///
-                Dynacoe::Vector GetVector(int i) const;
-
-                /// \brief Updates the value of the i'th point.
-                ///
-                void SetVector(int, const Dynacoe::Vector &);
-
-                
-                ContactPoly(int i) : numPts(i) {pts = new Dynacoe::Vector[i];}
-                ~ContactPoly() { delete[] pts;}
-
-            private:
-                friend Object2D;
-                friend CollisionManager;
-                Dynacoe::Vector * pts;
-                int numPts;
-
-        };
-
-
+ 
  
         class Collider {
           public:
+            class Line {
+              public:
+                Line(const Dynacoe::Vector & a, const Dynacoe::Vector & b);
+                bool Intersects(const Line & other) const;
+              private:
+                Dynacoe::Vector a;
+                Dynacoe::Vector b;
+            };
 
-            void FromRectangle(const Dynacoe::Vector & p0, const Dynacoe::Vector & p1,
-                               const Dynacoe::Vector & p2, const Dynacoe::Vector & p3);
-                               
-            void FromPolygon(const std::vector<Dynacoe::Vector> &);
+            Collider(const std::vector<Dynacoe::Vector> &);
+            Collider(float radius, uint32_t numPts=8);
+            Collider(const std::vector<const Collider &> &);
             
-            void FromCircle(float radius, uint32_t numPoints=8);
+            void UpdateTransition(const Dynacoe::Vector & before, const Dynacoe::Vector & after);
             
-            
-            const std::vector<Dynacoe::Vector> & GetSmear(const Dynacoe::Vector & before, const Dynacoe::Vector & after);
-            const std::vector<Dynacoe::Vector> & GetBoundingBox();
-            
-            
-        }
+            bool CollidesWith(
+                const Collider & other, 
+                const Dynacoe::Vector & before, 
+                const Dynacoe::Vector & after) const;
+
+          private:
+            const std::vector<Line> & GetSmear();
+
+              
+            std::vector<Line> boundingBox;
+            std::vector<Line> staticPoints;
+            std::vector<Line> smear;
+        };
 
 
         Object2D();
@@ -168,21 +154,16 @@ class Object2D : public Component {
 
 
 
-        /// \brief Adds a collision box relative to the origin of the host Entity.
-        ///
-        ContactPoly & AddContactBox(const Dynacoe::Vector & offset,
-                           int w, int h);
 
 
 
         /// \brief Adds a polygon defined by 2D points in space to act as a collision bound.
         ///
-        ContactPoly & AddContactPolygon(const std::vector<Dynacoe::Vector> &);
+        void SetCollider(const Collider &);
 
 
+        const Collider & GetCollider() const;
 
-        /// \brief Removes the specified contact polygon
-        void ClearAllContacts();
 
         /// \brief  Sets whether or not this collider should detect collisions.
         ///        
@@ -224,8 +205,7 @@ class Object2D : public Component {
         bool willCollide(Object2D * other);
 
         bool collisionActive;
-        //vector<ContactBox> colliders;
-        std::vector<ContactPoly *> colliders;
+        Collider collider;
         static bool isCollided(const ContactPoly * self, const ContactPoly * other,
                         const Dynacoe::Vector & selfOrigin, const Dynacoe::Vector & otherOrigin);
         static bool areIntersected(const Dynacoe::Vector &, const Dynacoe::Vector &,
