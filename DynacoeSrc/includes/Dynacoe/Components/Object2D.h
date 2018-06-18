@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Dynacoe {
 
-class CollisionManager; 
 /// \ingroup Components
 /// \{
 
@@ -61,28 +60,27 @@ class Object2D : public Component {
           public:
             class Line {
               public:
+                Line(){};
                 Line(const Dynacoe::Vector & a, const Dynacoe::Vector & b);
                 bool Intersects(const Line & other) const;
-              private:
                 Dynacoe::Vector a;
                 Dynacoe::Vector b;
             };
-
+            Collider(){};
             Collider(const std::vector<Dynacoe::Vector> &);
             Collider(float radius, uint32_t numPts=8);
-            Collider(const std::vector<const Collider &> &);
+            Collider(const std::vector<Collider> &);
             
             void UpdateTransition(const Dynacoe::Vector & before, const Dynacoe::Vector & after);
             
-            bool CollidesWith(
-                const Collider & other, 
-                const Dynacoe::Vector & before, 
-                const Dynacoe::Vector & after) const;
+            bool CollidesWith(const Collider & otherd) const;
+
+
+            Entity::ID lastCollided;
 
           private:
-            const std::vector<Line> & GetSmear();
-
-              
+            void SetFromPoints(const std::vector<Dynacoe::Vector> &);
+  
             std::vector<Line> boundingBox;
             std::vector<Line> staticPoints;
             std::vector<Line> smear;
@@ -94,7 +92,6 @@ class Object2D : public Component {
     
         void OnAttach();
 
-        void OnStep();
 
         /// \brief Compounds a velocity vector with the current velocity
         ///
@@ -154,63 +151,21 @@ class Object2D : public Component {
 
 
 
+        Collider collider;
 
-
-
-        /// \brief Adds a polygon defined by 2D points in space to act as a collision bound.
-        ///
-        void SetCollider(const Collider &);
-
-
-        const Collider & GetCollider() const;
-
-
-        /// \brief  Sets whether or not this collider should detect collisions.
-        ///        
-        /// If inactive, other active colliders can still detect this collider.
-        /// In general, setting an Entity to be collision-inactve makes sense
-        /// for permanently stationary objects.
-        void SeekCollisions(bool doIt) { collisionActive = doIt; }
-
-
-
-        /// \brief Returns true if the given line segment defined by two points
-        /// instersects any point in any contact polygons.
-        ///
-        bool IsLineCollided(const Dynacoe::Vector &,
-                            const Dynacoe::Vector &);
 
         static void DrawColliders(const Color & c);
 
         std::string GetInfo();
 
+        void Update();   
     private:
         friend class CollisionManager;
-
-        static DynacoeEvent(NullCollision);
-        static CollisionManager * collisionManager;
         double speedX;
         double speedY;
         double frictionX;
         double frictionY;
-        float greatestColliderSpan;
-
-
-        void runCollisions();
-        void Update();
-        
-
-
-
-        bool willCollide(Object2D * other);
-
-        bool collisionActive;
-        Collider collider;
-        static bool isCollided(const ContactPoly * self, const ContactPoly * other,
-                        const Dynacoe::Vector & selfOrigin, const Dynacoe::Vector & otherOrigin);
-        static bool areIntersected(const Dynacoe::Vector &, const Dynacoe::Vector &,
-                            const Dynacoe::Vector &, const Dynacoe::Vector &);
-        bool isCollidedState;
+     
 
 };
 /// \}

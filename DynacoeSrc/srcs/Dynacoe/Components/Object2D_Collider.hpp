@@ -21,7 +21,42 @@ bool Object2D::Collider::Line::Intersects(const Line & other) const {
 
 
 
-Object2D::Collider::Collider(const std:vector<Dynacoe::Vector> & pts) {
+
+
+Object2D::Collider::Collider(const std::vector<Dynacoe::Vector> & pts) {
+    SetFromPoints(pts);
+}
+
+
+Object2D::Collider::Collider(float radius, uint32_t numPts) {
+    std::vector<Dynacoe::Vector> inpts(numPts);
+    double RADIAN_MAX = M_PI*2;
+    for(uint32_t i = 0; i < numPts; ++i) {
+        inpts[i].x = cos(i / RADIAN_MAX) * radius;
+        inpts[i].y = sin(i / RADIAN_MAX) * radius;
+    }
+    
+    SetFromPoints(inpts);
+}
+
+
+Object2D::Collider::Collider(const std::vector<Object2D::Collider> & colliders) {
+    std::vector<Dynacoe::Vector> pts;    
+    for(uint32_t i = 0; i < colliders.size(); ++i) {
+        uint32_t localSize = colliders[i].staticPoints.size();
+        if (!localSize) continue;
+
+        for(uint32_t n = 0; n < localSize; ++n) {
+            pts.push_back(colliders[i].staticPoints[n].a);
+        }
+        pts.push_back(colliders[i].staticPoints[0].a);
+    }
+    
+    SetFromPoints(pts);
+}
+
+
+void Object2D::Collider::SetFromPoints(const std::vector<Dynacoe::Vector> & pts) {
     if (!pts.size() || pts.size() == 1) return;
 
     for(uint32_t i = 0; i < pts.size()-1; ++i) {
@@ -54,42 +89,7 @@ Object2D::Collider::Collider(const std:vector<Dynacoe::Vector> & pts) {
 
 
 
-
-Object2D::Collider::Collider(float radius, uint32_t numPts) {
-    std::vector<Dynacoe::Vector> pts(numPts);
-    double RADIAN_MAX = M_PI*2;
-    for(uint32_t i = 0; i < numPts; ++i) {
-        pts[i].x = cos(i / RADIAN_MAX) * radius;
-        pts[i].y = sin(i / RADIAN_MAX) * radius;
-    }
-    
-    Collider(pts);
-}
-
-
-Object2D::Collider::Collider(const std:vector<const Object2D::Collider &> & colliders) {
-    std::vector<Dynacoe::Vector> pts;
-    uint32_t totalSize = 0;
-    for(uint32_t i = colliders.size(); ++i) {
-        totalSize += colliders[i].size();
-    }
-    pts.resize(totalSize);
-    
-    totalSize = 0;
-    for(uint32_t i = colliders.size(); ++i) {
-        memcpy(
-            &pts[totalSize], 
-            &colliders.staticPoints[0], 
-            colliders.staticPoints.size()*sizeof(Collider::Line)
-        );
-        totalSize += colliders[i].size();
-    }
-    
-    Collider(pts);
-}
-
-
-
+/*
 std::vector<Object2D::Collider::Line> Object2D::Collider::GetSmearBoundingBox(const Dynacoe::Vector & before, const Dynacoe::Vector & after) const {
     float minX = before.x < after.x ? boundBox[0].x + before.x : boundBox[0].x + after.x;
     float maxX = before.x > after.x ? boundBox[1].x + before.x : boundBox[1].x + after.x;
@@ -102,37 +102,35 @@ std::vector<Object2D::Collider::Line> Object2D::Collider::GetSmearBoundingBox(co
         {{minX, maxY}, {minX, minY}}        
     };
 }
+*/
 
-std::vector<Object2D::Collider::Line> Object2D::Collider::UpdateTransition(const Dynacoe::Vector & before, const Dynacoe::Vector & after) {
-    out.resize(staticPoints.size()*3);
+void Object2D::Collider::UpdateTransition(const Dynacoe::Vector & before, const Dynacoe::Vector & after) {
+    smear.resize(staticPoints.size()*3);
     for(uint32_t i = 0; i < staticPoints.size(); ++i) {
-        out.push_back({
+        smear.push_back({
             staticPoints[i].a + before,
             staticPoints[i].b + before
         });
 
-        out.push_back({
+        smear.push_back({
             staticPoints[i].a + after,
             staticPoints[i].b + after
         });
         
-        out.push_back({
+        smear.push_back({
             staticPoints[i].a + before,
             staticPoints[i].a + after,
-        })
+        });
     }
     
-    return out;
 }
 
 
-bool Collider::CollidesWith(const Collider & other, const Dynacoe::Vector & before, const Dynacoe::Vector & after) const {
-    auto thisSmear  =       GetSmear(before, after);
-    auto otherSmear = other.GetSmear(before, after);
+bool Object2D::Collider::CollidesWith(const Object2D::Collider & other) const {
     
-    for(uint32_t i = 0; i < thisSmear.size(); ++i) {
-        for(uint32_t n = 0; n < otherSmear.size(); ++i) {
-            if (thisSmear[i].Intersects(otherSmear[n])) {
+    for(uint32_t i = 0; i < smear.size(); ++i) {
+        for(uint32_t n = 0; n < other.smear.size(); ++n) {
+            if (smear[i].Intersects(other.smear[n])) {
                 return true;
             }          
         }

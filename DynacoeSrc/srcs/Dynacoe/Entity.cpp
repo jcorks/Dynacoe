@@ -492,6 +492,7 @@ Entity::ID::ID(uint64_t data) {
 }
 
 const std::string & Entity::ID::String() const {
+    if (!id) return "";
     EntityIDTable * table = (EntityIDTable*)id;
     return table->ToString();
 }
