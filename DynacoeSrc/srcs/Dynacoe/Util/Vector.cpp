@@ -201,9 +201,11 @@ Dynacoe::Vector Dynacoe::Vector::operator+(const Dynacoe::Vector & in) const {
 	return out;
 }
 Dynacoe::Vector Dynacoe::Vector::operator-(const Dynacoe::Vector & in) const {
-	Vector out = (*this);
-	out -= in;
-	return out;
+	return {
+		x - in.x,
+		y - in.y,
+		z - in.z
+	};
 }
 
 

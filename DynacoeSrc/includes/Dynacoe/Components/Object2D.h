@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Component.h>
 #include <Dynacoe/Color.h>
-
+#include <Dynacoe/Util/BoundingBox.h>
 
 
 
@@ -71,19 +71,29 @@ class Object2D : public Component {
             Collider(float radius, uint32_t numPts=8);
             Collider(const std::vector<Collider> &);
             
-            void UpdateTransition(const Dynacoe::Vector & before, const Dynacoe::Vector & after);
+            bool WillContainPoint(const Dynacoe::Vector & other) const;
+            
+            void UpdateTransition(const Dynacoe::Vector & after);
             
             bool CollidesWith(const Collider & otherd) const;
 
 
-            Entity::ID lastCollided;
 
+            Entity::ID lastCollided;
+            
+            const BoundingBox & GetMomentBounds() {return smearBounds;}
           private:
             void SetFromPoints(const std::vector<Dynacoe::Vector> &);
   
             std::vector<Line> boundingBox;
             std::vector<Line> staticPoints;
             std::vector<Line> smear;
+
+            BoundingBox smearBounds;
+            Vector oldPosition;
+            bool stationary;
+            bool isSet;
+
         };
 
 
