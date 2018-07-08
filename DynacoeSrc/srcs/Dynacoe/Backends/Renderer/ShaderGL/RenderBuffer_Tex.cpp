@@ -96,9 +96,9 @@ void RenderBuffer_Tex::UpdateData(const float * dataSrc, int offset, int numElts
     stateChanged = true;
 }
 
-void RenderBuffer_Tex::GetData(float * outputData, int offset, int dataSize) {
+void RenderBuffer_Tex::GetData(float * outputData, int offset, int numElts) {
     if (!outputData || !data) return;
-    memcpy(outputData, data+offset, sizeof(float)*std::min(size ,dataSize));
+    memcpy(outputData, data+offset, sizeof(float)*std::min(size, numElts));
 }
 
 float * RenderBuffer_Tex::GetData() {

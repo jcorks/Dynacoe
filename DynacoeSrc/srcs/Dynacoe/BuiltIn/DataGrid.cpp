@@ -126,8 +126,8 @@ void Dynacoe::DataGrid::AddColumn(const std::string & title, int width, const Co
         visibleGUI[i]->DefineRegion(spanWidth, lineHeight);
 
         next = new Text2D;
-        next->node.local.position.y = (i)*(lineHeight);
-        next->node.local.position.x = c.x;
+        next->node.Position().y = (i)*(lineHeight);
+        next->node.Position().x = c.x;
         next->SetTextColor(color);
         AddComponent(next);
         visibleText[i].push_back(next);
@@ -238,8 +238,8 @@ void Dynacoe::DataGrid::RefreshView() {
         int pad = (height - scrollHeight) / 2;
         float position = viewIndex / (float) unseenRows;
         Vector scrollDim = {(float)scroll_width_c, (float) (scrollHeight < 3 ? 3 : scrollHeight)};
-        scroll.node.local.position.x = spanWidth-scroll_width_c;
-        scroll.node.local.position.y = (position * (pad*2));
+        scroll.node.Position().x = spanWidth-scroll_width_c;
+        scroll.node.Position().y = (position * (pad*2));
         scroll.FormRectangle(scrollDim.x, scrollDim.y);
         //scroll.color.a = 1.f;
 
@@ -407,11 +407,11 @@ void Dynacoe::DataGrid::SetRowsVisible(uint32_t rows) {
         Shape2D * rowBG = new Shape2D();
         rowBG->FormRectangle(spanWidth, lineHeight);
         rowBG->color = ((rowCount+1)%2) ? real_backgroundOddColor : real_backgroundEvenColor;
-        rowBG->node.local.position = Vector(0, visibleRows.size()*lineHeight);
+        rowBG->node.Position() = Vector(0, visibleRows.size()*lineHeight);
 
         GUI * gui = new GUI();
         gui->DefineRegion(spanWidth, lineHeight);
-        gui->node.local.position = rowBG->node.local.position;
+        gui->node.Position() = rowBG->node.GetPosition();
         // skip for title row
         if (visibleRows.size()) {
             gui->InstallHandler("on-click", master_click);
@@ -429,8 +429,8 @@ void Dynacoe::DataGrid::SetRowsVisible(uint32_t rows) {
         visibleText.push_back(std::vector<Text2D *>());
         for(uint32_t i = 0; i < columns.size(); ++i) {
             next = new Text2D;
-            next->node.local.position.y = (visibleText.size()-1)*(lineHeight);
-            next->node.local.position.x = columns[i].x;
+            next->node.Position().y = (visibleText.size()-1)*(lineHeight);
+            next->node.Position().x = columns[i].x;
             next->SetTextColor(columns[i].color);
             AddComponent(next);
             visibleText[visibleText.size()-1].push_back(next);

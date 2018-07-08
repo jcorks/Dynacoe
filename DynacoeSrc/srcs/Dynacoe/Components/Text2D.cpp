@@ -298,7 +298,7 @@ class Dynacoe::TextState {
         const char * str, uint32_t strLen, int size, FT_Face * id, // in
         //float r, float g, float b, float a,
         const std::vector<Color> & colorStorage, const std::vector<uint32_t> & colorIndices, 
-        std::vector<Renderer::DynamicVertex> & vertices, 
+        std::vector<Renderer::Vertex2D> & vertices, 
         std::vector<Vector> & pos,                // out
         Vector & dimensions
     ) {
@@ -337,12 +337,12 @@ class Dynacoe::TextState {
 
 
         // gen vertices for each character
-        Renderer::DynamicVertex * vtex;
+        Renderer::Vertex2D * vtex;
         int xIter = 0;
         int yIter = 0;
 
-        static Renderer::DynamicVertex empty = Renderer::DynamicVertex(
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        static Renderer::Vertex2D empty = Renderer::Vertex2D(
+            0, 0, 0, 0, 0, 0, 0, 0, 0
         );
 
         int colorIndex = 0;
@@ -379,29 +379,29 @@ class Dynacoe::TextState {
 
 
                 // topleft
-                vertices.push_back(Renderer::DynamicVertex(
-                    info.xOffset+xIter, info.yOffset+yIter, 0,
+                vertices.push_back(Renderer::Vertex2D(
+                    info.xOffset+xIter, info.yOffset+yIter,
                     r, g, b, a,
                     info.tex, 0, 0
                 ));
                 
-                vertices.push_back(Renderer::DynamicVertex(
-                    info.xOffset+xIter+info.width, info.yOffset+yIter, 0,
+                vertices.push_back(Renderer::Vertex2D(
+                    info.xOffset+xIter+info.width, info.yOffset+yIter,
                     r, g, b, a,
                     info.tex, 1.f, 0.f
                 ));
                                 
                 
-                vertices.push_back(Renderer::DynamicVertex(
-                    info.xOffset+xIter+info.width, info.yOffset+yIter+info.height, 0,
+                vertices.push_back(Renderer::Vertex2D(
+                    info.xOffset+xIter+info.width, info.yOffset+yIter+info.height,
                     r, g, b, a,
                     info.tex, 1.f, 1.f
                 ));
                 
                 vertices.push_back(vertices[vertices.size() - 1]);
                 
-                vertices.push_back(Renderer::DynamicVertex(
-                    info.xOffset+xIter, info.yOffset+yIter+info.height, 0,
+                vertices.push_back(Renderer::Vertex2D(
+                    info.xOffset+xIter, info.yOffset+yIter+info.height, 
                     r, g, b, a,
                     info.tex, 0.f, 1.f
                 ));
@@ -807,7 +807,7 @@ void Text2D::ReRender() {
             colorTable[i] = defaultC;
     }
     */
-    std::vector<Renderer::DynamicVertex> vertices;
+    std::vector<Renderer::Vertex2D> vertices;
     modeInst->Render(
         srcText.c_str(), srcText.size(), fontSize, (FT_Face*)fontFace,
         colorStorage, colorIndex,

@@ -152,20 +152,20 @@ class EParticle : public Entity {
 
 
 
-            node.local.position = {x, y};
-            node.local.rotation.z = (rotation);
+            node.Position() = {x, y};
+            node.Rotation().z = (rotation);
             shape.color = Color(red, green, blue, alpha);
             //imm.SetTranslucent(true);
             if (!img.Valid()) {
                 shape.FormRectangle(125 * xScale * multiScale,
                                           125 * yScale * multiScale);
-                shape.node.local.position = -Vector(125 * xScale * multiScale,
+                shape.node.Position() = -Vector(125 * xScale * multiScale,
                                           125 * yScale * multiScale)/2.f;
 
 
             } else {
-                shape.node.local.position = -(center/2);
-                node.local.scale = Vector(xScale * multiScale, yScale * multiScale, 1.f);
+                shape.node.Position() = -(center/2);
+                node.Scale() = Vector(xScale * multiScale, yScale * multiScale, 1.f);
                 shape.FormImageFrame(
                     img, frame
                 );
@@ -248,8 +248,7 @@ void ParticleEmitter2D::OnDraw() {
     drawBuffer->GetDrawingMode(&p, &d, &a);
 
     // dump all currently queued drawing operations
-    drawBuffer->RenderDynamicQueue();
-    drawBuffer->ClearDynamicQueue();
+    Graphics::Flush2D();
 
     drawBuffer->SetDrawingMode(Renderer::Polygon::Triangle,
                                Renderer::Dimension::D_2D,
@@ -281,8 +280,7 @@ void ParticleEmitter2D::OnDraw() {
         (particleActiveList[i].IdentifyAs<EParticle>())->Draw();
     }
 
-    drawBuffer->RenderDynamicQueue();
-    drawBuffer->ClearDynamicQueue();
+    Graphics::Flush2D();
     drawBuffer->SetDrawingMode(p, d, a);
     drawBuffer->SetTextureFilter(prev);
 
@@ -310,11 +308,13 @@ void ParticleEmitter2D::EmitParticle(AssetID i, int num) {
         Console::Error()<<("[PARTICLE] Couldn't instantiate particle! Emit failed")<< Console::End;
         return;
     }
+    Dynacoe::Vector v = node.GetGlobalTransform().Transform({});
     for(uint32_t n = 0; n < num; ++n) {
         EParticle * temp = instantiateParticle(&Assets::Get<Particle>(i));
 
-        temp->x = node.global.position.x;
-        temp->y = node.global.position.y;
+        temp->x = v.x;
+        temp->y = v.y;
+
         temp->Step();
         particleActiveList.push_back(temp->GetID());
     }

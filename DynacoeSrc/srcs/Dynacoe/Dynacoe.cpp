@@ -243,12 +243,12 @@ int Engine::Startup() {
 
 
     AddModule(new Assets);
+    AddModule(new Graphics);
+    AddModule(new Sound);
     AddModule(new ViewManager);
     AddModule(new Input);
     AddModule(new Debugger);
     AddModule(new Console);
-    AddModule(new Graphics);
-    AddModule(new Sound);
 
 
     quit = false;

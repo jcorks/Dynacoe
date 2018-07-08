@@ -121,6 +121,7 @@ class Shape2D : public Render2D {
     Color realColor;
     float forcedWidth;
     float forcedHeight;
+    float currentTexture;
 
     void SetFrameActive(const Image::Frame & f);
 };

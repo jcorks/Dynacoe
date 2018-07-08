@@ -102,10 +102,10 @@ void FillBar::SetDims(int w, int h) {
     height = h;
 
     if (border) {
-        borderUp->   QueryComponent<Node>()->local.position = {(float)border, 0.f};
-        borderDown-> QueryComponent<Node>()->local.position = {(float)border, (float)height - border};
-        borderLeft-> QueryComponent<Node>()->local.position = {0.f, 0.f};
-        borderRight->QueryComponent<Node>()->local.position = {(float)width - border, 0.f};
+        borderUp->   QueryComponent<Node>()->Position() = {(float)border, 0.f};
+        borderDown-> QueryComponent<Node>()->Position() = {(float)border, (float)height - border};
+        borderLeft-> QueryComponent<Node>()->Position() = {0.f, 0.f};
+        borderRight->QueryComponent<Node>()->Position() = {(float)width - border, 0.f};
 
 
         borderUp->QueryComponent<Shape2D>()->   FormRectangle(width - border*2, border);
@@ -122,7 +122,7 @@ void FillBar::SetDims(int w, int h) {
 
 void FillBar::SetBorder(int px) {
     border = px;
-    empty->QueryComponent<Node>()->local.position = {(float)px, (float)px};
+    empty->QueryComponent<Node>()->Position() = {(float)px, (float)px};
     SetFill(fraction);
     SetDims(width, height);
 }
@@ -164,7 +164,7 @@ void FillBar::Run() {
     if (fraction != realFraction) {
         switch(fill) {
           case FillDirection::Up:
-            full->QueryComponent<Node>()->local.position = (Vector(border, height - border));
+            full->QueryComponent<Node>()->Position() = (Vector(border, height - border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 width-border*2,
                 -((height-border*2)*realFraction)
@@ -172,7 +172,7 @@ void FillBar::Run() {
             break;
         
           case FillDirection::Right:
-            full->QueryComponent<Node>()->local.position = (Vector(border, border));
+            full->QueryComponent<Node>()->Position() = (Vector(border, border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 (width - border*2)*realFraction,
                 height - border*2
@@ -180,7 +180,7 @@ void FillBar::Run() {
             break;
 
           case FillDirection::Down:
-            full->QueryComponent<Node>()->local.position = (Vector(border, border));
+            full->QueryComponent<Node>()->Position() = (Vector(border, border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 width-border*2,
                 ((height-border*2)*realFraction)
@@ -188,7 +188,7 @@ void FillBar::Run() {
             break;
 
           case FillDirection::Left:
-            full->QueryComponent<Node>()->local.position = Vector(width - border, height - border);
+            full->QueryComponent<Node>()->Position() = Vector(width - border, height - border);
             full->QueryComponent<Shape2D>()->FormRectangle(
                 -(width - border*2)*realFraction,
                 -(height - border*2)

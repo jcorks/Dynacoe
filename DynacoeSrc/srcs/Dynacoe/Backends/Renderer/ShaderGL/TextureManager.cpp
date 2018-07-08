@@ -494,6 +494,7 @@ Renderer::TexFilter TextureManager::GetFilter() {
 
 
 void TextureManager::GarbageCollectBang() {
+    return;
     if (garbageBag.empty()) return;
 
     //std::cout << "Attempting to remove " << garbageBag.size() << std::endl;

@@ -51,7 +51,7 @@ Vector Parallaxizer::Shift(const Vector & p) {
 
     float wMax = Graphics::GetRenderCamera().Width();
     float hMax = Graphics::GetRenderCamera().Height();
-    Vector vanishingVector = Graphics::GetCamera2D().node.local.position + Vector(wMax/2, hMax/2);
+    Vector vanishingVector = Graphics::GetCamera2D().node.GetPosition() + Vector(wMax/2, hMax/2);
 
     float influence = 1 - (p.z / maxParallax);
     Math::Clamp(influence, 0.f, 2.f);

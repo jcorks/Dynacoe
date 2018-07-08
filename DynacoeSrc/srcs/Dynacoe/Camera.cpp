@@ -104,17 +104,19 @@ void Camera::SetTarget(const Dynacoe::Vector & pos) {
         */
 
 
-        node.local.rotation = Vector();
-        Vector p = node.GetGlobalTransform().Transform(node.local.position);
+        node.Rotation() = Vector();
+        Vector p = node.GetGlobalTransform().Transform(node.GetPosition());
         TransformMatrix m = Matrix_ViewLookAt(p,
                   pos,
                   Vector(0, 1.f, 0));
-        node.local.rotation.z = m.Transform(Vector(1, 0, 0)).RotationZ();
-        node.local.rotation.y = m.Transform(Vector(0, 0, 1)).RotationY();
-        node.local.rotation.x = m.Transform(Vector(0, 1, 0)).RotationX();
+        node.Rotation() = {
+            m.Transform(Vector(1, 0, 0)).RotationZ(),
+            m.Transform(Vector(0, 0, 1)).RotationY(),
+            m.Transform(Vector(0, 1, 0)).RotationX()
+        };
 
     } else {
-        node.local.position = pos;
+        node.Position() = pos;
     }
 }
 

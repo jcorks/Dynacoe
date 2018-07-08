@@ -69,7 +69,7 @@ class TransformMatrix {
 
     /// \brief Returns the internal representation of the TransformMatrix.
     ///
-    float * GetData();
+    float * GetData() const;
 
 
 
@@ -97,6 +97,8 @@ class TransformMatrix {
     /// \brief Sets the matrix to the identity matrix, removing all transformations.
     ///
     void SetToIdentity();
+    
+
     
   private:
     float data[16];

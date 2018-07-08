@@ -656,7 +656,7 @@ InputManager * Input::GetManager() {
 int MouseXDeviceToWorld2D(int x) {
     if (!ViewManager::Get(focusID)) return 0;
     return
-        Graphics::GetCamera2D().node.local.position.x +
+        Graphics::GetCamera2D().node.GetPosition().x +
         x*(Graphics::GetRenderCamera().Width() / (float)ViewManager::Get(focusID)->Width());
 }
 
@@ -664,6 +664,6 @@ int MouseXDeviceToWorld2D(int x) {
 int MouseYDeviceToWorld2D(int y) {
     if (!ViewManager::Get(focusID)) return 0;
     return
-        Graphics::GetCamera2D().node.local.position.y +
+        Graphics::GetCamera2D().node.GetPosition().y +
         y*(Graphics::GetRenderCamera().Height() / (float)ViewManager::Get(focusID)->Height());
 }

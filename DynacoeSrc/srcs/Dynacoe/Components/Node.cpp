@@ -64,19 +64,20 @@ Node::Node() : Component("Node") {
     parentNode = nullptr;
     overrideParent = nullptr;
     manualChildren = nullptr;
+    reverse = false;
+    scale = {1, 1, 1};
+    InstallEvent("on-update");
 }
 
 
 std::string Node::GetInfo() {
     Chain info;
     info = Chain() << "Local:\n"
-                   << "position :" << local.position << "\n"
-                   << "scale    :" << local.scale << "\n"
-                   << "rotation :" << local.rotation << "\n\n"
+                   << "position :" << GetPosition() << "\n"
+                   << "scale    :" << GetScale() << "\n"
+                   << "rotation :" << GetRotation() << "\n\n"
                    << "Global: \n"
-                   << "position :" << global.position << "\n"
-                   << "scale    :" << global.scale << "\n"
-                   << "rotation :" << global.rotation << "\n\n";
+                   << "position :" << globalTransform.Transform({}) << "\n\n";
 
     return info;
 
@@ -108,12 +109,10 @@ Node::~Node() {
 
 
 
-const uint8_t * Node::Transform::GetState() {
-    return (const uint8_t *)&position;
-}
 
-TransformMatrix Node::Transform::Compute() {
-    TransformMatrix localTransform;
+
+void Node::ComputeLocal() {
+    localTransform.SetToIdentity();
 
 
     if (position.x != 0.f ||
@@ -144,7 +143,8 @@ TransformMatrix Node::Transform::Compute() {
 
 
     }
-    return localTransform;
+    localTransformValid = true;
+
 }
 
 
@@ -169,7 +169,6 @@ void Node::updateTransform() {
 
 
     // check local transform based on user-given public attribute
-    localTransformValid = transformLastState == local;
 
 
     if (localTransformValid && parentTransformValid) {
@@ -178,10 +177,9 @@ void Node::updateTransform() {
 
 
 
+
     if (!localTransformValid) {
-        transformLastState = local;
-        localTransformValid = true;
-        localTransform = local.Compute();
+        ComputeLocal();
     }
 
 
@@ -197,8 +195,7 @@ void Node::updateTransform() {
 
     // since one of them changed, we need to update the global transform
     if (parentNode) {
-        TransformMatrix parent = parentNode->globalTransform;
-        globalTransform = parent * localTransform;
+        globalTransform = parentNode->globalTransform * localTransform;
     } else {
         globalTransform = localTransform;
     }
@@ -206,24 +203,7 @@ void Node::updateTransform() {
 
 
 
-    global.position = globalTransform.Transform({0, 0, 0});
-
-    Vector rotationBaseZ = Vector(1, 0, 0);
-
-    rotationBaseZ = globalTransform.Transform(rotationBaseZ);
-    Vector rotationBaseY = Vector(0, 0, 1);
-    rotationBaseY = globalTransform.Transform(rotationBaseY);
-
-    Vector rotationBaseX = Vector(0, 1, 0);
-    rotationBaseX = globalTransform.Transform(rotationBaseX);
-
-    rotationBaseX = rotationBaseX - global.position;
-    rotationBaseY = rotationBaseY - global.position;
-    rotationBaseZ = rotationBaseZ - global.position;
-
-    global.rotation.x = rotationBaseX.RotationX();
-    global.rotation.y = rotationBaseY.RotationY();
-    global.rotation.z = rotationBaseZ.RotationZ();
+    
 
 
 
@@ -234,6 +214,7 @@ void Node::updateTransform() {
     // update all children since the parent changed.
     Node * asp;
     //globalTransform.ReverseMajority();
+    
     if (host) {
         auto children = host->GetChildren();
         for(uint32_t i = 0; i < children.size(); ++i) {
@@ -257,6 +238,7 @@ void Node::updateTransform() {
     parentTransformValid = true;
     localTransformValid = true;
     OnTransformUpdate();
+    EmitEvent("on-update");
 
 }
 
@@ -274,6 +256,35 @@ void Node::UpdateParentReference() {
 const TransformMatrix & Node::GetGlobalTransform() {
     return globalTransform;
 }
+
+const Vector & Node::GetRotation() const {
+    return rotation;
+}
+
+const Vector & Node::GetPosition() const {
+    return position;
+}
+
+const Vector & Node::GetScale() const {
+    return scale;
+}
+
+
+Vector & Node::Rotation() {
+    localTransformValid = false;
+    return rotation;
+}
+
+Vector & Node::Position() {
+    localTransformValid = false;
+    return position;
+}
+
+Vector & Node::Scale() {
+    localTransformValid = false;
+    return scale;
+}
+
 
 
 void Node::UpdateModelTransforms(RenderBufferID modelTransform) {

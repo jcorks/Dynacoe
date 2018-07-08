@@ -257,24 +257,24 @@ DebugWindow::DebugWindow() {
     // titlebar
     base = {0, 0};
     AddComponent(&title);
-    title.node.local.position = base + text_offset_c;
+    title.node.Position() = base + text_offset_c;
     titleBarGrab.DefineRegion(default_w_c,
         grab_bar_height_c +
         location_row_height_c +
         info_bar_height_c
     );
-    titleBarGrab.node.local.position = base;
+    titleBarGrab.node.Position() = base;
     titleBarGrab.InstallHandler("on-click", event_drag_begin_window);
     AddComponent(&titleBarGrab);
 
 
     // exit
-    exit.node.local.position = {default_w_c - exit_button_width_c, 0};
+    exit.node.Position() = {default_w_c - exit_button_width_c, 0};
     exit.color = exit_color;
     exit.FormRectangle(exit_button_width_c, grab_bar_height_c);
     AddComponent(&exit);
 
-    exitButton.node.local.position = exit.node.local.position;
+    exitButton.node.Position() = exit.node.GetPosition();
     exitButton.DefineRegion(exit_button_width_c, grab_bar_height_c);
     exitButton.InstallHandler("on-click", event_click_exit);
     exitButton.InstallHandler("on-enter", event_hover_enter_exit);
@@ -283,12 +283,12 @@ DebugWindow::DebugWindow() {
 
 
     // pause
-    pause.node.local.position = {default_w_c -2* exit_button_width_c, 0};
+    pause.node.Position() = {default_w_c -2* exit_button_width_c, 0};
     pause.color = back_color;
     pause.FormRectangle(exit_button_width_c, grab_bar_height_c);
     AddComponent(&pause);
 
-    pauseButton.node.local.position = pause.node.local.position;
+    pauseButton.node.Position() = pause.node.GetPosition();
     pauseButton.DefineRegion(exit_button_width_c, grab_bar_height_c);
     pauseButton.InstallHandler("on-click", event_click_pause);
     pauseButton.InstallHandler("on-enter", event_hover_enter_pause);
@@ -299,37 +299,37 @@ DebugWindow::DebugWindow() {
     // location / link
     base = {0, (float)grab_bar_height_c};
     AddComponent(&linkBar);
-    linkBar.node.local.position = Vector(back_button_width_c, 0) + base;
+    linkBar.node.Position() = Vector(back_button_width_c, 0) + base;
     linkBar.FormRectangle(default_w_c - back_button_width_c, location_row_height_c);
     linkBar.color = location_color;
     AddComponent(&link);
-    link.node.local.position = linkBar.node.local.position + text_offset_c;
+    link.node.Position() = linkBar.node.GetPosition() + text_offset_c;
 
-    linkBackButton.node.local.position = base;
+    linkBackButton.node.Position() = base;
     linkBackButton.DefineRegion(back_button_width_c, location_row_height_c);
     linkBackButton.InstallHandler("on-click", event_click_back);
     linkBackButton.InstallHandler("on-enter", event_hover_enter_back);
     linkBackButton.InstallHandler("on-leave", event_hover_leave_back);
     AddComponent(&linkBackButton);
 
-    linkBack.node.local.position = base;
+    linkBack.node.Position() = base;
     linkBack.color = back_color;
     linkBack.FormRectangle(back_button_width_c, grab_bar_height_c);
     AddComponent(&linkBack);
 
-    linkBackText.node.local.position = base + Vector(6, 6);
+    linkBackText.node.Position() = base + Vector(6, 6);
     linkBackText.text = "<";
     AddComponent(&linkBackText);
 
 
     // status bar
     base.y += grab_bar_height_c;
-    statusBar.node.local.position = base;
+    statusBar.node.Position() = base;
     statusBar.FormRectangle(default_w_c, info_bar_height_c);
     statusBar.color = "#00000056";
     AddComponent(&statusBar);
 
-    status.node.local.position = base;
+    status.node.Position() = base;
     status.SetTextColor(info_text_color);
     status.SetFontSize(9);
     AddComponent(&status);
@@ -339,34 +339,34 @@ DebugWindow::DebugWindow() {
 
     // attached button
     base.y += info_bar_height_c;
-    attached.node.local.position = base;
+    attached.node.Position() = base;
     attached.FormRectangle(default_w_c/2, tab_bar_height_c);
     attached.color = tab_color;
     AddComponent(&attached);
 
-    attachedText.node.local.position = base;
+    attachedText.node.Position() = base;
     attachedText.text = attached_string_c;
     attachedText.SetTextColor(tab_text_color);
     AddComponent(&attachedText);
 
-    attachedButton.node.local.position = base;
+    attachedButton.node.Position() = base;
     attachedButton.DefineRegion(default_w_c/2, tab_bar_height_c);
     attachedButton.InstallHandler("on-click", event_click_attached);
     attachedButton.InstallHandler("on-enter", event_hover_enter_attached);
     attachedButton.InstallHandler("on-leave", event_hover_leave_attached);
     AddComponent(&attachedButton);
 
-    variables.node.local.position = base + Vector(default_w_c/2, 0);
+    variables.node.Position() = base + Vector(default_w_c/2, 0);
     variables.FormRectangle(default_w_c/2, tab_bar_height_c);
     variables.color = tab_color;
     AddComponent(&variables);
 
-    variablesText.node.local.position = base + Vector(default_w_c/2, 0);
+    variablesText.node.Position() = base + Vector(default_w_c/2, 0);
     variablesText.text = variable_string_c;
     variablesText.SetTextColor(tab_text_color);
     AddComponent(&variablesText);
 
-    variablesButton.node.local.position = base + Vector(default_w_c/2, 0);
+    variablesButton.node.Position() = base + Vector(default_w_c/2, 0);
     variablesButton.DefineRegion(default_w_c, tab_bar_height_c);
     variablesButton.InstallHandler("on-click", event_click_variables);
     variablesButton.InstallHandler("on-enter", event_hover_enter_variables);
@@ -374,12 +374,12 @@ DebugWindow::DebugWindow() {
     AddComponent(&variablesButton);
 
 
-    node.local.position = {100, 100};
+    node.Position() = {100, 100};
 
     base.y += tab_bar_height_c;
     attachedTable = CreateChild<DataGrid>();
     attachedTable->clickCallback = event_click_table_attached;
-    attachedTable->node.local.position = base;
+    attachedTable->node.Position() = base;
     attachedTable->titleColor = {.6f, .6f, .6f, 1.f};
     attachedTable->AddColumn("ID",          130);
     attachedTable->AddColumn("Name",        190);
@@ -392,7 +392,7 @@ DebugWindow::DebugWindow() {
     attachedTableGUIcontainer = attachedTable->CreateChild<Entity>();
     for(uint32_t i = 0; i < attachedTable->GetRowsVisible(); ++i) {
         Entity * child = attachedTableGUIcontainer->CreateChild<Entity>();
-        child->node.local.position.y = (i+1)*attachedTable->RowHeight(); // +1 to skip titles
+        child->node.Position().y = (i+1)*attachedTable->RowHeight(); // +1 to skip titles
 
         DataTable * data = child->BindComponent<DataTable>();
         data->Write("index", i);
@@ -402,7 +402,7 @@ DebugWindow::DebugWindow() {
     SetName("DebugWindow");
 
     variablesTable = CreateChild<DataGrid>();
-    variablesTable->node.local.position = base;
+    variablesTable->node.Position() = base;
     variablesTable->titleColor = {.6f, .6f, .6f, 1.f};
     variablesTable->AddColumn("Name",            120, {.7f, .9f, .7f, 1.f});
     variablesTable->AddColumn("Value/State",     280);
@@ -726,7 +726,7 @@ void DebugWindow::OnStep() {
             isBeingDragged = false;
             return;
         }
-        node.local.position += {
+        node.Position() += {
             (float)Input::MouseXDelta(),
             (float)Input::MouseYDelta()
         };
@@ -871,29 +871,29 @@ class ProcessTimeFeedback : public Dynacoe::Entity {
         Entity * board = CreateChild<Entity>();
 
         //Graphics::DrawString(timing.c_str() , timingOrigin, Color(255, 255, 255, 255));
-        timeString.node.local.position = textOrigin;
-        titleString.node.local.position = {0, 0};
+        timeString.node.Position() = textOrigin;
+        titleString.node.Position() = {0, 0};
         timeString.SetTextColor("white");
         board->AddComponent(&timeString);
         board->AddComponent(&titleString);
 
         // legend
-        drawRect.node.local.position = legendSquareOrigin;
+        drawRect.node.Position() = legendSquareOrigin;
         drawRect.FormRectangle(2, 12);
         drawRect.color = drawColor;
         board->AddComponent(&drawRect);
 
-        runRect.node.local.position = legendSquareOrigin + Vector{0, 12};
+        runRect.node.Position() = legendSquareOrigin + Vector{0, 12};
         runRect.FormRectangle(2, 12);
         runRect.color = runColor;
         board->AddComponent(&runRect);
 
-        sysRect.node.local.position = legendSquareOrigin +Vector{0, 24};
+        sysRect.node.Position() = legendSquareOrigin +Vector{0, 24};
         sysRect.FormRectangle(2, 12);
         sysRect.color = sysColor;
         board->AddComponent(&sysRect);
 
-        debugRect.node.local.position = legendSquareOrigin +Vector{0, 36};
+        debugRect.node.Position() = legendSquareOrigin +Vector{0, 36};
         debugRect.FormRectangle(2, 12);
         debugRect.color = debugColor;
         board->AddComponent(&debugRect);
@@ -916,11 +916,11 @@ class ProcessTimeFeedback : public Dynacoe::Entity {
 
 
         barBG.FormRectangle(graphWidth + 2, 12);
-        barBG.node.local.position = graphOrigin + Vector(-1, -1);
+        barBG.node.Position() = graphOrigin + Vector(-1, -1);
         barBG.color = bgColor;
         board->AddComponent(&barBG);
 
-        barDraw.node.local.position = graphOrigin;
+        barDraw.node.Position() = graphOrigin;
         barDraw.color = drawColor;
         board->AddComponent(&barDraw);
 
@@ -973,13 +973,13 @@ class ProcessTimeFeedback : public Dynacoe::Entity {
        barDraw.FormRectangle(drawWidth  , 10);
 
        barRun.FormRectangle(runWidth  , 10);
-       barRunTransform->local.position = graphOrigin + Vector(runXPos,   0);
+       barRunTransform->Position() = graphOrigin + Vector(runXPos,   0);
 
        barSys.FormRectangle(sysWidth  , 10);
-       barSysTransform->local.position = graphOrigin + Vector(sysXPos,   0);
+       barSysTransform->Position() = graphOrigin + Vector(sysXPos,   0);
 
        barDebug.FormRectangle(debugWidth  , 10);
-       barDebugTransform->local.position = graphOrigin + Vector(debugXPos,   0);
+       barDebugTransform->Position() = graphOrigin + Vector(debugXPos,   0);
 
 
     }
@@ -1108,7 +1108,7 @@ class DebuggerBase : public Entity {
         draw = show;
         step = show;
 
-        node.local.position.x = -width;
+        node.Position().x = -width;
     }
 
     void CreateBase() {
@@ -1133,7 +1133,7 @@ class DebuggerBase : public Entity {
 
     void OnStep() {
         mouseXY.text = (Chain() << Input::MouseX() << ", " << Input::MouseY());
-        hover->node.local.position.x = Mutator::StepTowards(hover->node.local.position.x, hoverX);
+        hover->node.Position().x = Mutator::StepTowards(hover->node.GetPosition().x, hoverX);
         if (updateTimer.IsExpired()) {
             UpdateCycle();
             updateTimer.Set(1500);
@@ -1173,7 +1173,7 @@ class DebuggerBase : public Entity {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         base->acc++;
         base->hover->draw = (base->acc > 0);
-        base->hoverX = gui->node.local.position.x;
+        base->hoverX = gui->node.Position().x;
         return true;
     }
 
@@ -1197,9 +1197,9 @@ class DebuggerBase : public Entity {
         h->FormRectangle(50, 1);
         h->color = "#AAFFAA";
 
-        overviewText->node.local.position = {0, 0};
-        entityText->node.local.position   = {49, 0};
-        varsText->node.local.position     = {99, 0};
+        overviewText->node.Position() = {0, 0};
+        entityText->node.Position()   = {49, 0};
+        varsText->node.Position()     = {99, 0};
 
         buttons->AddComponent(overviewText);
         buttons->AddComponent(entityText);
@@ -1207,7 +1207,7 @@ class DebuggerBase : public Entity {
         buttons->AddComponent(h);
         hover = h;
         hover->draw = false;
-        hover->node.local.position = {0, 15};
+        hover->node.Position() = {0, 15};
         acc = 0;
 
         overviewButton = new GUI;
@@ -1218,9 +1218,9 @@ class DebuggerBase : public Entity {
         entityButton->  DefineRegion(50, 20);
         varsButton->    DefineRegion(50, 20);
 
-        overviewButton->node.local.position = {0, 0};
-        entityButton->node.local.position = {50, 0};
-        varsButton->node.local.position = {100, 0};
+        overviewButton->node.Position() = {0, 0};
+        entityButton->node.Position() = {50, 0};
+        varsButton->node.Position() = {100, 0};
 
         overviewButton->InstallHandler("on-click", ButtonClickEvent);
         overviewButton->InstallHandler("on-enter", ButtonEnterEvent);
@@ -1247,7 +1247,7 @@ class DebuggerBase : public Entity {
     void CreateOverviewPage() {
 
         overview = CreateChild<Entity>();
-        overview->node.local.position = Vector(0, 20);
+        overview->node.Position() = Vector(0, 20);
 
 
         const float label_column_c = 0.f;
@@ -1255,13 +1255,13 @@ class DebuggerBase : public Entity {
         const float line_height_c = 10.f;
 
         ProcessTimeFeedback * p = overview->CreateChild<ProcessTimeFeedback>();
-        p->node.local.position = {10, 0};
+        p->node.Position() = {10, 0};
 
 
 
 
         table = overview->CreateChild<DataGrid>();
-        table->node.local.position = {0, 100};
+        table->node.Position() = {0, 100};
         for(int i = 0; i < slowestCount; ++i)
             table->AddRow();
 
@@ -1278,7 +1278,7 @@ class DebuggerBase : public Entity {
     DataGrid * searchResults;
     void CreateEntityPage() {
         entity = CreateChild<Entity>();
-        entity->node.local.position = {0, 20};
+        entity->node.Position() = {0, 20};
         search = entity->CreateChild<InputBox>();
         search->Resize(width, 12);
 
@@ -1290,7 +1290,7 @@ class DebuggerBase : public Entity {
         for(int i = 0; i < 100; ++i) {
             searchResults->AddRow();
         }
-        searchResults->node.local.position = {0, 40};
+        searchResults->node.Position() = {0, 40};
         search->SetText("Search...");
     }
 
@@ -1346,7 +1346,7 @@ class DebuggerBase : public Entity {
                     table->GetTooltip(i) = Chain() <<
                         "Entity Info:\n"
                         "ID:       " << it->second.String() << "\n"
-                        "Position: " << it->second.Identify()->node.local.position
+                        "Position: " << it->second.Identify()->node.GetPosition()
                     ;
                 }
 
@@ -1365,7 +1365,7 @@ class DebuggerBase : public Entity {
                 searchResults->GetTooltip(i) = Chain() <<
                     "Entity Info:\n"
                     "ID:       " << ent->GetID().String() << "\n"
-                    "Position: " << ent->node.local.position
+                    "Position: " << ent->node.GetPosition()
                 ;
             }
             searchIDs = results;
@@ -1381,15 +1381,15 @@ class DebuggerBase : public Entity {
         base->mutate.Clear(-base->width);
         base->mutate.NewMutation(base->slide_duration_s, 0, Mutator::Function::Logarithmic);
         base->mutate.Start();
-        base->mutate.Bind(base->node.local.position.x);
+        base->mutate.Bind(base->node.Position().x);
         return true;
     }
 
     static DynacoeEvent(State_SlideIn_Step) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         if (base->mutate.Expired()) {
-            base->mutate.Unbind(base->node.local.position.x);
-            base->node.local.position.x = 0;
+            base->mutate.Unbind(base->node.Position().x);
+            base->node.Position().x = 0;
             base->state.Halt();
         }
         return true;
@@ -1399,20 +1399,20 @@ class DebuggerBase : public Entity {
 
     static DynacoeEvent(State_SlideOut_Init) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
-        base->mutate.Clear(base->node.local.position.x);
-        base->mutate.NewMutation(base->slide_duration_s, base->node.local.position.x-base->width, Mutator::Function::Quadratic);
+        base->mutate.Clear(base->node.GetPosition().x);
+        base->mutate.NewMutation(base->slide_duration_s, base->node.GetPosition().x-base->width, Mutator::Function::Quadratic);
         base->mutate.Start();
-        base->mutate.Bind(base->node.local.position.x);
+        base->mutate.Bind(base->node.Position().x);
         return false;
     }
 
     static DynacoeEvent(State_SlideOut_Step) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         if (base->mutate.Expired()) {
-            base->mutate.Unbind(base->node.local.position.x);
+            base->mutate.Unbind(base->node.Position().x);
             base->draw = false;
             base->step = false;
-            base->node.local.position.x = -base->width;
+            base->node.Position().x = -base->width;
             base->state.Halt();
         }
         return false;
@@ -1444,7 +1444,7 @@ Backend * Debugger::GetBackend() {
 }
 
 void Debugger::RunBefore() {
-    debuggerBase.Identify()->GetParent().node.local.position = Graphics::GetCamera2D().node.local.position;
+    debuggerBase.Identify()->GetParent().node.Position() = Graphics::GetCamera2D().node.GetPosition();
     if (Input::IsPressed(Keyboard::Key_F3)) {
         debuggerBase.IdentifyAs<DebuggerBase>()->Toggle();
     }

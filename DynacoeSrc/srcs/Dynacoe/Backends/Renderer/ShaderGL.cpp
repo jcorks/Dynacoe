@@ -205,8 +205,7 @@ ShaderGLRenderer::ShaderGLRenderer() {
     framebufferHandle = 0;
     framebuffer = nullptr;
     texture =      new TextureManager();
-    dynamic =      CreateDynamicProgram();
-    dynamic->AttachTextureManager(texture);
+    renderer2D =   new Renderer2D(texture);
     glClearColor(.1, 0, .07, 1.f);
     
     
@@ -230,6 +229,62 @@ ShaderGLRenderer::ShaderGLRenderer() {
 
 
 
+
+
+uint32_t ShaderGLRenderer::Add2DObject() {
+    return renderer2D->Add2DObject();
+}
+
+void ShaderGLRenderer::Remove2DObject(uint32_t a) {
+    renderer2D->Remove2DObject(a);
+}
+
+void ShaderGLRenderer::Set2DObjectParameters(uint32_t object, Renderer::Render2DObjectParameters p) {
+    renderer2D->Set2DObjectParameters(object, p);
+}
+
+
+
+
+uint32_t ShaderGLRenderer::Add2DVertex() {
+    return renderer2D->Add2DVertex();
+}
+
+void ShaderGLRenderer::Remove2DVertex(uint32_t object) {
+    renderer2D->Remove2DVertex(object);
+}
+
+void ShaderGLRenderer::Set2DVertex(uint32_t vertex, Renderer::Vertex2D src) {
+    renderer2D->Set2DVertex(vertex, src);
+}
+
+Renderer::Vertex2D ShaderGLRenderer::Get2DVertex(uint32_t vertex) {
+    return renderer2D->Get2DVertex(vertex);
+}
+
+
+
+
+void ShaderGLRenderer::Queue2DVertices(
+    const uint32_t * indices,
+    uint32_t count
+) {
+    renderer2D->Queue2DVertices(indices, count);
+}
+
+
+
+// Clears all requests queued before the last RenderDynamicQueue
+void ShaderGLRenderer::Clear2DQueue() {
+    renderer2D->Clear2DQueue();
+}
+
+
+
+
+
+
+
 void ShaderGLRenderer::SetTextureFilter(TexFilter f) {
     texture->SetFilter(f);
 }
@@ -249,25 +304,9 @@ int ShaderGLRenderer::GetTextureHeight(int id) {
 
 
 
-void ShaderGLRenderer::QueueDynamicVertices(const DynamicVertex * v, uint32_t numVertices, DynamicTransformID id) {
-    dynamic->Queue(v, numVertices, id);
-    //assert(id);
-}
-
-DynamicTransformID ShaderGLRenderer::CacheDynamicTransform(float * f) {
-    return dynamic->NewTransform(f);
-}
-
 int ShaderGLRenderer::AddTexture(int w, int h, const uint8_t * data) {
     return texture->NewTexture(w, h, (uint8_t*)data);
 }
-
-
-
-void ShaderGLRenderer::ClearDynamicQueue() {
-    dynamic->Clear();
-}
-
 
 
 void ShaderGLRenderer::SetDrawingMode(Polygon p, Dimension d, AlphaRule a) {
@@ -302,9 +341,9 @@ Dynacoe::Framebuffer * ShaderGLRenderer::GetTarget() {
 }
 
 
-void ShaderGLRenderer::RenderDynamicQueue() {
+void ShaderGLRenderer::Render2DVertices(const Render2DStaticParameters & params) {
     framebufferCheck();
-    uint32_t count = dynamic->Render(drawMode);
+    uint32_t count = renderer2D->Render2DVertices(drawMode, params);
     diagnostic_dynamic_vtex_per_render_accumulated_avg += count;
     diagnostic_dynamic_vtex_per_render_accumulated_avg_ct++;
     if (diagnostic_dynamic_vtex_per_render_accumulated_avg_ct > 20) {

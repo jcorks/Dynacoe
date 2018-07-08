@@ -140,7 +140,7 @@ class Text2D : public Render2D {
     std::vector<Color> colorStorage;
     std::vector<uint32_t> colorIndex;
 
-    Renderer::DynamicVertex * vertices;
+    Renderer::Vertex2D * vertices;
     std::vector<Vector> offsets;
     uint32_t numVertices;
     uint32_t numVerticesAllocd;

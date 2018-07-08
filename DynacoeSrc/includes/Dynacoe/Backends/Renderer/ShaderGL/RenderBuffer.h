@@ -52,7 +52,7 @@ class RenderBuffer {
     virtual void UpdateData(const float * dataSrc, int offset, int numElts) = 0;
     
     // Retrieves the data of the data store.
-    virtual void GetData(float * outputData, int offset, int dataSize) = 0;
+    virtual void GetData(float * outputData, int offset, int numElts) = 0;
 
     // Retrieves a pointer to the data store. This pointer is owned by 
     // the render buffer and should not be freed. The pointer is valid until 

@@ -57,64 +57,17 @@ class Node : public Component {
     Node();
     ~Node();
 
-    /// \brief Holds the position scale and rotation.
-    ///
-    class Transform {
-      public:
-        Transform() :
-            position(0, 0, 0),
-            rotation(0, 0, 0),
-            scale(1, 1, 1),
-            reverse(false){}
+    
+    
+    const Vector & GetRotation() const;
+    const Vector & GetPosition() const;
+    const Vector & GetScale() const;
 
-        bool operator==(const Transform & other) const {
-            return
-                position.x == other.position.x &&
-                position.y == other.position.y &&
-                position.z == other.position.z &&
-
-                rotation.x == other.rotation.x &&
-                rotation.x == other.rotation.y &&
-                rotation.z == other.rotation.z &&
-
-                scale.x == other.scale.x &&
-                scale.y == other.scale.y &&
-                scale.z == other.scale.z;
-
-        }
-
-        /// \brief Position
-        ///
-        Vector position;
-
-        /// \brief Scale
-        ///
-        Vector scale;
-        
-        /// \brief Rotation
-        ///
-        Vector rotation;
-
-        bool reverse;
-
-        /// \brief Returns the TransformMatrix equating to the current position, scale, and rotation.
-        ///
-        TransformMatrix Compute();
+    Vector & Rotation();
+    Vector & Position();
+    Vector & Scale();
 
 
-        const uint8_t * GetState();
-    };
-
-
-
-
-    /// \brief The transform in space local to this object
-    ///
-    Transform local;
-
-    /// \brief The transform in space considering the entire hierarchy
-    ///
-    Transform global;
 
     // TODO
     //Transform global();
@@ -154,20 +107,25 @@ class Node : public Component {
 
 
     void UpdateParentReference();
+    void ComputeLocal();
 
     TransformMatrix localTransform;
     TransformMatrix normalTransform;
     TransformMatrix globalTransform;
 
-    Transform transformLastState;
+    //Transform transformLastState;
 
     LookupID id;
     LookupID parent;
-    Transform preGlobal;
 
     bool localTransformValid;
     bool parentTransformValid;
+    bool reverse;
 
+    Vector position;
+    Vector rotation;
+    Vector scale;
+    
 
     Node * overrideParent;
     Node * parentNode;

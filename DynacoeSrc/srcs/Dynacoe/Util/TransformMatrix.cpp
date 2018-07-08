@@ -319,6 +319,7 @@ Vector TransformMatrix::Transform(const Vector & p) const {
 }
 
 
+
 /// TRANSFORMATIONS ///
 
 
@@ -336,6 +337,6 @@ Chain TransformMatrix::Print() const {
      return out;
 }
 
-float * TransformMatrix::GetData() {
-    return data;
+float * TransformMatrix::GetData() const {
+    return (float*)data;
 }

@@ -70,24 +70,29 @@ class Render2D : public Component {
     /// \brief Returns the raw vertices compiled for the renderable object 
     ///
     /// See Renderer.h
-    const std::vector<Renderer::DynamicVertex> & GetVertices();    
+    std::vector<Renderer::Vertex2D> GetVertices() const;    
+    
+    uint32_t GetObjectID() const;
+    
+    const std::vector<uint32_t> & GetVertexIDs() const;
     
     /// \brief Returns the polygon to be used when drawing the vertices 
     ///
     /// See Renderer.h
-    Renderer::Polygon GetPolygon();
-
+    Renderer::Polygon GetPolygon() const;
+    ~Render2D();
 
   protected:
     Render2D(const std::string &);
 
-    void SetVertices(const std::vector<Renderer::DynamicVertex> &);
-    std::vector<Renderer::DynamicVertex> & ChangeVertices();
+    void SetVertices(const std::vector<Renderer::Vertex2D> &);
     void SetPolygon(Renderer::Polygon);
 
 
   private:
-     std::vector<Renderer::DynamicVertex> vertices;
+     std::vector<uint32_t> vertexSrc;
+     int objectID;
+     
      Renderer::Polygon polygon;
      void OnAttach();
      void OnStep();

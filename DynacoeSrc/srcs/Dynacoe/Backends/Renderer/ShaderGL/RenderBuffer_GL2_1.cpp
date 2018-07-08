@@ -74,7 +74,8 @@ void RenderBuffer_GL2_1::Define(const float * dataSrc, int numElts) {
         glBufferData(type, sizeof(float)*numElts, dataSrc, GL_STATIC_DRAW);
         glGetBufferParameteriv(type, GL_BUFFER_SIZE, &size);
         glBindBuffer(type, 0);
-        size /= sizeof(float);
+        size = numElts * sizeof(float);
+        
     } else {
         size = numElts * sizeof(float);
     }
@@ -114,9 +115,9 @@ void RenderBuffer_GL2_1::UpdateData(const float * dataSrc, int offset, int numEl
 
 }
 
-void RenderBuffer_GL2_1::GetData(float * outputData, int offset, int dataSize) {
+void RenderBuffer_GL2_1::GetData(float * outputData, int offset, int numElts) {
     if (data)
-        memcpy(outputData, data+(sizeof(float)*offset), dataSize*sizeof(float));
+        memcpy(outputData, data+(offset), numElts*sizeof(float));
 }
 
 float * RenderBuffer_GL2_1::GetData() { 

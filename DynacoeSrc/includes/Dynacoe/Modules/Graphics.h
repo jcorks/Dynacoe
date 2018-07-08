@@ -221,7 +221,7 @@ class Graphics : public Module {
     static Camera & GetRenderCamera();
     ///\}
 
-
+    
   private:
     friend class Assets;
     friend class GraphicsResizeCallback;
@@ -296,6 +296,7 @@ class Graphics : public Module {
     std::string GetName() { return "Graphics"; }
     void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
     Backend * GetBackend();
+    static void Flush2D();
 };
 };
 

@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 #include <Dynacoe/Backends/Renderer/ShaderGL/DynamicProgram.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/TextureManager.h>
+#include <Dynacoe/Backends/Renderer/ShaderGL/Renderer2D.h>
 #include <vector>
 #include <stack>
 
@@ -73,10 +74,20 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     bool Valid();
 
 
-    void QueueDynamicVertices(const DynamicVertex *, uint32_t numEntries, DynamicTransformID);
-    DynamicTransformID CacheDynamicTransform(float *);
-    void ClearDynamicQueue();
-    void RenderDynamicQueue();
+    void Queue2DVertices(
+        const uint32_t * indices,
+        uint32_t count
+    );
+    
+    uint32_t Add2DObject();
+    void Remove2DObject(uint32_t);
+    uint32_t Add2DVertex();
+    void Remove2DVertex(uint32_t object);
+    void Set2DVertex(uint32_t vertex, Vertex2D);
+    Vertex2D Get2DVertex(uint32_t vertex);
+    void Set2DObjectParameters(uint32_t object, Render2DObjectParameters);
+    void Render2DVertices(const Render2DStaticParameters &);
+    void Clear2DQueue();
     
     void RenderStatic(StaticState *);
     void ClearRenderedData();
@@ -152,7 +163,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     GLuint * texImageBounds;
 
     TextureManager * texture;
-    DynamicProgram * dynamic;
+    Renderer2D * renderer2D;
 
 
 

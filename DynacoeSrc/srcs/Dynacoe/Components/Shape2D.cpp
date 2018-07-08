@@ -61,6 +61,7 @@ Shape2D::Shape2D() : Render2D("Shape2D") {
     color = "white";
     forcedWidth = -1;
     forcedHeight = -1;
+    currentTexture = -1;
 }
 
 
@@ -70,7 +71,7 @@ void Shape2D::FormRectangle(
 
     id = AssetID();
 
-    vector<Renderer::DynamicVertex> & vertices = ChangeVertices();
+    vector<Renderer::Vertex2D> vertices;
     vertices.resize(6);
 
     float rgba[4];
@@ -79,14 +80,15 @@ void Shape2D::FormRectangle(
     rgba[2] = color.b;
     rgba[3] = color.a;
 
-    vertices[0] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
-    vertices[1] = {0, h, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
-    vertices[2] = {w, h, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
-    vertices[3] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
-    vertices[4] = {w, h, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
-    vertices[5] = {w, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[0] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[1] = {0, h,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[2] = {w, h,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[3] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[4] = {w, h,     rgba[0], rgba[1], rgba[2], rgba[3]};
+    vertices[5] = {w, 0,     rgba[0], rgba[1], rgba[2], rgba[3]};
 
     SetPolygon(Renderer::Polygon::Triangle);
+    SetVertices(vertices);
 
 };
 
@@ -99,7 +101,7 @@ void Shape2D::FormImage(AssetID id_, float fw, float fh) {
     }
     forcedWidth = fw;
     forcedHeight = fh;
-    vector<Renderer::DynamicVertex> & vertices = ChangeVertices();
+    vector<Renderer::Vertex2D> vertices;
     vertices.resize(6);
 
     float rgba[4];
@@ -111,16 +113,17 @@ void Shape2D::FormImage(AssetID id_, float fw, float fh) {
     //float texID = (idFrame < 0 ? im->getNextFrame() : im->getFrame(idFrame));
     id = id_;
 
-    vertices[0] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 0};
-    vertices[1] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 1};
-    vertices[2] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 1};
-    vertices[3] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 0};
-    vertices[4] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 1};
-    vertices[5] = {0, 0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 0};
+    vertices[0] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 0};
+    vertices[1] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 1};
+    vertices[2] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 1};
+    vertices[3] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 0, 0};
+    vertices[4] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 1};
+    vertices[5] = {0, 0,     rgba[0], rgba[1], rgba[2], rgba[3],  0, 1, 0};
 
     SetFrameActive(im->CurrentFrame());
 
     SetPolygon(Renderer::Polygon::Triangle);
+    SetVertices(vertices);
     idFrame = -1;
 
 }
@@ -156,7 +159,7 @@ void Shape2D::FormCircle(float radius, int numIterations) {
 
 
 void Shape2D::FormTriangles(vector<Vector> & pts) {
-    std::vector<Renderer::DynamicVertex> & vertices = ChangeVertices();
+    std::vector<Renderer::Vertex2D> vertices;
     vertices.resize(pts.size());
 
     float rgba[4];
@@ -168,15 +171,16 @@ void Shape2D::FormTriangles(vector<Vector> & pts) {
 
     for(uint32_t i = 0; i < vertices.size(); ++i) {
         vertices[i] = {
-            pts[i].x, pts[i].y, pts[i].z,
+            pts[i].x, pts[i].y,
             rgba[0], rgba[1], rgba[2], rgba[3]
         };
     }
     SetPolygon(Renderer::Polygon::Triangle);
+    SetVertices(vertices);
 }
 
 void Shape2D::FormLines(const vector<Vector> & pts) {
-    std::vector<Renderer::DynamicVertex> & vertices = ChangeVertices();
+    std::vector<Renderer::Vertex2D> vertices;
     vertices.resize(pts.size());
     id = AssetID();
 
@@ -189,11 +193,12 @@ void Shape2D::FormLines(const vector<Vector> & pts) {
 
     for(uint32_t i = 0; i < vertices.size(); ++i) {
         vertices[i] = {
-            pts[i].x, pts[i].y, pts[i].z,
+            pts[i].x, pts[i].y,
             rgba[0], rgba[1], rgba[2], rgba[3]
         };
     }
     SetPolygon(Renderer::Polygon::Line);
+    SetVertices(vertices);
 }
 
 
@@ -202,8 +207,9 @@ void Shape2D::FormLines(const vector<Vector> & pts) {
 
 
 void Shape2D::OnDraw() {
+    // TODO: there... needs to be a better way
     if (!(realColor == color)) {
-        std::vector<Renderer::DynamicVertex> & v = ChangeVertices();
+        std::vector<Renderer::Vertex2D> v = GetVertices();
         for(uint32_t i = 0; i < v.size(); ++i) {
             v[i].r = color.r;
             v[i].g = color.g;
@@ -211,6 +217,7 @@ void Shape2D::OnDraw() {
             v[i].a = color.a;
         }
         realColor = color;
+        SetVertices(v);
     }
 
     if (id.Valid() && idFrame != -1) {
@@ -226,7 +233,7 @@ void Shape2D::OnDraw() {
 std::string Shape2D::GetInfo() {
     return (Chain() <<
         "Color: " << color.ToString().c_str() << "\n" <<
-        "Vertices: " << (int)GetVertices().size() << "\n" <<
+        "Vertices: " << (int)GetVertexIDs().size() << "\n" <<
         node.GetInfo()
     );
 }
@@ -234,7 +241,10 @@ std::string Shape2D::GetInfo() {
 
 void Shape2D::SetFrameActive(const Image::Frame & frameRef) {
     float tex = frameRef.GetHandle();
-    vector<Renderer::DynamicVertex> & vertices = ChangeVertices();
+    if (currentTexture == tex) return;
+    currentTexture = tex;
+    
+    vector<Renderer::Vertex2D> vertices = GetVertices();
     vertices[0].useTex = tex;
     vertices[1].useTex = tex;
     vertices[2].useTex = tex;
@@ -255,5 +265,7 @@ void Shape2D::SetFrameActive(const Image::Frame & frameRef) {
     vertices[4].x = w;
     vertices[4].y = h;
     vertices[5].x = w;
-
+    
+    
+    SetVertices(vertices);
 }

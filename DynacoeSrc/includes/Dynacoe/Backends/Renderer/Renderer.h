@@ -72,27 +72,28 @@ class Renderer : public Backend {
 
     // Struct representing a dynamic vertex state.
     // Dynamic vertices do not support lighting.
-    struct DynamicVertex {
-        DynamicVertex(){}
-        DynamicVertex(float x_, float y_, float z_,
+    struct Vertex2D {
+        Vertex2D(){}
+        Vertex2D(float x_, float y_,
                       float r_, float g_, float b_, float a_,
                       float tex, float tx, float ty)
-            : x(x_), y(y_), z(z_),
+            : x(x_), y(y_),
               r(r_), g(g_), b(b_), a(a_), useTex(tex), texX(tx), texY(ty) {}
-        DynamicVertex(float x_, float y_, float z_,
+        Vertex2D(float x_, float y_,
                       float r_, float g_, float b_, float a_)
-            : x(x_), y(y_), z(z_),
+            : x(x_), y(y_), 
               r(r_), g(g_), b(b_), a(a_), useTex(-1) {}
 
-        DynamicVertex(float x_, float y_, float z_,
+        Vertex2D(float x_, float y_,
                       float tex, float tx, float ty)
-            : x(x_), y(y_), z(z_),
+            : x(x_), y(y_),
               r(1.f), g(1.f), b(1.f), a(1.f),
               useTex(tex), texX(tx), texY(ty) {}
-        float x, y, z;                        // vertex position
+        float x, y;                           // vertex position
         float r, g, b, a; // color, scale from 0.f to 1.f (red, green, blue, and alpha)
         float texX, texY;                     // texture coordinates (0, 0 is topleft)
         float useTex;                         // if not used, set to -1, else float form of texture id
+        float object;                         // the transform reference object
     };
 
     // For use with StaticState. See StaticState.h
@@ -182,7 +183,21 @@ class Renderer : public Backend {
         Directional,
         Spot
     };
+    
+    
+    struct Render2DStaticParameters {
+        float contextWidth;
+        float contextHeight;
+        
+        float * contextTransform;
+    };
 
+    struct Render2DObjectParameters {
+        
+        // transform
+        float data[16];
+        
+    };
 
 
 
@@ -196,26 +211,34 @@ class Renderer : public Backend {
 
     /* Requesting Geometry */
 
-    // Requests draws of geometry directly. This is recommended for geometry that changes often
-    virtual void QueueDynamicVertices(
-        const    DynamicVertex *,
-        uint32_t numEntries,
-        DynamicTransformID=DynamicTransformID()
+    // The general use case for 2D geometry is we will draw many 
+    // small objects with unique tranform properties. Thus, a stati crendering 
+    // approach is less favorable as that would lead to more frequent draws.
+    // Render2DVertices, using user-maintained global vertices, is a more 
+    // performant option for drawing specifically 2D vertices.
+    virtual void Queue2DVertices(
+        const uint32_t * indices,
+        uint32_t count
     ) = 0;
+    
+    virtual uint32_t Add2DObject() = 0;
+    
+    virtual void Remove2DObject(uint32_t) = 0;
+    
+    virtual uint32_t Add2DVertex() = 0;
+    
+    virtual void Remove2DVertex(uint32_t object) = 0;
+    
+    virtual void Set2DVertex(uint32_t vertex, Vertex2D) = 0;
+    
+    virtual Vertex2D Get2DVertex(uint32_t vertex) = 0;
+    
+    virtual void Set2DObjectParameters(uint32_t object, Render2DObjectParameters) = 0;
 
-    // Uploads a transform that can be used with QueueDynamic calls.
-    // The Dynamic transform ID returned is valid until either
-    // the next RenderDynamicQueue or ClearDynamicQueue. After which,
-    // passing the id for a render operation results in undefined behavior.
-    // If matrix4x4 is less than sizeof(float)*16, behavior is undefined.
-    virtual DynamicTransformID CacheDynamicTransform(float * matrix4x4) = 0;
+    virtual void Render2DVertices(const Render2DStaticParameters &) = 0;
 
     // Clears all requests queued before the last RenderDynamicQueue
-    virtual void ClearDynamicQueue() = 0;
-
-    // draws all added polygons requested since the last resolve or clear.
-    virtual void RenderDynamicQueue() = 0;
-
+    virtual void Clear2DQueue() = 0;
 
 
 

@@ -163,7 +163,8 @@ void Graphics::Init() {
         state.dim = Renderer::Dimension::D_2D;
 
 
-        state.currentCamera2D = GetCamera2D().GetID();
+        //state.currentCamera2D = GetCamera2D().GetID();
+        SetCamera2D(GetCamera2D());
         state.currentCamera2D.IdentifyAs<Camera>()->SetType(Camera::Type::Orthographic2D);
         state.currentCamera3D = GetCamera3D().GetID();
         state.currentCamera3D.IdentifyAs<Camera>()->BindTransformBuffers(
@@ -173,7 +174,7 @@ void Graphics::Init() {
         state.currentCamera3D.IdentifyAs<Camera>()->SetType(Camera::Type::Perspective3D);
         SetRenderCamera(*state.currentCamera2D.IdentifyAs<Camera>());
 
-        GetCamera2D().node.local.reverse = true;
+        //GetCamera2D().node.local.reverse = true;
 
         Graphics::storeSystemImages(); // TODO: make proper. It should be that images stored with no renderer initialized are just cached until a display is given.
 
@@ -242,7 +243,7 @@ void Graphics::RunAfter() {
 void Graphics::DrawString(const std::string & str, const Dynacoe::Vector & pos, const Color & c) {
     Text2D text;
     text.text = str;
-    text.node.local.position = pos;
+    text.node.Position() = pos;
     text.SetTextColor(c);
     text.Step();
     text.Draw();
@@ -251,9 +252,18 @@ void Graphics::DrawString(const std::string & str, const Dynacoe::Vector & pos, 
 
 
 
+static Renderer::Render2DStaticParameters params2D;
 
+static DynacoeEvent(UpdateTransform2D) {
+    Graphics::GetRenderer()->Render2DVertices(params2D);
+    Camera * cam2D = &Graphics::GetCamera2D();
+    params2D.contextWidth  = cam2D->Width();
+    params2D.contextHeight = cam2D->Height();
+    params2D.contextTransform = cam2D->node.GetGlobalTransform().GetData();
 
-
+    
+    return true;
+}
 
 
 
@@ -269,6 +279,17 @@ void Graphics::Draw(Render2D & aspect) {
                    Renderer::Dimension::D_2D,
                    aspect.mode == Render2D::RenderMode::Translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow);
 
+    if (round(params2D.contextWidth) != cam2d->Width() ||
+        round(params2D.contextHeight) != cam2d->Height()) {
+        cam2d->node.EmitEvent("on-update");
+    }
+
+    drawBuffer->Queue2DVertices(
+        &aspect.GetVertexIDs()[0],
+        aspect.GetVertexIDs().size()
+    );
+
+    /*
     TransformMatrix transform;
     if (aspect.absolute) {
         transform = GetRenderCamera().GetProjectionTransform()*cam2d->node.GetGlobalTransform();
@@ -283,7 +304,7 @@ void Graphics::Draw(Render2D & aspect) {
          aspect.GetVertices().size(),
          drawBuffer->CacheDynamicTransform(transform.GetData())
      );
-
+     */
 
 }
 
@@ -295,8 +316,7 @@ void Graphics::Draw(RenderMesh & aspect) {
                    Renderer::Dimension::D_3D,
                    Renderer::AlphaRule::Allow);
 
-    drawBuffer->RenderDynamicQueue();
-    drawBuffer->ClearDynamicQueue();
+    drawBuffer->Render2DVertices(params2D);
 
     aspect.RenderSelf(drawBuffer);
 
@@ -319,8 +339,7 @@ void Graphics::setDisplayMode(Renderer::Polygon p, Renderer::Dimension d, Render
 
         // Settings with which to draw have changed, so we commit what we have and start over
         drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
-		drawBuffer->RenderDynamicQueue();
-        drawBuffer->ClearDynamicQueue();
+		drawBuffer->Render2DVertices(params2D);
 
 	    state.alpha = a;
         state.polygon = p;
@@ -347,12 +366,11 @@ void Graphics::SetRenderer(Renderer * r) {
 
 
 void Graphics::Commit() {
-    drawBuffer->RenderDynamicQueue();
 
     //GetRenderCamera().GetFramebuffer()->RunCommand("dump-texture", nullptr);
     //GetRenderCamera().GetFramebuffer()->RunCommand("fill-debug", nullptr);
 
-    drawBuffer->ClearDynamicQueue();
+    drawBuffer->Render2DVertices(params2D);
     setDisplayMode(Renderer::Polygon::Triangle,
                    Renderer::Dimension::D_2D,
                    Renderer::AlphaRule::Allow);
@@ -367,7 +385,6 @@ void Graphics::Commit() {
     if (c && c->autoRefresh) {
         c->Refresh();
     }
-    drawBuffer->ClearDynamicQueue();
 }
 
 
@@ -490,15 +507,20 @@ void Graphics::SetCamera3D(Camera & c) {
 }
 
 void Graphics::SetCamera2D(Camera & c) {
+    auto cam = state.currentCamera2D.IdentifyAs<Camera>();
+    if (cam) {
+        cam->node.UninstallHook("on-update", UpdateTransform2D);
+    }
     state.currentCamera2D = c.GetID();
+    c.node.InstallHook("on-update", UpdateTransform2D);
+    c.node.EmitEvent("on-update");
 }
 
 void Graphics::SetRenderCamera(Camera & c) {
     Camera * cam = &c;
     if (!cam) return;
 
-    drawBuffer->RenderDynamicQueue();
-    drawBuffer->ClearDynamicQueue();
+    drawBuffer->Render2DVertices(params2D);
 
 
 
@@ -548,6 +570,9 @@ Camera & Graphics::GetRenderCamera() {
 }
 
 
+void Graphics::Flush2D() {
+    drawBuffer->Render2DVertices(params2D);
+}
 
 
 /// statics ///

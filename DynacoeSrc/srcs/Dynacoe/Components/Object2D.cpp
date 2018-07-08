@@ -92,7 +92,7 @@ void Object2D::Update() {
     
     EmitEvent("on-move");
         
-    node->local.position += GetNextPosition() - node->global.position;
+    node->Position() += GetNextPosition() - node->GetGlobalTransform().Transform({});
     speedX *= (1.0 - frictionX);
     speedY *= (1.0 - frictionY);
 }
@@ -109,7 +109,7 @@ void Object2D::AddVelocityTowards(double factor, const Dynacoe::Vector & p) {
     if (!GetHost()) return;
     Node * n = GetHost()->QueryComponent<Node>();
     Vector delta;    
-    Vector src = n->global.position;
+    Vector src = n->GetGlobalTransform().Transform({});
     
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
@@ -125,7 +125,7 @@ void Object2D::SetVelocityTowards(double factor, const Dynacoe::Vector & p) {
     if (!GetHost()) return;
     Node * n = GetHost()->QueryComponent<Node>();
     Vector delta;
-    Vector src = n->global.position;
+    Vector src = n->GetGlobalTransform().Transform({});
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
     SetVelocity(factor, delta.RotationZ()); 
@@ -140,7 +140,6 @@ void Object2D::SetFrictionY(double amt) {
 }
 
 double Object2D::GetDirection() {
-    //return (180 / Math::Pi()) * atan(speedY / (speedX + .0000001));
     return Vector(speedX, speedY).RotationZ();
 }
 
@@ -170,7 +169,7 @@ Vector Object2D::GetNextPosition() {
     Node * n = GetHost()->QueryComponent<Node>();
     Vector newPos;
     
-    Vector p = n->global.position;
+    Vector p = n->GetGlobalTransform().Transform({});
 
 
     newPos(p.x + speedX*(1.0 - frictionX),
@@ -184,7 +183,7 @@ Vector Object2D::GetNextPosition() {
 
 std::string Object2D::GetInfo() {
     Node * n = GetHostID().Query<Node>();
-    return (Chain() << "Position :" << (n ? n->global.position : Vector()) << "\n" 
+    return (Chain() << "Position :" << (n ? n->GetGlobalTransform().Transform({}) : Vector()) << "\n" 
                     << "Speed    : (" << GetVelocityX() << ", " << GetVelocityY() << ") [" << GetSpeed() << "]\n"
                     << "Direction: " << GetDirection() << "\n"
                     << "Collided : " << 

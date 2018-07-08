@@ -120,9 +120,9 @@ void RenderBuffer_GL3_1::UpdateData(const float * dataSrc, int offset, int numEl
     stateChanged = true;
 }
 
-void RenderBuffer_GL3_1::GetData(float * outputData, int offset, int dataSize) {
+void RenderBuffer_GL3_1::GetData(float * outputData, int offset, int numElts) {
     if (data)
-        memcpy(outputData, data+(sizeof(float)*offset), dataSize*sizeof(float));
+        memcpy(outputData, data+(sizeof(float)*offset), numElts*sizeof(float));
 }
 
 float * RenderBuffer_GL3_1::GetData() {

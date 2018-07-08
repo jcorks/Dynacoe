@@ -29,29 +29,73 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <Dynacoe/Components/Render2D.h>
-
+#include <Dynacoe/Modules/Graphics.h>
 
 using namespace Dynacoe;
+
+static DynacoeEvent(Render2D_UpdateRendererObject) {
+    Render2D * r2d = (Render2D*)functionData;
+
+    TransformMatrix m = r2d->node.GetGlobalTransform();
+    m.ReverseMajority();
+    Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
+    Graphics::GetRenderer()->Set2DObjectParameters(
+        r2d->GetObjectID(),
+        obj
+    );
+    return true;
+}
 
 Render2D::Render2D(const std::string & n) : Component(n){
     absolute = false;
     mode = RenderMode::Normal;
     polygon = Renderer::Polygon::Triangle;
+    objectID = Graphics::GetRenderer()->Add2DObject();
+    node.InstallHook("on-update", Render2D_UpdateRendererObject, this);
 }
 
-void Render2D::SetVertices(const std::vector<Renderer::DynamicVertex> & v) {
-    vertices = v;
+Render2D::~Render2D() {
+    node.UninstallHook("on-update", Render2D_UpdateRendererObject);
+    Graphics::GetRenderer()->Remove2DObject(objectID);
 }
 
-std::vector<Renderer::DynamicVertex> & Render2D::ChangeVertices() {
-    return vertices;
+void Render2D::SetVertices(const std::vector<Renderer::Vertex2D> & v) {
+    while (vertexSrc.size() < v.size()) {
+        vertexSrc.push_back(Graphics::GetRenderer()->Add2DVertex());
+    }
+    
+    while (vertexSrc.size() > v.size()) {
+        uint32_t t = vertexSrc[vertexSrc.size()-1];
+        Graphics::GetRenderer()->Remove2DVertex(t);
+        vertexSrc.erase(vertexSrc.begin()+(vertexSrc.size()-1));
+    }
+
+
+    for(uint32_t i = 0; i < v.size(); ++i) {
+        Renderer::Vertex2D vertex = v[i];
+        vertex.object = (float)objectID;
+        Graphics::GetRenderer()->Set2DVertex(vertexSrc[i], vertex);
+    }
 }
 
-const std::vector<Renderer::DynamicVertex> & Render2D::GetVertices() {
-    return vertices;
+
+std::vector<Renderer::Vertex2D> Render2D::GetVertices() const {
+    std::vector<Renderer::Vertex2D> out;
+    for(uint32_t i = 0; i < vertexSrc.size(); ++i) {
+        out.push_back(Graphics::GetRenderer()->Get2DVertex(vertexSrc[i]));
+    }
+    return out;
 }
 
-Renderer::Polygon Render2D::GetPolygon() {
+uint32_t Render2D::GetObjectID() const {
+    return objectID;
+}
+
+const std::vector<uint32_t> & Render2D::GetVertexIDs() const {
+    return vertexSrc;
+}
+
+Renderer::Polygon Render2D::GetPolygon() const {
     return polygon;
 }
 
