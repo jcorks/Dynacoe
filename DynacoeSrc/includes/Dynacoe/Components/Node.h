@@ -59,18 +59,43 @@ class Node : public Component {
 
     
     
+    /// \brief Gets a read-only, quick reference to the rotation component.
+    ///
     const Vector & GetRotation() const;
+
+    /// \brief Gets a read-only, quick reference to the position component.
+    ///
     const Vector & GetPosition() const;
+
+    /// \brief Gets a read-only, quick reference to the scale component.
+    ///
     const Vector & GetScale() const;
 
+    /// \brief Returns a writable reference to the rotation component. 
+    /// Once called, flags the node to recalculate its transforms
+    /// on the following frame.
     Vector & Rotation();
+
+    /// \brief Returns a writable reference to the position component. 
+    /// Once called, flags the node to recalculate its transforms
+    /// on the following frame.
     Vector & Position();
+
+    /// \brief Returns a writable reference to the scale component. 
+    /// Once called, flags the node to recalculate its transforms
+    /// on the following frame.
     Vector & Scale();
 
 
+    /// \brief Sets whether to reverse the node's interpretation of 
+    /// of translation for transform calculation. Rarely useful.
+    ///
+    void SetReverseTranslation(bool);
+    
 
-    // TODO
-    //Transform global();
+
+    /// \brief Gets the global transform of the node based on its 
+    /// nodal ancestry.
     const TransformMatrix & GetGlobalTransform();
 
 

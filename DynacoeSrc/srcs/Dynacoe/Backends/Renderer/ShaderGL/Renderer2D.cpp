@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/TransformMatrix.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/RenderBuffer_Tex1D.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/RenderBuffer_GL2_1.h>
+#include <Dynacoe/Backends/Renderer/ShaderGL/RenderBuffer.h>
 
 using namespace Dynacoe;
 
@@ -133,7 +134,7 @@ struct UserObjectData {
 class Renderer2DData {
   public:
     RenderBuffer_Tex1D * objectData;
-    RenderBuffer_GL2_1 * vertexData;
+    RenderBuffer       * vertexData;
     ShaderProgram      * program;
     TextureManager     * textureSrc;
     
@@ -159,7 +160,7 @@ class Renderer2DData {
 Renderer2D::Renderer2D(TextureManager * textureSrc) {
     data = new Renderer2DData;
     data->objectData = new RenderBuffer_Tex1D();
-    data->vertexData = new RenderBuffer_GL2_1();
+    data->vertexData = CreateRenderBuffer();
     data->textureSrc = textureSrc;
     data->vertexData->SetType(GL_ARRAY_BUFFER);
     
@@ -305,6 +306,7 @@ void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
 }
 
 void Renderer2DData::RebaseTextures() {
+    if (!userVertexData.size()) return;
     Renderer::Vertex2D * copy = new Renderer::Vertex2D[userVertexData.size()];
     vertexData->GetData((float*)copy, 0, userVertexData.size()*10);
 
@@ -315,7 +317,7 @@ void Renderer2DData::RebaseTextures() {
         copy[i].texY = textureSrc->MapTexCoordsToRealCoordsY(tex.texY, copy[i].useTex);
     }
     
-    vertexData->UpdateData((float*)copy, 0, userVertexData.size());
+    vertexData->UpdateData((float*)copy, 0, userVertexData.size()*10);
     delete[] copy; 
 }
 

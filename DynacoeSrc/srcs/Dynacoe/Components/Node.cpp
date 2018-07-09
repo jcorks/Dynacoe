@@ -303,6 +303,11 @@ void Node::OnStep() {
     updateTransform();
 }
 
+void Node::SetReverseTranslation(bool d) {
+    reverse = d;
+    localTransformValid = false;
+}
+
 void Node::SetManualParent(Node * node) {
     if (overrideParent) {
         assert(overrideParent->manualChildren);

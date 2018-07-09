@@ -69,22 +69,19 @@ int RenderBuffer_GL2_1::Size() {
 
 void RenderBuffer_GL2_1::Define(const float * dataSrc, int numElts) {
     assert(glGetError() == GL_NO_ERROR);
+    size = numElts * sizeof(float);
     if (type == GL_ARRAY_BUFFER) {
         glBindBuffer(type, glID);
         glBufferData(type, sizeof(float)*numElts, dataSrc, GL_STATIC_DRAW);
-        glGetBufferParameteriv(type, GL_BUFFER_SIZE, &size);
         glBindBuffer(type, 0);
-        size = numElts * sizeof(float);
-        
-    } else {
-        size = numElts * sizeof(float);
-    }
+    }    
+    
 
     assert(glGetError() == GL_NO_ERROR);
-    if (data == dataSrc && data != nullptr) return;
+    //if (data == dataSrc && data != nullptr) return;
     if (data) delete[] data;
     data = new float[numElts];
-    if (dataSrc)
+    if (data && dataSrc)
         memcpy(data, dataSrc, sizeof(float)*numElts);
 }
 
@@ -92,7 +89,7 @@ void RenderBuffer_GL2_1::UpdateData(const float * dataSrc, int offset, int numEl
 
     assert(glGetError() == GL_NO_ERROR);
 
-    if ((offset+numElts) > size) {
+    if ((offset+numElts) > size/sizeof(float)) {
         cout << "Updated past buffer store..." << endl;
         return;
     }

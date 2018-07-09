@@ -289,22 +289,6 @@ void Graphics::Draw(Render2D & aspect) {
         aspect.GetVertexIDs().size()
     );
 
-    /*
-    TransformMatrix transform;
-    if (aspect.absolute) {
-        transform = GetRenderCamera().GetProjectionTransform()*cam2d->node.GetGlobalTransform();
-    } else {
-        TransformMatrix globalT = aspect.node.GetGlobalTransform(),
-                        cameraT = cam2d->node.GetGlobalTransform();
-
-        transform = GetRenderCamera().GetProjectionTransform()*(cameraT * globalT);
-    }
-     drawBuffer->QueueDynamicVertices(
-         &aspect.GetVertices()[0],
-         aspect.GetVertices().size(),
-         drawBuffer->CacheDynamicTransform(transform.GetData())
-     );
-     */
 
 }
 
@@ -510,8 +494,10 @@ void Graphics::SetCamera2D(Camera & c) {
     auto cam = state.currentCamera2D.IdentifyAs<Camera>();
     if (cam) {
         cam->node.UninstallHook("on-update", UpdateTransform2D);
+        cam->node.SetReverseTranslation(false);
     }
     state.currentCamera2D = c.GetID();
+    c.node.SetReverseTranslation(true);
     c.node.InstallHook("on-update", UpdateTransform2D);
     c.node.EmitEvent("on-update");
 }

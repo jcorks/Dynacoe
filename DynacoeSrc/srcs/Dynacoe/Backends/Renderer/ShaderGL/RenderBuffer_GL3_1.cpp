@@ -103,7 +103,7 @@ int RenderBuffer_GL3_1::Size() {
 }
 
 void RenderBuffer_GL3_1::Define(const float * dataSrc, int numElts) {
-    size = numElts;
+    size = numElts*sizeof(float);
     if (data) delete[] data;
     data = new float[numElts];
     if (dataSrc)
@@ -112,7 +112,7 @@ void RenderBuffer_GL3_1::Define(const float * dataSrc, int numElts) {
 }
 
 void RenderBuffer_GL3_1::UpdateData(const float * dataSrc, int offset, int numElts) {
-    if ((offset+numElts) > size) {
+    if ((offset+numElts) > size/sizeof(float)) {
         cout << "Updated past buffer store..." << endl;
         return;
     }
@@ -122,7 +122,7 @@ void RenderBuffer_GL3_1::UpdateData(const float * dataSrc, int offset, int numEl
 
 void RenderBuffer_GL3_1::GetData(float * outputData, int offset, int numElts) {
     if (data)
-        memcpy(outputData, data+(sizeof(float)*offset), numElts*sizeof(float));
+        memcpy(outputData, data+offset, numElts*sizeof(float));
 }
 
 float * RenderBuffer_GL3_1::GetData() {
@@ -147,7 +147,7 @@ GLuint RenderBuffer_GL3_1::GenerateBufferID() {
     }
     usedIDs.push(glID);
     glBindBuffer(type, glID);
-    glBufferData(type, size*sizeof(float), data, GL_STATIC_DRAW);
+    glBufferData(type, size, data, GL_STATIC_DRAW);
     glBindBuffer(type, 0);
 
     assert(glGetError() == GL_NO_ERROR);
@@ -158,7 +158,7 @@ GLuint RenderBuffer_GL3_1::GenerateBufferID() {
     GLuint glID;
     glGenBuffers(1, &glID);
     glBindBuffer(type, glID);
-    glBufferData(type, size*sizeof(float), data, GL_STATIC_DRAW);
+    glBufferData(type, size, data, GL_STATIC_DRAW);
     glBindBuffer(type, 0);
     glDeleteBuffers(1, &lastID);
     lastID = glID;
