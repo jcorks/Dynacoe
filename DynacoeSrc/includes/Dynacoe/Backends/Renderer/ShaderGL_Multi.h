@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
         #include <glew.h>
     #endif
 #endif
-#include <Dynacoe/Backends/Renderer/ShaderGL/DynamicProgram.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/TextureManager.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/Renderer2D.h>
 #include <vector>

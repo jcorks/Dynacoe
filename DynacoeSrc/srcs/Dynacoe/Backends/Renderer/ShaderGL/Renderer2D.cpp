@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <Dynacoe/Backends/Renderer/ShaderGL/DynamicProgram_GL2_0.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/GLVersionQuery.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/ShaderProgram.h>
 #include <cstring>
@@ -45,7 +44,7 @@ using namespace Dynacoe;
 const int resize_block_addition_elements = 16*10*10;
 
 
-const int VBO_SLOT__POS    = 3;
+const int VBO_SLOT__POS    = 0;
 const int VBO_SLOT__COLOR  = 4;
 const int VBO_SLOT__UVS    = 5;
 const int VBO_SLOT__OBJECT = 6;
@@ -149,8 +148,11 @@ class Renderer2DData {
     uint32_t objectID;
     uint32_t vertexID;
     
+    int lastW;
+    int lastH;
     
     
+    void RebaseTextures();
 };
 
 
@@ -163,6 +165,8 @@ Renderer2D::Renderer2D(TextureManager * textureSrc) {
     
     data->objectID = 0;
     data->vertexID = 0;
+    data->lastW = 0;
+    data->lastH = 0;
 
     
     data->program = new ShaderProgram(
@@ -300,8 +304,29 @@ void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
     }
 }
 
+void Renderer2DData::RebaseTextures() {
+    Renderer::Vertex2D * copy = new Renderer::Vertex2D[userVertexData.size()];
+    vertexData->GetData((float*)copy, 0, userVertexData.size()*10);
+
+    for(uint32_t i = 0; i < userVertexData.size(); ++i) {
+        if (copy[i].useTex < 0.f) continue;
+        UserVertexData tex = userVertexData[i];
+        copy[i].texX = textureSrc->MapTexCoordsToRealCoordsX(tex.texX, copy[i].useTex);
+        copy[i].texY = textureSrc->MapTexCoordsToRealCoordsY(tex.texY, copy[i].useTex);
+    }
+    
+    vertexData->UpdateData((float*)copy, 0, userVertexData.size());
+    delete[] copy; 
+}
+
 uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DStaticParameters & params) {
     if (!data->queued.size()) return 0;
+    if (data->lastW != data->textureSrc->GetTextureW() ||
+        data->lastH != data->textureSrc->GetTextureH()) {
+        data->RebaseTextures();
+        data->lastW = data->textureSrc->GetTextureW();
+        data->lastH = data->textureSrc->GetTextureH();
+    }
     
     glUseProgram(data->program->GetHandle());
     data->program->UpdateUniform("fragTex",   TextureManager::GetActiveTextureSlot()- GL_TEXTURE0);
@@ -335,7 +360,6 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
 
     
     
-    glEnableVertexAttribArray(0); // required for some systems
     glEnableVertexAttribArray(VBO_SLOT__POS);
     glEnableVertexAttribArray(VBO_SLOT__COLOR);
     glEnableVertexAttribArray(VBO_SLOT__UVS);
@@ -353,7 +377,6 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     glDisableVertexAttribArray(VBO_SLOT__COLOR);
     glDisableVertexAttribArray(VBO_SLOT__UVS);
     glDisableVertexAttribArray(VBO_SLOT__OBJECT);
-    glDisableVertexAttribArray(0);
     
     glBindTexture(GL_TEXTURE_2D, 0);
     uint32_t size = data->queued.size();

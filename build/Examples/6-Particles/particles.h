@@ -67,7 +67,7 @@ class ParticlesExample : public Dynacoe::Entity {
     void OnStep() {
 
         // Lets have the emitter always match the mouse's position
-        particleEmitter->node.local.position = {Input::MouseX(), Input::MouseY()};
+        particleEmitter->node.Position() = {Input::MouseX(), Input::MouseY()};
 
 
         //... and let's have the emitter activate when the user clicks.

@@ -51,7 +51,7 @@ class ShaderProgram {
         const std::string & vertexSource_GL2_1,
         const std::string & fragmentSource_GL2_1,
         
-        const std::vector<std::pair<uint, std::string>> & bindAttributeLocations
+        const std::vector<std::pair<uint32_t, std::string>> & bindAttributeLocations
     );
     ~ShaderProgram();
     

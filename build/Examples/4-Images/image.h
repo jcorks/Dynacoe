@@ -63,9 +63,9 @@ class ImageExample : public Dynacoe::Entity {
 
         Dynacoe::Image & imageReference = Dynacoe::Assets::Get<Dynacoe::Image>(id);
 
-        image.node.local.position = {imageReference.CurrentFrame().Width(), imageReference.CurrentFrame().Height()};
-        image.node.local.position.x *= -.5;
-        image.node.local.position.y *= -.5;
+        image.node.Position() = {imageReference.CurrentFrame().Width(), imageReference.CurrentFrame().Height()};
+        image.node.Position().x *= -.5;
+        image.node.Position().y *= -.5;
 
     }
 
@@ -79,12 +79,12 @@ class ImageExample : public Dynacoe::Entity {
         // Every Entity has a Position attribute that can be edited. It's often useful to use this
         // as the Entity's baseline position to draw from.
 
-        node.local.position.x = Dynacoe::Mutator::StepTowards(node.local.position.x, Dynacoe::Input::MouseX(), .1f);
-        node.local.position.y = Dynacoe::Mutator::StepTowards(node.local.position.y, Dynacoe::Input::MouseY(), .1f);
+        node.Position().x = Dynacoe::Mutator::StepTowards(node.GetPosition().x, Dynacoe::Input::MouseX(), .1f);
+        node.Position().y = Dynacoe::Mutator::StepTowards(node.GetPosition().y, Dynacoe::Input::MouseY(), .1f);
 
         // To make it more interesting, we will secretly rotate the image based on the
         // difference in position of the Mouse pointer's position.
-        node.local.rotation.z += Dynacoe::Input::MouseYDelta();
+        node.Rotation().z += Dynacoe::Input::MouseYDelta();
 
 
     }

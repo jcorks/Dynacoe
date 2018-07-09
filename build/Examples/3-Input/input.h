@@ -49,12 +49,12 @@ class InputExample : public Dynacoe::Entity {
 
 
         // Let's center our Entity.
-        node.local.position.x = Dynacoe::ViewManager::GetViewWidth() / 2;
-        node.local.position.y = Dynacoe::ViewManager::GetViewHeight() / 2;
+        node.Position().x = Dynacoe::ViewManager::GetViewWidth() / 2;
+        node.Position().y = Dynacoe::ViewManager::GetViewHeight() / 2;
 
 
         mouseSquare.FormRectangle(4, 4);
-        mouseSquare.node.local.position = {-2, -2};
+        mouseSquare.node.Position() = {-2, -2};
         mouseSquare.color = "yellow";
         AddComponent(&mouseSquare);
     }
@@ -68,26 +68,26 @@ class InputExample : public Dynacoe::Entity {
         // movement
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_w)) {
-            node.local.position.y -= 2;
+            node.Position().y -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_a)) {
-            node.local.position.x -= 2;
+            node.Position().x -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_s)) {
-            node.local.position.y += 2;
+            node.Position().y += 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_d)) {
-            node.local.position.x += 2;
+            node.Position().x += 2;
         }
 
 
         // Lets have the Entity teleport to where the mouse clicks.
         // IsPressed() will return true only when the press is registered.
         if (Dynacoe::Input::IsPressed(Dynacoe::MouseButtons::Left)) {
-            node.local.position = {
+            node.Position() = {
                 Dynacoe::Input::MouseX(),
                 Dynacoe::Input::MouseY()
             };

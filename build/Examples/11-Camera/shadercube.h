@@ -84,16 +84,16 @@ class ShaderCube : public Dynacoe::Entity {
         mat.SetProgram(program.GetID());        
 
 
-        node.local.scale = {3, 3, 3};
+        node.Scale() = {3, 3, 3};
 
     }
 
 
     void OnStep() {
         // Rotate it all around
-        node.local.rotation.y += .1;
-        node.local.rotation.z += .1;
-        node.local.rotation.x += .1;
+        node.Rotation().y += .1;
+        node.Rotation().z += .1;
+        node.Rotation().x += .1;
 
     }
 

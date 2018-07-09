@@ -145,8 +145,8 @@ Light::Light() {
     RenderMesh * r = ent->BindComponent<RenderMesh>();
     r->AddMesh(Mesh::Basic_Cube());
     ent->SetName("LIGHT POINT");
-    ent->node.local.position = {1, 1, 1};
-    r->node.local.scale = {.1, .1, .1};
+    ent->node.Position() = {1, 1, 1};
+    r->node.Scale() = {.1, .1, .1};
 
     cube.Query<RenderMesh>()->Material() = mat;
     /*
@@ -163,13 +163,13 @@ Light::Light() {
 
     RenderMesh * ground = BindComponent<RenderMesh>();
     ground->AddMesh(Mesh::Basic_Square());
-    ground->node.local.position = {0, -2, 0};
-    ground->node.local.scale = {1000, 1000, 1000};
+    ground->node.Position() = {0, -2, 0};
+    ground->node.Scale() = {1000, 1000, 1000};
     ground->Material() = mat;
 
 
 
-    node.local.position = {0, 0, -10};
+    node.Position() = {0, 0, -10};
 }
 
 void Light::OnStep() {
@@ -183,7 +183,7 @@ void Light::OnStep() {
     //light.SetPosition(Position);
 
     // We slowly rotate the loaded model to make it more interesting.
-    node.local.rotation.y += .7f;
+    node.Rotation().y += .7f;
     //node.local.rotation.x += .3f;
     //node.local.rotation.z += .8f;
 
@@ -241,9 +241,9 @@ void Light::controlCamera() {
 
 
     // ease towards position
-    cam->node.local.position.x = Mutator::StepTowards(cam->node.local.position.x, target.x, .1);
-    cam->node.local.position.y = Mutator::StepTowards(cam->node.local.position.y, target.y, .1);
-    cam->node.local.position.z = Mutator::StepTowards(cam->node.local.position.z, target.z, .1);
+    cam->node.Position().x = Mutator::StepTowards(cam->node.GetPosition().x, target.x, .1);
+    cam->node.Position().y = Mutator::StepTowards(cam->node.GetPosition().y, target.y, .1);
+    cam->node.Position().z = Mutator::StepTowards(cam->node.GetPosition().z, target.z, .1);
 
 
 }

@@ -57,13 +57,13 @@ using namespace Dynacoe;
     AddComponent(&snare);
 
 
-    kick.node.local.position = {
+    kick.node.Position() = {
         Graphics::GetRenderCamera().Width()  * .1, 
         Graphics::GetRenderCamera().Height()  * .2
     };
 
 
-    snare.node.local.position = {
+    snare.node.Position() = {
         Graphics::GetRenderCamera().Width()  * .5, 
         Graphics::GetRenderCamera().Height()  * .2
     };

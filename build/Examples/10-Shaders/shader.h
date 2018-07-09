@@ -108,9 +108,9 @@ class ShaderExample : public Dynacoe::Entity {
 
 
     void OnDraw() {
-        renderer.node.local.rotation.z += .1;
-        renderer.node.local.rotation.x += .1;
-        renderer.node.local.rotation.y += .1;
+        renderer.node.Rotation().z += .1;
+        renderer.node.Rotation().x += .1;
+        renderer.node.Rotation().y += .1;
     }
 
 
@@ -156,11 +156,10 @@ class ShaderExample : public Dynacoe::Entity {
             target.z += .1f;
         }
 
-
         // ease towards position
-        cam.node.local.position.x = Dynacoe::Mutator::StepTowards(cam.node.local.position.x, target.x, .1);
-        cam.node.local.position.y = Dynacoe::Mutator::StepTowards(cam.node.local.position.y, target.y, .1);
-        cam.node.local.position.z = Dynacoe::Mutator::StepTowards(cam.node.local.position.z, target.z, .1);
+        cam.node.Rotation().x = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().x, target.x, .1);
+        cam.node.Rotation().y = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().y, target.y, .1);
+        cam.node.Rotation().z = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().z, target.z, .1);
 
     }
 

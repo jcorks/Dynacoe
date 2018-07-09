@@ -62,7 +62,7 @@ int main() {
     
     // Creates a "screen" that shows a rendered visual as a texture
     Screen * s = demo->CreateChild<Screen>();
-    s->node.local.position = {0, 0, -5};    
+    s->node.Position() = {0, 0, -5};    
 
 
     Engine::Run();

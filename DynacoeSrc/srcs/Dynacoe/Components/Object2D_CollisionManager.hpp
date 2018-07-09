@@ -118,8 +118,7 @@ class CollisionManager : public Dynacoe::Entity {
 
             }
         }
-        std::cout << count / (double)(numObj*numObj) << " (" << countFalse << "false positives)\n";
-        
+
 
         /*
         ////////////////////////////////

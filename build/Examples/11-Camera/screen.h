@@ -60,8 +60,8 @@ class Screen : public Dynacoe::Entity {
         surface.AddMesh(Dynacoe::Mesh::Basic_Square());
 
         // Basic transform info
-        node.local.rotation.x = 90;
-        node.local.scale = {4, 4, 4};
+        node.Rotation().x = 90;
+        node.Scale() = {4, 4, 4};
 
 
         // Creates the shader object as a child of the camera so that it always
@@ -121,7 +121,7 @@ class Screen : public Dynacoe::Entity {
     void OnStep() {
         // rotate the surface to make it more clear that 
         // the surface is indepent of the visual.
-        node.local.rotation.z += .3;
+        node.Rotation().z += .3;
     }
 
 

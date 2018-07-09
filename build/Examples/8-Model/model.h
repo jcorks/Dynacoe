@@ -48,7 +48,7 @@ class ModelViewer : public Dynacoe::Entity {
         // it is not necessary. If loading fails,
         // any handler of the object will notify you if it is invalid.
         target = Dynacoe::Vector();
-        id = Dynacoe::Assets::Load("dae", "/home/jc/models/rockruff/Rockruff_OpenCollada.DAE", false);
+        id = Dynacoe::Assets::Load("obj", "test.obj", false);
         if (!id.Valid()) {
             Dynacoe::Console::Error() << "Could not load model :(\n";
             return;
@@ -72,7 +72,7 @@ class ModelViewer : public Dynacoe::Entity {
         light2.FormLight(Dynacoe::RenderLight::Light::Directional);
         light2.state.position = {5, .5, 5};
 
-        node.local.rotation = {270, 0, 0};
+        node.Rotation() = {270, 0, 0};
 
 
     }
@@ -88,7 +88,7 @@ class ModelViewer : public Dynacoe::Entity {
             );
         }*/
         
-        node.local.rotation += Dynacoe::Vector(0, .01, 0);
+        node.Rotation() += Dynacoe::Vector(0, .01, 0);
         
     }
 
@@ -141,7 +141,7 @@ class ModelViewer : public Dynacoe::Entity {
         camPos.y = Dynacoe::Mutator::StepTowards(camPos.y, target.y, .1);
         camPos.z = Dynacoe::Mutator::StepTowards(camPos.z, target.z, .1);
 
-        cam->node.local.position = camPos;
+        cam->node.Position() = camPos;
 
     }
   

@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 )
-#include <Dynacoe/Backends/Renderer/ShaderGL/DynamicProgram_GL2_0.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/ShaderProgram.h>
 #include <Dynacoe/Backends/Renderer/ShaderGL/GLVersionQuery.h>
 #include <cstring>

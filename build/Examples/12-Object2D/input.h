@@ -133,19 +133,19 @@ class InputExample : public Dynacoe::Entity {
         // movement
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_w)) {
-            Dynacoe::Graphics::GetCamera2D().node.Position().y -= 2;
+            node.Position().y -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_a)) {
-            Dynacoe::Graphics::GetCamera2D().node.Position().x -= 2;
+            node.Position().x -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_s)) {
-            Dynacoe::Graphics::GetCamera2D().node.Position().y += 2;
+            node.Position().y += 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_d)) {
-            Dynacoe::Graphics::GetCamera2D().node.Position().x += 2;
+            node.Position().x += 2;
         }
 
 
