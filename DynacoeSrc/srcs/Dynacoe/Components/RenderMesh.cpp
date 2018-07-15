@@ -61,7 +61,9 @@ static bool arePrimitivesAllocd = false;
 
 
 
-RenderMesh::RenderMesh() : Component("RenderMesh") {
+RenderMesh::RenderMesh() : RenderMesh(new Node){}
+
+RenderMesh::RenderMesh(Node * nInst) : Component("RenderMesh"), node(*nInst){
     Alloc();
     initValues();
 }
@@ -101,7 +103,7 @@ RenderMesh & RenderMesh::operator=(const RenderMesh & other) {
     return *this;
 }
 
-RenderMesh::RenderMesh(const RenderMesh & other) : Component("RenderMesh"){
+RenderMesh::RenderMesh(const RenderMesh & other, Node * n) : Component("RenderMesh"), node(n?*n:*new Node()){
     Alloc();
     initValues(); 
     *this = other;

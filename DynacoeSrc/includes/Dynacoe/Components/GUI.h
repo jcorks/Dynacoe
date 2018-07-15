@@ -51,6 +51,7 @@ namespace Dynacoe {
 class GUI : public Component {
   public:
     GUI();
+    GUI(Node *);
     ~GUI();
 
 
@@ -80,7 +81,7 @@ class GUI : public Component {
     ///
     bool IsBeingDragged();
 
-    Node node;
+    Node & node;
 
 
     /// \brief Attempts to grab the input focus for this GUI.
@@ -138,6 +139,7 @@ class GUI : public Component {
     void OnAttach();
 
   private:
+    void Initialize();
     static GUI * focused;
     static GUI * grabbed;
     std::string tooltipText;

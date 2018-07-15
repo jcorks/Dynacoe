@@ -460,6 +460,7 @@ class Entity {
   protected:
 
     Entity();
+    Entity(Node*);
     Entity(const std::string &);
 
 

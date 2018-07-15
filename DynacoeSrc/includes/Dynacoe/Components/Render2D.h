@@ -60,7 +60,7 @@ class Render2D : public Component {
 
     /// \brief The Node for the visual. Z is ignored.
     ///
-    Node node;
+    Node & node;
 
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 
     /// pixel values on the display or should be within the hierarchy. The default is false.
@@ -84,6 +84,7 @@ class Render2D : public Component {
 
   protected:
     Render2D(const std::string &);
+    Render2D(const std::string &, Node *);
 
     void SetVertices(const std::vector<Renderer::Vertex2D> &);
     void SetPolygon(Renderer::Polygon);

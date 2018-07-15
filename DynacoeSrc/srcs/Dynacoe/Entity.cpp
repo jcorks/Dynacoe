@@ -506,7 +506,8 @@ bool Entity::ID::Valid() const{
 Entity::Entity(const std::string & str) : Entity(){
     SetName(str);
 }
-Entity::Entity() : node(*(new Node)) {
+Entity::Entity() : Entity(new Node){}
+Entity::Entity(Node * n) : node(*n) {
     if (!limbo) {
         limbo = new EntityLimbo();
         masterEntIDMap[0] = nullptr;

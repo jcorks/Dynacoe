@@ -60,6 +60,8 @@ class TextState;
 class Text2D : public Render2D {
   public:
     Text2D(const std::string & str = std::string(""), const Color & color = Color("white"));
+    Text2D(Node *);
+
     ~Text2D();
 
     /// \brief The mode by which text should be rendered
@@ -145,6 +147,7 @@ class Text2D : public Render2D {
     uint32_t numVertices;
     uint32_t numVerticesAllocd;
     Vector dimensions;
+    void Initialize(const std::string &, const Color &);
 };
 }    
 

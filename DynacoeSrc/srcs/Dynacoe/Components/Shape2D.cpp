@@ -53,15 +53,20 @@ static float quadUV[] =  {
     1.f, 0.f
 };
 
-
-
-Shape2D::Shape2D() : Render2D("Shape2D") {
+void Shape2D::Initialize() {
     idFrame = 0;
     realColor = "white";
     color = "white";
     forcedWidth = -1;
     forcedHeight = -1;
-    currentTexture = -1;
+    currentTexture = -1;    
+}
+
+Shape2D::Shape2D(Node * n) : Render2D("Shape2D", n){
+    Initialize();
+}
+Shape2D::Shape2D() : Render2D("Shape2D") {
+    Initialize();
 }
 
 

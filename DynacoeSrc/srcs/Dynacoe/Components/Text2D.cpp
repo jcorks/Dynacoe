@@ -658,7 +658,7 @@ static FontCache fontCache;
 const uint8_t      bad_char_c           = '?';
 const Color        default_text_color_c = Color(255, 255, 255, 255);
 
-Text2D::Text2D(const std::string & str, const Color & clr) : Render2D("Text2D") {
+void Text2D::Initialize(const std::string & str, const Color & clr) {
     static AssetID defaultFont;
     numVertices = 0;
     numVerticesAllocd = 0;
@@ -682,6 +682,15 @@ Text2D::Text2D(const std::string & str, const Color & clr) : Render2D("Text2D") 
     SetFont(defaultFont);
     
     text = str;
+}
+
+
+Text2D::Text2D(const std::string & str, const Color & clr) : Render2D("Text2D") {
+    Initialize(str, clr);
+}
+
+Text2D::Text2D(Node * n) : Render2D("Text2D", n) {
+    Initialize("", Color("white"));    
 }
 
 Text2D::~Text2D() {

@@ -45,8 +45,8 @@ static DynacoeEvent(Render2D_UpdateRendererObject) {
     );
     return true;
 }
-
-Render2D::Render2D(const std::string & n) : Component(n){
+Render2D::Render2D(const std::string & n) : Render2D(n, new Node){}
+Render2D::Render2D(const std::string & n, Node * nInst) : Component(n), node(*nInst){
     absolute = false;
     mode = RenderMode::Normal;
     polygon = Renderer::Polygon::Triangle;

@@ -99,9 +99,7 @@ class TooltipManager : public Entity {
 
 };
 
-
-
-GUI::GUI() : Component("GUI"){
+void GUI::Initialize() {
     w = 0;
     h = 0;
     hovered = false;
@@ -118,6 +116,15 @@ GUI::GUI() : Component("GUI"){
 
         Engine::AttachManager(tooltipManager);
     }
+}
+
+
+GUI::GUI() : Component("GUI"), node(*(new Node)){
+    Initialize();
+}
+
+GUI::GUI(Node * a) : Component("GUI"), node(*a) {
+    Initialize();
 }
 
 GUI::~GUI() {

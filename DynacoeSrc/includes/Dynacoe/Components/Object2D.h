@@ -51,6 +51,7 @@ namespace Dynacoe {
 /// Known events:
 /// "on-move" - called BEFORE applying the new position of the Entity.
 /// "on-collide" - source will always be what caused the collision
+
 class Object2D : public Component {
     public:
         
@@ -175,7 +176,7 @@ class Object2D : public Component {
         double speedY;
         double frictionX;
         double frictionY;
-     
+        Dynacoe::Vector last;
 
 };
 /// \}

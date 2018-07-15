@@ -61,6 +61,24 @@ class SpatialMap {
         
     }
     
+    void QueryFast(const BoundingBox & region, uint8_t * visited, std::vector<uint32_t> & ids) {
+        XYRange range = GetCoveredRegions(region);
+        uint32_t len;
+        for(uint32_t y = range.minY; y <= range.maxY; ++y) {
+            for(uint32_t x = range.minX; x <= range.maxX; ++x) {
+                std::vector<uint32_t> * obj = field[x][y];
+                len = obj->size();
+                for(uint32_t n = 0; n < len; ++n) {
+                    if (visited[((*obj)[n])]) continue;
+                    ids.push_back(((*obj)[n]));
+                    visited[((*obj)[n])] = true;
+                }
+            }
+        }
+        
+        
+    }
+    
   private:
     struct XYPair {
         int x;

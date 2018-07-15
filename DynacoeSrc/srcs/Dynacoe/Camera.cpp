@@ -56,12 +56,20 @@ void Camera::BindTransformBuffers(RenderBufferID mview, RenderBufferID proj) {
     projection = proj;
 }
 
-Camera::Camera() {
+
+void Camera::Initialize() {
     modelView = Graphics::GetRenderer()->AddBuffer(nullptr, 32);
     projection = Graphics::GetRenderer()->AddBuffer(nullptr, 16);
     lastW = lastH = 0;
     fb = (Dynacoe::Framebuffer*)Backend::CreateDefaultFramebuffer();
-    autoRefresh = true;
+    autoRefresh = true;    
+}
+Camera::Camera(Node* a) : Entity(a){
+    Initialize();
+}
+
+Camera::Camera() {
+    Initialize();
 }
 
 void Camera::SetType(Type t) {

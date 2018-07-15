@@ -53,13 +53,14 @@ class RenderMesh : public Component {
 
 
     RenderMesh();
+    RenderMesh(Node *);
     ~RenderMesh();
     RenderMesh & operator=(const RenderMesh &);
-    RenderMesh(const RenderMesh &);
+    RenderMesh(const RenderMesh &, Node * n = nullptr);
 
     /// \brief Node of the RenderMesh.
     ///
-    Node node;
+    Node & node;
 
     /// \brief  Forms the aspect into a 3D mesh based on the stored Mesh asset.
     ///

@@ -3,11 +3,13 @@
 #include <cfloat>
 #include <cassert>
 #include <cstring>
+
+static std::vector<uint32_t> setObjs;
+
 class CollisionManager : public Dynacoe::Entity {
   public:
     QTree * tree;
     SpatialMap * map;
-    std::unordered_map<uint32_t, bool> setObjs;
     CollisionManager() {
         SetName("Object2D::CollisionManager");
         tree = nullptr;
@@ -55,6 +57,26 @@ class CollisionManager : public Dynacoe::Entity {
         ////////////////////////////////
         // uniform spatial indexing method
         ////////////////////////////////
+        
+        // setup tracking of who collided with who this iteration.
+        // tracked with just an n^2 byte flag
+        static uint8_t * collided = nullptr;
+        static uint32_t collidedSize = 0;
+        if (!collided) {
+            collidedSize = 1024;
+            collided = new uint8_t[collidedSize];
+        }
+        
+        
+        if (collidedSize <= numObj*numObj) {
+            delete[] collided;
+            collidedSize = numObj*numObj;
+            collided = new uint8_t[collidedSize];
+        }
+        memset(collided, 0, collidedSize);
+        
+        
+        
         float spaceX  =  FLT_MAX, spaceX2  = -FLT_MAX,
               spaceY  =  FLT_MAX, spaceY2  = -FLT_MAX;
         float x, y, w, h;
@@ -91,17 +113,46 @@ class CollisionManager : public Dynacoe::Entity {
         uint32_t count = 0;
         uint32_t countFalse = 0;
 
+
+        // list of visited this iteration
+        static uint8_t * shortlist = nullptr;
+        static uint32_t shortListSize = 1024;
+        if (!shortlist) {
+            shortlist = new uint8_t[1024];            
+        }
+        
+        if (shortListSize <= numObj) {
+            shortListSize = numObj;
+            delete[] shortlist;
+            shortlist = new uint8_t[numObj];
+        }
+        memset(shortlist, 0, numObj);
+
         for(uint32_t i = 0; i < numObj; ++i) {
-            setObjs.clear();
-            map->Query(objects[i]->collider.GetMomentBounds(), setObjs);            
+            // if we didnt use it last iter, dont bother clearing it out!
+            if (setObjs.size()) {
+                memset(shortlist, 0, numObj);
+                setObjs.clear();
+            }
+            
+            // get all collisions
+            map->QueryFast(objects[i]->collider.GetMomentBounds(), shortlist, setObjs);            
             current = objects[i];
             
-            for(auto n = setObjs.begin(); n != setObjs.end(); ++n) {                
-                other = objects[n->first];
+
+            // process each detected collision
+            for(uint32_t n = 0; n != setObjs.size(); ++n) {                
+                other = objects[setObjs[n]];
+                
                 if (other == current) {
                     continue;
                 }
-                
+
+                // no repeats! If we're already collided, skip very overlap check
+                if (collided[i*numObj + setObjs[n]]) continue;
+                collided[i*numObj + setObjs[n]] = true;                
+
+
                 if (!current->collider.GetMomentBounds().Overlaps(other->collider.GetMomentBounds())) {
                     continue;
                 }

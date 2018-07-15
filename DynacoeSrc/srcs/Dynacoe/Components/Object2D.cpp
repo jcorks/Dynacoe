@@ -68,6 +68,8 @@ Object2D::Object2D() : Component("Object2D") {
 
     InstallEvent("on-move");
     InstallEvent("on-collide");
+    InstallEvent("on-moved");
+
 }
 
 Object2D::~Object2D() {
@@ -90,11 +92,21 @@ void Object2D::Update() {
     Node * node = GetHost()->QueryComponent<Node>();
     if (!node) return;
     
-    EmitEvent("on-move");
-        
-    node->Position() += GetNextPosition() - node->GetGlobalTransform().Transform({});
+
+    Vector delta = GetNextPosition() - node->GetGlobalTransform().Transform({});
+    // using the "last" model, we include manual translations as part of 
+    // normal collisions.
+    if (delta.Length() > .000001) {
+        EmitEvent("on-move");
+        node->Position() += delta;
+
+    }
+    last = node->GetPosition();
+
     speedX *= (1.0 - frictionX);
     speedY *= (1.0 - frictionY);
+    
+
 }
 
 

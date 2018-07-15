@@ -46,6 +46,7 @@ namespace Dynacoe {
 class Shape2D : public Render2D {
   public:
     Shape2D();
+    Shape2D(Node *);
 
     /** \name  Formation
      *
@@ -124,6 +125,7 @@ class Shape2D : public Render2D {
     float currentTexture;
 
     void SetFrameActive(const Image::Frame & f);
+    void Initialize();
 };
 }
 
