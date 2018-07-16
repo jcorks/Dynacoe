@@ -5,7 +5,11 @@
 namespace Dynacoe {
 class BoundingBox {
   public:
-    BoundingBox(){}
+    BoundingBox() :
+        x(0.f),
+        y(0.f),
+        width(0.f),
+        height(0.f){}
     BoundingBox(float x_, float y_, float w_, float h_) :
         x(x_),
         y(y_),

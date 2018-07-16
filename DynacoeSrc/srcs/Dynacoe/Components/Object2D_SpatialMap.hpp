@@ -33,8 +33,8 @@ class SpatialMap {
     void Insert(const BoundingBox & region, uint32_t index) {
         XYRange range = GetCoveredRegions(region);
         
-        for(uint32_t y = range.minY; y <= range.maxY; ++y) {
-            for(uint32_t x = range.minX; x <= range.maxX; ++x) {
+        for(int y = range.minY; y <= range.maxY; ++y) {
+            for(int x = range.minX; x <= range.maxX; ++x) {
                 if (!field[x][y])
                     field[x][y] = new std::vector<uint32_t>();
                     
@@ -46,8 +46,8 @@ class SpatialMap {
     void Query(const BoundingBox & region, std::unordered_map<uint32_t, bool> & indicesHit) {
         XYRange range = GetCoveredRegions(region);
         uint32_t len;
-        for(uint32_t y = range.minY; y <= range.maxY; ++y) {
-            for(uint32_t x = range.minX; x <= range.maxX; ++x) {
+        for(int y = range.minY; y <= range.maxY; ++y) {
+            for(int x = range.minX; x <= range.maxX; ++x) {
                 std::vector<uint32_t> * obj = field[x][y];
                 len = obj->size();
                 if (len) {
@@ -64,8 +64,8 @@ class SpatialMap {
     void QueryFast(const BoundingBox & region, uint8_t * visited, std::vector<uint32_t> & ids) {
         XYRange range = GetCoveredRegions(region);
         uint32_t len;
-        for(uint32_t y = range.minY; y <= range.maxY; ++y) {
-            for(uint32_t x = range.minX; x <= range.maxX; ++x) {
+        for(int y = range.minY; y <= range.maxY; ++y) {
+            for(int x = range.minX; x <= range.maxX; ++x) {
                 std::vector<uint32_t> * obj = field[x][y];
                 len = obj->size();
                 for(uint32_t n = 0; n < len; ++n) {

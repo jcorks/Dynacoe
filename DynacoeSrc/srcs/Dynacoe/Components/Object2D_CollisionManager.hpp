@@ -42,6 +42,9 @@ class CollisionManager : public Dynacoe::Entity {
             host = objects[i]->GetHost();
             if (!host) {
                 objects.erase(objects.begin()+i);
+                numObj--;
+                i--;
+                continue;
             }
 
             objects[i]->collider.UpdateTransition(
@@ -93,6 +96,14 @@ class CollisionManager : public Dynacoe::Entity {
 
 
         if (map) delete map;
+        
+        // no viable collision detection can occur, so just update the objects and drop out.
+        if (spaceW == 0.f || spaceH == 0.f) {
+            for(uint32_t i = 0; i < numObj; ++i) {
+                objects[i]->Update();
+            }
+            return;
+        }
         map = new SpatialMap(
             spaceX,
             spaceY,
