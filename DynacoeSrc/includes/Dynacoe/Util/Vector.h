@@ -188,7 +188,7 @@ struct Vector {
     ///
     /// If a vector has length zero in these dimensions
     /// , the angle is always zero.
-    /// The rotation is about the directional vector (0, 1, 0) and
+    /// The rotation is about the directional vector (1, 0, 0) and
     /// Positive rotation is towards the positive Z direction.
     ///\{
 
@@ -219,7 +219,7 @@ struct Vector {
     ///
     /// If a vector has length zero in these dimensions
     /// , the angle is always zero.
-    /// The rotation is about the directional vector (0, 0, 1)
+    /// The rotation is about the directional vector (0, 1, 0)
     /// Positive rotation is towards the positive X direction.
     ///\{
 
@@ -248,7 +248,7 @@ struct Vector {
     /// XY is most useful for 2D angles and transformations.
     /// If a vector has length zero in these dimensions
     /// , the angle is always zero.
-    /// The rotation is about the directional vector (1, 0, 0).
+    /// The rotation is about the directional vector (0, 0, 1).
     /// Positive rotation is towards the positive Y direction.
 	///\{
 

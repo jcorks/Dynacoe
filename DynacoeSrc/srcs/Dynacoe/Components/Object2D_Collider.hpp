@@ -275,7 +275,7 @@ bool Object2D::Collider::CollidesWith(const Object2D::Collider & other) const {
             }          
         }
     }
-    
+    assert(stationary == 1 || stationary == 0);
     uint32_t size = stationary ? smear.size() : (smear.size()/3)*2;
     for(uint32_t i = stationary ? 0 : smear.size()/3; i < size; ++i) {
         if (other.WillContainPoint(

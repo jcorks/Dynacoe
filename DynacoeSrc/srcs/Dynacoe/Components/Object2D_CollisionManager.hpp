@@ -50,7 +50,6 @@ class CollisionManager : public Dynacoe::Entity {
             objects[i]->collider.UpdateTransition(
                  objects[i]->GetNextPosition()
             );
-            objects[i]->collider.lastCollided = Entity::ID();
         }
         
 
@@ -95,8 +94,10 @@ class CollisionManager : public Dynacoe::Entity {
         float spaceH = spaceY2 - spaceY;
 
 
-        if (map) delete map;
-        
+        if (map) {
+            delete map;
+            map = nullptr;
+        }
         // no viable collision detection can occur, so just update the objects and drop out.
         if (spaceW == 0.f || spaceH == 0.f) {
             for(uint32_t i = 0; i < numObj; ++i) {
@@ -111,6 +112,7 @@ class CollisionManager : public Dynacoe::Entity {
             spaceH,
             numObj
         );
+        
         
         
         for(uint32_t i = 0; i < numObj; ++i) {
