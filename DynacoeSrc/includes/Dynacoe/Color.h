@@ -76,8 +76,8 @@ class Color {
             return data;
         }
         
-        bool operator==(const Component & other) const {data == other.data;}
-        bool operator!=(const Component & other) const {data != other.data;}
+        bool operator==(const Component & other) const {return data == other.data;}
+        bool operator!=(const Component & other) const {return data != other.data;}
 
       private:
         uint8_t data;
