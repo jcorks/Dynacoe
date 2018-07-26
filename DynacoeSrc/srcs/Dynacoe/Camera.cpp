@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Camera.h>
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Modules/ViewManager.h>
-#include <Dynacoe/Components/Node.h>
 #include <Dynacoe/Util/Math.h>
 #include <cmath>
 
@@ -64,9 +63,7 @@ void Camera::Initialize() {
     fb = (Dynacoe::Framebuffer*)Backend::CreateDefaultFramebuffer();
     autoRefresh = true;    
 }
-Camera::Camera(Node* a) : Entity(a){
-    Initialize();
-}
+
 
 Camera::Camera() {
     Initialize();
@@ -87,7 +84,9 @@ void Camera::SetType(Type t) {
 
 }
 
-
+void Camera::OnUpdateTransform() {
+    Graphics::UpdateCameraTransforms(this);
+}
 
 
 void Camera::Refresh() {
@@ -113,7 +112,7 @@ void Camera::SetTarget(const Dynacoe::Vector & pos) {
 
 
         node.Rotation() = Vector();
-        Vector p = node.GetGlobalTransform().Transform(node.GetPosition());
+        Vector p = GetGlobalTransform().Transform(node.GetPosition());
         TransformMatrix m = Matrix_ViewLookAt(p,
                   pos,
                   Vector(0, 1.f, 0));
@@ -137,7 +136,7 @@ Vector Camera::TransformWorldToScreen(const Dynacoe::Vector & p) {
     // combines homogeneous -> normalized device coordinates -> screen coordinates process
 
     //transform.TransformVectors(pIn, pOut, 1);
-    Vector out = node.GetGlobalTransform().Transform(p);
+    Vector out = GetGlobalTransform().Transform(p);
     out = projectionMatrix.Transform(out);
 
     return Vector(      (out.x)*(w/2.f) + w/2.f,
@@ -163,7 +162,7 @@ Vector Camera::TransformScreenToWorld(const Dynacoe::Vector & p, float distance)
         ((p.z+.01f)/100.f),
     };
 
-    TransformMatrix mvInv = node.GetGlobalTransform();
+    TransformMatrix mvInv = GetGlobalTransform();
     TransformMatrix pjInv = projectionMatrix;
 
     mvInv.Inverse();
@@ -177,7 +176,7 @@ Vector Camera::TransformScreenToWorld(const Dynacoe::Vector & p, float distance)
 
 
 void Camera::OnStep() {
-    TransformMatrix m = node.GetGlobalTransform();
+    TransformMatrix m = GetGlobalTransform();
     m.Inverse();
     m.ReverseMajority();
     Graphics::GetRenderer()->UpdateBuffer(modelView, m.GetData(), 0, 16);

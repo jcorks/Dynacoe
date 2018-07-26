@@ -99,12 +99,6 @@ class Graphics : public Module {
     ///\{
 
 
-    /// \brief Draws basic text to the screen. Mostly for debugging.
-    ///
-    /// For nice text rendering, see AspectText.
-    static void DrawString(const std::string & str, const Dynacoe::Vector & pos, const Color & c = "white");
-
-
     /// \brief Draws an Aspect to the current display.
     ///
     static void Draw(Render2D &);
@@ -297,6 +291,7 @@ class Graphics : public Module {
     void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
     Backend * GetBackend();
     static void Flush2D();
+    static void UpdateCameraTransforms(Camera * );
 };
 };
 

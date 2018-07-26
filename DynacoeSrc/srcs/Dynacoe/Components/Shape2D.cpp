@@ -62,9 +62,6 @@ void Shape2D::Initialize() {
     currentTexture = -1;    
 }
 
-Shape2D::Shape2D(Node * n) : Render2D("Shape2D", n){
-    Initialize();
-}
 Shape2D::Shape2D() : Render2D("Shape2D") {
     Initialize();
 }
@@ -243,8 +240,7 @@ void Shape2D::OnDraw() {
 std::string Shape2D::GetInfo() {
     return (Chain() <<
         "Color: " << color.ToString().c_str() << "\n" <<
-        "Vertices: " << (int)GetVertexIDs().size() << "\n" <<
-        node.GetInfo()
+        "Vertices: " << (int)GetVertexIDs().size() << "\n" 
     );
 }
 

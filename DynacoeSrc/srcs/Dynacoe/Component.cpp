@@ -166,3 +166,14 @@ void Component::UninstallHook(const std::string & name, EventHandler h) {
     }
 }
 
+void * Component::operator new(std::size_t size) {
+    return new char[size];
+}
+
+
+
+void Component::operator delete(void * ptr)  {
+    delete[] (char*) ptr;
+}
+
+

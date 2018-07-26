@@ -75,9 +75,9 @@ class InputBox : public Dynacoe::Entity {
 
         static DynacoeEvent(Event_OnClick);
 
-        GUI gui;
-        Shape2D bg;
-        Text2D text2D;
+        GUI * gui;
+        Shape2D * bg;
+        Text2D * text2D;
         std::string text;
         std::string visibleText;
         Color textColor;

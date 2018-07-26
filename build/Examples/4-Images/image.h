@@ -39,13 +39,15 @@ DEALINGS IN THE SOFTWARE.
 class ImageExample : public Dynacoe::Entity {
   public:
 
+    Dynacoe::Shape2D * image;
+
     // The aspect member holds the image we are going to draw.
-    Dynacoe::Shape2D image;
     Dynacoe::AssetID id;
 
     ImageExample() {
         SetName("ImageExample");
 
+        image = AddComponent<Dynacoe::Shape2D>();
         // First we need to load the the image into the program.
         // To do that, we use Assets::Load. The first argument specifies
         // what kind of file we are attempting to load, while the second should be the name of
@@ -57,15 +59,13 @@ class ImageExample : public Dynacoe::Entity {
 
 
         id = Dynacoe::Assets::Load("png", "image.png");
-
-        AddComponent(&image);
-        image.FormImage(id);
+        image->FormImage(id);
 
         Dynacoe::Image & imageReference = Dynacoe::Assets::Get<Dynacoe::Image>(id);
 
-        image.node.Position() = {imageReference.CurrentFrame().Width(), imageReference.CurrentFrame().Height()};
-        image.node.Position().x *= -.5;
-        image.node.Position().y *= -.5;
+        image->node.Position() = {imageReference.CurrentFrame().Width(), imageReference.CurrentFrame().Height()};
+        image->node.Position().x *= -.5;
+        image->node.Position().y *= -.5;
 
     }
 

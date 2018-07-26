@@ -185,7 +185,7 @@ void Entity::Attach(Entity::ID NewEntID) {
     //priorityListQueueAdd(NewEnt);
     priorityListAdd(NewEntID);
     NewEnt->world = this;
-
+    NewEnt->SetAsParent(this);
     NewEnt->OnEnter();
 }
 
@@ -198,6 +198,8 @@ void Entity::Detach(Entity::ID entID) {
     if (!ent) return;
     if (!(ent->GetID()).Valid()) return;
     ent->world = nullptr;
+    ent->SetAsParent(nullptr);
+
 
     // Try to find the index of the entity
     auto it = lower_bound(PriorityList.begin(), PriorityList.end(), entID, Before<Entity::ID>{});
@@ -339,7 +341,6 @@ void Entity::Step() {
 
     }
     if (!idSelf.Valid()) return;
-
     // actual running of self
     OnStep();
     for(n = 0; n < componentsAfter.size(); ++n) {
@@ -347,7 +348,10 @@ void Entity::Step() {
         if (componentsAfter[n]->step)
             componentsAfter[n]->Step();
     }
+
     if (!idSelf.Valid()) return;
+    CheckUpdate();
+
     stepTime = Time::MsSinceStartup()-recordTime;
 
 
@@ -401,6 +405,7 @@ void Entity::Draw() {
 
 
     OnDraw();
+    
     for(compInd = 0; compInd < componentsAfter.size(); ++compInd) {
         if (!idSelf.Valid()) return;
         if (componentsAfter[compInd]->draw)
@@ -408,6 +413,8 @@ void Entity::Draw() {
 
     }
     if (!idSelf.Valid()) return;
+    CheckUpdate();
+
     drawTime = Time::MsSinceStartup()-recordTime;
 }
 
@@ -506,8 +513,7 @@ bool Entity::ID::Valid() const{
 Entity::Entity(const std::string & str) : Entity(){
     SetName(str);
 }
-Entity::Entity() : Entity(new Node){}
-Entity::Entity(Node * n) : node(*n) {
+Entity::Entity() {
     if (!limbo) {
         limbo = new EntityLimbo();
         masterEntIDMap[0] = nullptr;
@@ -532,7 +538,6 @@ Entity::Entity(Node * n) : node(*n) {
 
     Watch(Variable("draw", draw));
     Watch(Variable("step", step));
-    AddComponent(&node);
 
 }
 
@@ -570,10 +575,9 @@ void Entity::Remove() {
 }
 
 Entity::~Entity() {
-    for(uint32_t i = 0; i < componentsBound.size(); ++i) {
-        delete (componentsBound[i]);
+    for(uint32_t i = 0; i < components.size(); ++i) {
+        delete (components[i]);
     }
-    delete &node;
 }
 
 
@@ -631,39 +635,31 @@ bool Entity::HasParent() {
 
 
 
-Component * Entity::AddComponent(Component * c, UpdateClass timeC) {
-    if (timeC == UpdateClass::Before)
-        componentsBefore.push_back(c);
-    else
-        componentsAfter.push_back(c);
-    components.push_back(c);
-    c->SetHost(this);
-    c->OnAttach();
-    return c;
-}
 
 
 void Entity::RemoveComponent(const string & tag) {
+    Component * target  = nullptr;
     for(size_t i = 0; i < components.size(); ++i) {
         if (components[i]->GetTag() == tag) {
             components[i]->SetHost(nullptr);
+            target = components[i];
             components.erase(components.begin() + i);
             break;
         }
     }
 
     for(size_t i = 0; i < componentsBefore.size(); ++i) {
-        if (componentsBefore[i]->GetTag() == tag) {
-            componentsBefore[i]->SetHost(nullptr);
+        if (componentsBefore[i] == target) {
             componentsBefore.erase(componentsBefore.begin() + i);
+            delete componentsBefore[i];
             return;
         }
     }
 
 
     for(size_t i = 0; i < componentsAfter.size(); ++i) {
-        if (componentsAfter[i]->GetTag() == tag) {
-            componentsAfter[i]->SetHost(nullptr);
+        if (componentsAfter[i] == target) {
+            delete componentsAfter[i];
             componentsAfter.erase(componentsAfter.begin() + i);
             return;
         }
@@ -685,7 +681,7 @@ void Entity::RemoveComponent(const Component * c) {
 
     for(size_t i = 0; i < componentsBefore.size(); ++i) {
         if (componentsBefore[i] == c) {
-            componentsBefore[i]->SetHost(nullptr);
+            delete componentsBefore[i];
             componentsBefore.erase(componentsBefore.begin() + i);
             break;
         }
@@ -693,7 +689,7 @@ void Entity::RemoveComponent(const Component * c) {
 
     for(size_t i = 0; i < componentsAfter.size(); ++i) {
         if (componentsAfter[i] == c) {
-            componentsAfter[i]->SetHost(nullptr);
+            delete componentsAfter[i];
             componentsAfter.erase(componentsAfter.begin() + i);
             break;
         }
@@ -781,6 +777,19 @@ std::vector<Entity::ID> Entity::GetAll() {
     return out;
 }
 
+void Entity::AddComponentInternal(Component * c, UpdateClass when) {
+    if (when == UpdateClass::Before)
+        componentsBefore.push_back(c);
+    else
+        componentsAfter.push_back(c);
+    components.push_back(c);
+    Spatial * cSp;
+    if ((cSp = dynamic_cast<Spatial*>(c))) {
+        cSp->SetAsParent(this);
+    }
+    c->SetHost(this);
+    c->OnAttach();
+}
 
 
 void * Entity::operator new(std::size_t size) {

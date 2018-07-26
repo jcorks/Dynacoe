@@ -153,9 +153,9 @@ class DataGrid : public Entity {
     Color real_titleColor;
     Color real_defaultTextColor;
     
-    GUI wheelZone;
-    Shape2D scroll;
-    GUI scrollGrab;
+    GUI * wheelZone;
+    Shape2D * scroll;
+    GUI * scrollGrab;
     
     uint32_t rowCount;
     uint32_t viewIndex;

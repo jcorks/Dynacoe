@@ -190,7 +190,6 @@ int Image::Frame::GetHandle() const {
 class FrameCounter : public Entity {
   public:
     FrameCounter() {
-        RemoveComponent(&node);
         frame = 0;
     }
     void OnStep() {

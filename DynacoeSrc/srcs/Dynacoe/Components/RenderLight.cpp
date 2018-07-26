@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Components/RenderLight.h>
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Util/Math.h>
-#include <Dynacoe/Components/Node.h>
 
 using namespace Dynacoe;
 
@@ -68,14 +67,10 @@ void RenderLight::Enable(bool doIt) {
 }
 
 void RenderLight::OnDraw() {
-    Node * p;
-    if (!GetHost()) return;
-    p = GetHost()->QueryComponent<Node>();
-    
     Vector base = state.position;
     
-    if (p && type != Light::Directional) {
-        base = p->GetGlobalTransform().Transform(base);
+    if (type != Light::Directional) {
+        base = GetHost()->GetGlobalTransform().Transform(base);
     } 
     
     //state.position = p->local.position;

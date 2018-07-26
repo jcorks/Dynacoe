@@ -39,14 +39,15 @@ DEALINGS IN THE SOFTWARE.
 class CollideObject : public Dynacoe::Entity {
   public:
     CollideObject() {
-        AddComponent(&obj);
-        shape.color = "red";
-        AddComponent(&shape);
-        obj.InstallHook("on-collide", OnCollide);
+        obj = AddComponent<Dynacoe::Object2D>();
+        shape = AddComponent<Dynacoe::Shape2D>();
+
+        shape->color = "red";
+        obj->InstallHook("on-collide", OnCollide);
     }
 
     void Set(float w, float h) {
-        obj.collider = 
+        obj->collider = 
             Dynacoe::Object2D::Collider({
                 Dynacoe::Vector{0, 0},
                 Dynacoe::Vector{w, 0},
@@ -55,16 +56,17 @@ class CollideObject : public Dynacoe::Entity {
             });
         ;
 
-        shape.FormRectangle(w, h);
+        shape->FormRectangle(w, h);
 
     }
 
 
     void OnDraw() {
-        if (obj.collider.lastCollided.Valid()) {
-            shape.color = "green";
+        if (obj->collider.lastCollided.Valid()) {
+            shape->color = "green";
+            obj->collider.lastCollided = Dynacoe::Entity::ID();
         } else {
-            shape.color = "grey";
+            shape->color = "grey";
         }
     }
 
@@ -74,8 +76,8 @@ class CollideObject : public Dynacoe::Entity {
         return true;
     }
     
-    Dynacoe::Object2D obj;
-    Dynacoe::Shape2D shape;
+    Dynacoe::Object2D * obj;
+    Dynacoe::Shape2D * shape;
 };
 
 class Dumb : public Dynacoe::Entity {
@@ -103,11 +105,12 @@ class InputExample : public Dynacoe::Entity {
   public:
 
     // A square to show where our little entity is
-    Dynacoe::Shape2D mouseSquare;
+    Dynacoe::Shape2D * mouseSquare;
 
 
     InputExample() {
         SetName("InputEx");
+        mouseSquare = AddComponent<Dynacoe::Shape2D>();
 
 
         // Let's center our Entity.
@@ -115,10 +118,9 @@ class InputExample : public Dynacoe::Entity {
         node.Position().y = Dynacoe::ViewManager::GetViewHeight() / 2;
 
 
-        mouseSquare.FormRectangle(4, 4);
-        mouseSquare.node.Position() = {-2, -2};
-        mouseSquare.color = "yellow";
-        AddComponent(&mouseSquare);
+        mouseSquare->FormRectangle(4, 4);
+        mouseSquare->node.Position() = {-2, -2};
+        mouseSquare->color = "yellow";
 
         CollideObject * o = Dynacoe::Entity::CreateChild<CollideObject>();
         o->Set(4, 4);

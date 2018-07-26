@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Material.h>
 #include <Dynacoe/AssetID.h>
 #include <Dynacoe/Mesh.h>
-#include <Dynacoe/Components/Node.h>
+#include <Dynacoe/Spatial.h>
 
 namespace Dynacoe {
 using CameraID = Dynacoe::LookupID;
@@ -47,20 +47,15 @@ using CameraID = Dynacoe::LookupID;
  * Mesh s are typically loaded from files or data buffers via Assets::Load.
  * See Mesh documentation for more information.
  */
-class RenderMesh : public Component {
+class RenderMesh : public Component, public Spatial {
   public:
 
 
 
     RenderMesh();
-    RenderMesh(Node *);
     ~RenderMesh();
     RenderMesh & operator=(const RenderMesh &);
-    RenderMesh(const RenderMesh &, Node * n = nullptr);
-
-    /// \brief Node of the RenderMesh.
-    ///
-    Node & node;
+    RenderMesh(const RenderMesh &);
 
     /// \brief  Forms the aspect into a 3D mesh based on the stored Mesh asset.
     ///
@@ -114,14 +109,12 @@ class RenderMesh : public Component {
     
     void RenderSelf(Renderer *);
     void OnDraw();
-    void OnStep();
-    void OnAttach();
     std::string GetInfo();
   private:
       
     void Alloc();
     void initValues();
-    void OnTransformUpdate();
+    void OnUpdateTransform();
     
     std::vector<Mesh*> meshes;
     Dynacoe::Material mat;

@@ -53,14 +53,14 @@ class TooltipManager : public Entity {
     TooltipManager() {
 
 
+        shape = AddComponent<Shape2D>();
+        text = AddComponent<Text2D>();
 
         draw = false;
         step = false;
-        text.node.Position() = {5, 5};
-        AddComponent(&shape);
-        AddComponent(&text);
+        text->node.Position() = {5, 5};
 
-        shape.color = {0.f, 0.f, 0.f, 1.f};
+        shape->color = {0.f, 0.f, 0.f, 1.f};
         source = nullptr;
     }
 
@@ -73,8 +73,8 @@ class TooltipManager : public Entity {
     }
 
     void SetText(const std::string & str) {
-        text.text = str;
-        shape.FormRectangle(text.GetDimensions().x+10, text.GetDimensions().y+10);
+        text->text = str;
+        shape->FormRectangle(text->GetDimensions().x+10, text->GetDimensions().y+10);
 
 
     }
@@ -94,8 +94,8 @@ class TooltipManager : public Entity {
     }
   private:
       GUI * source;
-      Text2D text;
-      Shape2D shape;
+      Text2D * text;
+      Shape2D *  shape;
 
 };
 
@@ -119,11 +119,7 @@ void GUI::Initialize() {
 }
 
 
-GUI::GUI() : Component("GUI"), node(*(new Node)){
-    Initialize();
-}
-
-GUI::GUI(Node * a) : Component("GUI"), node(*a) {
+GUI::GUI() : Component("GUI") {
     Initialize();
 }
 
@@ -209,11 +205,10 @@ int GUI::GetRegionH() {
 
 
 void GUI::OnStep() {
-    node.Step();
     if (grabbed && grabbed != this) return;
 
     Vector pt = {0, 0};
-    pt = node.GetGlobalTransform().Transform(pt);
+    pt = GetGlobalTransform().Transform(pt);
     bool newHovered = Math::IsVectorWithinBounds(
         Vector(Input::MouseX(), Input::MouseY()),
         pt, w-1, h-1
@@ -250,11 +245,6 @@ std::string GUI::GetInfo() {
                     << "Hovered? " << (IsHovered() ? "Yes" : "Nope") << "\n"
                     << "Focused? " << (IsFocused() ? "Yes" : "Nope") << "\n");
 }
-
-void GUI::OnAttach() {
-    node.SetManualParent(GetHost()->QueryComponent<Node>());
-}
-
 
 void GUI::SetTooltipText(const std::string & t) {
     tooltipText = t;

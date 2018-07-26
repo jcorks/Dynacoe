@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Entity.h>
 #include <Dynacoe/Color.h>
 #include <Dynacoe/Components/Object2D.h>
-#include <Dynacoe/Components/Node.h>
 #include <Dynacoe/Components/Shape2D.h>
 
 
@@ -113,7 +112,6 @@ class FillBar : public Entity {
 
     
 
-    Object2D obj2d;
 
 
     void Run();

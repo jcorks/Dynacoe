@@ -53,7 +53,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Components/RenderLight.h>
 #include <Dynacoe/Components/Clock.h>
 #include <Dynacoe/Components/GUI.h>
-#include <Dynacoe/Components/Node.h>
 #include <Dynacoe/Components/Scheduler.h>
 #include <Dynacoe/Components/StateControl.h>
 #include <Dynacoe/Components/Mutator.h>

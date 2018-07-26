@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/AssetID.h>
 #include <Dynacoe/Variable.h>
+#include <Dynacoe/Spatial.h>
 #include <set>
 #include <vector>
 #include <unordered_map>
@@ -45,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Dynacoe {
 class Component;
 class UintToID;
-class Node;
 /// \brief Basic interactive object.
 ///
 /// Entity s are the main classes that are extended to meet abstractions for your 
@@ -59,7 +59,7 @@ class Node;
 ///
 /// Entity s are also inherently hierarchical. By Attach()ing other Entity s,
 /// you can create trees of self-managed Entities.
-class Entity {
+class Entity : public Spatial {
 
   public:
       /// \brief Uniquely identifies an Entity 
@@ -123,12 +123,6 @@ class Entity {
     using   Priority    = int64_t;
 
 
-    /// \brief The Node of the Entity, holding info such as the position and rotation.
-    ///
-    /// By default, every Entity has a Node Component attached to it.
-    /// If your Entity does not require a Node, you can simply call
-    /// Detach(&node) to not update any node logic so save CPU cycles.
-    Node & node;
 
 
     /// \brief Returns the i'th Entity starting at 0.
@@ -363,23 +357,13 @@ class Entity {
     /// \brief Attaches a component to this entity.
     ///
     /// Once attached, the component's
-    /// Run and Draw functions will be called before this entity's Run and Draw.
-    /// @param c The new compontent to add.
-    Component * AddComponent(Component * c, UpdateClass when = UpdateClass::Before);
-
-    /// \brief Same as AddComponent, but the component is destroyed with the Entity.
-    ///
-    template<typename T>
-    T * BindComponent(UpdateClass when = UpdateClass::Before) {
-        T * component = new T;
-        if (!dynamic_cast<Component *>(component)) {
-            // not a component...
-            delete component;
-            return nullptr;
-        }
-        AddComponent(component, when);
-        componentsBound.push_back(component);
-        return component;
+    /// Step and Draw functions will be called before this entity's Run and Draw.
+    /// @param when When to step and draw this component in relation to the hosts own step/draw. The default is "before"
+    template <typename T>
+    T * AddComponent(UpdateClass when = UpdateClass::Before) {
+        T * c = new T;
+        AddComponentInternal(c, when);
+        return c;
     }
 
     /// \brief Returns whether or not there is currently an attached component of the
@@ -460,7 +444,6 @@ class Entity {
   protected:
 
     Entity();
-    Entity(Node*);
     Entity(const std::string &);
 
 
@@ -519,7 +502,7 @@ class Entity {
 
 
 
-
+     void AddComponentInternal(Component * c, UpdateClass);
     friend class Engine;
 
      bool WasDetachedMidExecution(Entity::ID id);
@@ -562,7 +545,6 @@ class Entity {
      std::vector<Component *> componentsBefore;
      std::vector<Component *> componentsAfter;
      std::vector<Component *> components;
-     std::vector<Component *> componentsBound;
      friend void EntityErase(Entity * e);
 };
 

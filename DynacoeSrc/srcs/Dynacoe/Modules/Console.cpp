@@ -47,7 +47,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Dynacoe.h>
 #include <Dynacoe/Interpreter.h>
 #include <Dynacoe/Modules/Debugger.h>
-#include <Dynacoe/Components/Node.h>
 #include <Dynacoe/BuiltIn/DataGrid.h>
 #include <cmath>
 #include <cassert>
@@ -72,49 +71,52 @@ class Dynacoe::DebugMessage : public Entity {
   public:
 
     void Set(const std::string & message, Shape2D * v, ConsoleStream::MessageType type){
+        bg = AddComponent<Shape2D>();
+        text = AddComponent<Text2D>();
+        tag = AddComponent<Shape2D>();
+        life = AddComponent<Mutator>();
+
         x = 0;
         y = 0;
-        text.text = message;
-        text.SetFontSize(13);
-        text.node.Position().x = 6;
+        text->text = message;
+        text->SetFontSize(13);
+        text->node.Position().x = 6;
         
-        bg.FormRectangle(bg_width, bg_height);
-        bg.color = (bg_color);
+        bg->FormRectangle(bg_width, bg_height);
+        bg->color = (bg_color);
         
 
-        AddComponent(&bg);
-        AddComponent(&text);
+
 
         others.push_back(GetID());
-        life.Clear(1.f);
-        life.NewMutation(enter_life, 0.f, Mutator::Function::Logarithmic);
-        life.NewMutation(enter_life + non_fade_life, 0.f, Mutator::Function::Constant);
-        life.NewMutation(enter_life + non_fade_life + exit_life, 1.f, Mutator::Function::Quadratic);
-        life.Start();
+        life->Clear(1.f);
+        life->NewMutation(enter_life, 0.f, Mutator::Function::Logarithmic);
+        life->NewMutation(enter_life + non_fade_life, 0.f, Mutator::Function::Constant);
+        life->NewMutation(enter_life + non_fade_life + exit_life, 1.f, Mutator::Function::Quadratic);
+        life->Start();
 
 
-        tag.FormRectangle(5, bg_height);
+        tag->FormRectangle(5, bg_height);
         switch(type) {
             case ConsoleStream::MessageType::Normal:
-                tag.color = (Color("white"));
+                tag->color = (Color("white"));
                 break;
 
             case ConsoleStream::MessageType::Warning:
-                tag.color = (Color("orange"));
+                tag->color = (Color("orange"));
 
                 break;
 
             case ConsoleStream::MessageType::Severe:
-                tag.color = (Color("red"));
+                tag->color = (Color("red"));
                 break;
 
             case ConsoleStream::MessageType::Fatal:
-                tag.color = (Color("dark red"));
+                tag->color = (Color("dark red"));
                 break;
 
             default:;
         }
-        AddComponent(&tag);
 
         x = -bg_width;
         node.Position().x = -bg_width + Graphics::GetCamera2D().node.GetPosition().x;
@@ -137,7 +139,7 @@ class Dynacoe::DebugMessage : public Entity {
 
     }
     void OnStep(){
-        if (life.Expired()) Remove();
+        if (life->Expired()) Remove();
 
 
         int index;
@@ -149,7 +151,7 @@ class Dynacoe::DebugMessage : public Entity {
         }
 
 
-        x = -bg_width * life.Value();
+        x = -bg_width * life->Value();
         y = Mutator::StepTowards((others.size()-index-1)*v_spacing_pixels, y, .5);
         node.Position().x = Graphics::GetCamera2D().node.GetPosition().x + x;
         node.Position().y = Graphics::GetCamera2D().node.GetPosition().y + y;
@@ -171,15 +173,15 @@ class Dynacoe::DebugMessage : public Entity {
 
 
     static std::vector<Entity::ID> others;
-    Shape2D bg;
-    Shape2D tag;
+    Shape2D * bg;
+    Shape2D * tag;
     
 
     
-    Text2D text;
+    Text2D * text;
     Shape2D * v;
 
-    Mutator life;
+    Mutator * life;
     float x;
     float y;
 
@@ -242,18 +244,20 @@ class ConsoleInputStream : public Entity {
     
 
     ConsoleInputStream() {
-        inputStringAspect.SetTextColor("white");
+        bg = AddComponent<Shape2D>();
+        inputStringAspect = AddComponent<Text2D>();
+        cursorStringAspect = AddComponent<Shape2D>();
+        
+        inputStringAspect->SetTextColor("white");
 
 
-        bg.color = "black";
+        bg->color = "black";
         historyIter = 0;
         inputString = "";
-        cursorStringAspect.FormRectangle(3, 10);
+        cursorStringAspect->FormRectangle(3, 10);
         cursorIter = 0;
 
-        AddComponent(&bg);
-        AddComponent(&inputStringAspect);
-        AddComponent(&cursorStringAspect);
+
         Input::AddUnicodeListener(new ConsoleUnicodeListener(this));
 
         up.key = Keyboard::Key_up;
@@ -280,7 +284,7 @@ class ConsoleInputStream : public Entity {
 
             cursorIter++;
         }
-        inputStringAspect.text = Chain() << "$  " << inputString;
+        inputStringAspect->text = Chain() << "$  " << inputString;
         //changed = true;
     }
 
@@ -295,7 +299,7 @@ class ConsoleInputStream : public Entity {
         
         bool changed = false;
         static float saturation = 0.f;
-        cursorStringAspect.color = (Color(255, 255, 255, 255*(.5*(1+sin(saturation)))));
+        cursorStringAspect->color = (Color(255, 255, 255, 255*(.5*(1+sin(saturation)))));
         saturation += .04;
         node.Position() = Vector(0, Graphics::GetRenderCamera().Height() - 12);
 
@@ -363,7 +367,7 @@ class ConsoleInputStream : public Entity {
 
         // update displayed string
         if (changed) {
-            inputStringAspect.text = Chain() << "$  " << inputString;
+            inputStringAspect->text = Chain() << "$  " << inputString;
         }
     }
 
@@ -373,28 +377,28 @@ class ConsoleInputStream : public Entity {
             history.push_back(inputString);
         historyIter = history.size();
         inputString = "";
-        inputStringAspect.text = ("$  ");
+        inputStringAspect->text = ("$  ");
         return out;
     }
 
     void OnDraw() {
-        bg.FormRectangle(
+        bg->FormRectangle(
             Graphics::GetRenderCamera().Width(),
             12
         );
         
-        cursorStringAspect.node.Position() = (inputStringAspect.GetCharPosition(3+cursorIter));
+        cursorStringAspect->node.Position() = (inputStringAspect->GetCharPosition(3+cursorIter));
 
     }
 
   private:
     std::string  inputString;
-    Text2D   inputStringAspect;
-    Shape2D  cursorStringAspect;
+    Text2D  * inputStringAspect;
+    Shape2D  * cursorStringAspect;
     int cursorIter;        
 
 
-    Shape2D  bg;
+    Shape2D * bg;
     std::vector<std::string> history;
     int historyIter;
 };

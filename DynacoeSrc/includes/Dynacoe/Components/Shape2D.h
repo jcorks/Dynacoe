@@ -46,7 +46,6 @@ namespace Dynacoe {
 class Shape2D : public Render2D {
   public:
     Shape2D();
-    Shape2D(Node *);
 
     /** \name  Formation
      *

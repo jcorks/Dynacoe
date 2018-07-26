@@ -57,7 +57,7 @@ Light::Light() {
 
     Entity::ID cube = Entity::CreateChild<Entity>()->GetID();
     cube.Identify()->SetName("CUBE");
-    cube.Identify()->BindComponent<RenderMesh>();
+    cube.Identify()->AddComponent<RenderMesh>();
     cube.Query<RenderMesh>()->AddMesh(Dynacoe::Mesh::Basic_Cube());
 
 
@@ -95,6 +95,7 @@ Light::Light() {
 
     // When models are loaded, they often have subgroups of smaller meshes. So,
     // we need to apply the material to those as well.
+    Entity * ent = CreateChild<Entity>();
 
 
 
@@ -114,9 +115,10 @@ Light::Light() {
     // To set it up, it is much light other aspects. The first argument denotes which kind of light it is.
     // We will use point lights, which are sensitive to proximity. The second argument is how intense it is
     // and the third is what color it should appear as.
-    light.FormLight(RenderLight::Light::Point);
-    light.state.intensity = 20.f;
-    light.state.color = "white";
+    light = ent->AddComponent<RenderLight>();
+    light->FormLight(RenderLight::Light::Point);
+    light->state.intensity = 20.f;
+    light->state.color = "white";
     //light.state.position = {0, 1.2, 0};
 
     // We will set up another light, just for fun.
@@ -124,11 +126,11 @@ Light::Light() {
     // Directional lights are different in that their position is a relative direction
     // showing where the light is coming from. Directional lights can
     // be thought of as lights that are at a very large distance away.
-
-    skyLight.FormLight(RenderLight::Light::Directional);
-    skyLight.state.intensity = 2.0f;
-    skyLight.state.color = softBlue;
-    skyLight.state.position = {0, -1, -.4};
+    skyLight = AddComponent<RenderLight>();
+    skyLight->FormLight(RenderLight::Light::Directional);
+    skyLight->state.intensity = 2.0f;
+    skyLight->state.color = softBlue;
+    skyLight->state.position = {0, -1, -.4};
 
 
 
@@ -138,11 +140,8 @@ Light::Light() {
 
     target = {0, 0, -3.2f};
     //AddComponent(&aspect);
-    AddComponent(&skyLight);
 
-    Entity * ent = CreateChild<Entity>();
-    ent->AddComponent(&light);
-    RenderMesh * r = ent->BindComponent<RenderMesh>();
+    RenderMesh * r = ent->AddComponent<RenderMesh>();
     r->AddMesh(Mesh::Basic_Cube());
     ent->SetName("LIGHT POINT");
     ent->node.Position() = {1, 1, 1};
@@ -161,7 +160,7 @@ Light::Light() {
     */
 
 
-    RenderMesh * ground = BindComponent<RenderMesh>();
+    RenderMesh * ground = AddComponent<RenderMesh>();
     ground->AddMesh(Mesh::Basic_Square());
     ground->node.Position() = {0, -2, 0};
     ground->node.Scale() = {1000, 1000, 1000};
@@ -235,7 +234,7 @@ void Light::controlCamera() {
     }
 
     if (lightMod != 0.0) {
-        light.state.intensity += lightMod;
+        light->state.intensity += lightMod;
     }
 
 

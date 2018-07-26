@@ -689,9 +689,6 @@ Text2D::Text2D(const std::string & str, const Color & clr) : Render2D("Text2D") 
     Initialize(str, clr);
 }
 
-Text2D::Text2D(Node * n) : Render2D("Text2D", n) {
-    Initialize("", Color("white"));    
-}
 
 Text2D::~Text2D() {
     fontCache.Remove(fontSize, (FT_Face*)fontFace, fontSpacing);

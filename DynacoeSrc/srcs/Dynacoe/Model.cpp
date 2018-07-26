@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Model.h>
 #include <Dynacoe/Components/RenderMesh.h>
 #include <Dynacoe/Material.h>
-#include <Dynacoe/Components/Node.h>
 
 using namespace Dynacoe;
 
@@ -42,10 +41,9 @@ Entity::ID Model::Create() {
     for(uint32_t i = 0; i < meshes.size(); ++i) {
         Entity * ent = Entity::CreateReference<Entity>();
         ent->SetName(Chain() << "model-node-" << i);
-        RenderMesh * copyMesh = new RenderMesh();        
+        RenderMesh * copyMesh = ent->AddComponent<RenderMesh>();        
         copyMesh->AddMesh(meshes[i]->MakeShallowCopy());
         copyMesh->Material() = *materials[i];
-        ent->AddComponent(copyMesh);
         out->Attach(ent->GetID());
     }
     return out->GetID();

@@ -33,29 +33,25 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-static DynacoeEvent(Render2D_UpdateRendererObject) {
-    Render2D * r2d = (Render2D*)functionData;
 
-    TransformMatrix m = r2d->node.GetGlobalTransform();
-    m.ReverseMajority();
-    Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
-    Graphics::GetRenderer()->Set2DObjectParameters(
-        r2d->GetObjectID(),
-        obj
-    );
-    return true;
-}
-Render2D::Render2D(const std::string & n) : Render2D(n, new Node){}
-Render2D::Render2D(const std::string & n, Node * nInst) : Component(n), node(*nInst){
+Render2D::Render2D(const std::string & n) : Component(n){
     absolute = false;
     mode = RenderMode::Normal;
     polygon = Renderer::Polygon::Triangle;
     objectID = Graphics::GetRenderer()->Add2DObject();
-    node.InstallHook("on-update", Render2D_UpdateRendererObject, this);
+}
+
+void Render2D::OnUpdateTransform() {
+    TransformMatrix m = GetGlobalTransform();
+    m.ReverseMajority();
+    Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
+    Graphics::GetRenderer()->Set2DObjectParameters(
+        GetObjectID(),
+        obj
+    );
 }
 
 Render2D::~Render2D() {
-    node.UninstallHook("on-update", Render2D_UpdateRendererObject);
     Graphics::GetRenderer()->Remove2DObject(objectID);
 }
 
@@ -103,11 +99,4 @@ void Render2D::SetPolygon(Renderer::Polygon p) {
     polygon = p;
 }
 
-void Render2D::OnAttach() {
-    node.SetManualParent(GetHost()->QueryComponent<Node>());
-    node.OnAttach();
-}
 
-void Render2D::OnStep() {
-    node.Step();
-}

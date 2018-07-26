@@ -49,8 +49,8 @@ class Light : public Dynacoe::Entity {
 
     Dynacoe::Vector target;
     Dynacoe::AssetID id;
-    Dynacoe::RenderLight light;
-    Dynacoe::RenderLight skyLight;
+    Dynacoe::RenderLight * light;
+    Dynacoe::RenderLight * skyLight;
 
     Dynacoe::Material mat;
 

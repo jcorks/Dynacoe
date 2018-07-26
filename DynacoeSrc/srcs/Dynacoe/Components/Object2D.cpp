@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Dynacoe.h>
 #include <Dynacoe/Components/Shape2D.h>
 #include <Dynacoe/Modules/Graphics.h>
-#include <Dynacoe/Components/Node.h>
 
 #include <cmath>
 #include <set>
@@ -87,13 +86,11 @@ void Object2D::OnAttach() {
 
 
 void Object2D::Update() {
-    if (!GetHost()) return;
     if (!GetHost()->IsStepping()) return;
-    Node * node = GetHost()->QueryComponent<Node>();
-    if (!node) return;
+    Transform * node = &GetHost()->node;
     
 
-    Vector delta = GetNextPosition() - node->GetGlobalTransform().Transform({});
+    Vector delta = GetNextPosition() - GetHost()->GetGlobalTransform().Transform({});
     // using the "last" model, we include manual translations as part of 
     // normal collisions.
     if (delta.Length() > .000001) {
@@ -118,10 +115,9 @@ void Object2D::AddVelocity(double factor, double direction) {
 }
 
 void Object2D::AddVelocityTowards(double factor, const Dynacoe::Vector & p) {
-    if (!GetHost()) return;
-    Node * n = GetHost()->QueryComponent<Node>();
+    Transform * n = &GetHost()->node;
     Vector delta;    
-    Vector src = n->GetGlobalTransform().Transform({});
+    Vector src = GetHost()->GetGlobalTransform().Transform({});
     
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
@@ -134,10 +130,9 @@ void Object2D::SetVelocity(double factor, double direction) {
 }
 
 void Object2D::SetVelocityTowards(double factor, const Dynacoe::Vector & p) {
-    if (!GetHost()) return;
-    Node * n = GetHost()->QueryComponent<Node>();
+    Transform * node = &GetHost()->node;
     Vector delta;
-    Vector src = n->GetGlobalTransform().Transform({});
+    Vector src = GetHost()->GetGlobalTransform().Transform({});
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
     SetVelocity(factor, delta.RotationZ()); 
@@ -177,11 +172,9 @@ void Object2D::SetSpeed(double speed) {
 
 
 Vector Object2D::GetNextPosition() {
-    if (!GetHost()) return Vector();
-    Node * n = GetHost()->QueryComponent<Node>();
     Vector newPos;
     
-    Vector p = n->GetGlobalTransform().Transform({});
+    Vector p = GetHost()->GetGlobalTransform().Transform({});
 
 
     newPos(p.x + speedX*(1.0 - frictionX),
@@ -194,8 +187,7 @@ Vector Object2D::GetNextPosition() {
 
 
 std::string Object2D::GetInfo() {
-    Node * n = GetHostID().Query<Node>();
-    return (Chain() << "Position :" << (n ? n->GetGlobalTransform().Transform({}) : Vector()) << "\n" 
+    return (Chain() << "Position :" << GetHost()->GetGlobalTransform().Transform({}) << "\n" 
                     << "Speed    : (" << GetVelocityX() << ", " << GetVelocityY() << ") [" << GetSpeed() << "]\n"
                     << "Direction: " << GetDirection() << "\n"
                     << "Collided : " << 

@@ -56,7 +56,6 @@ namespace Dynacoe {
 class Camera : public Entity {
   public:
     Camera();
-    Camera(Node*);
 
     /// \brief The type of Camera
     enum class Type {
@@ -160,6 +159,7 @@ class Camera : public Entity {
     RenderBufferID modelView;
     RenderBufferID projection;
     void Initialize();
+    void OnUpdateTransform();
 };
 }
 

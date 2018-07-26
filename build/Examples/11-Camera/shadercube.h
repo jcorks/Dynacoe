@@ -42,12 +42,12 @@ class ShaderCube : public Dynacoe::Entity {
 
     ShaderCube() {
         SetName("ShaderCube");
-        AddComponent(&renderer);
+        renderer = AddComponent<Dynacoe::RenderMesh>();
         
 
 
         // We're going to just draw a nice cube
-        renderer.AddMesh(Dynacoe::Mesh::Basic_Cube());        
+        renderer->AddMesh(Dynacoe::Mesh::Basic_Cube());        
 
         // We are going to read the vertex and fragment shaders into 
         // InputBuffers. (Open them in text files to see notes on their implementation)
@@ -80,7 +80,7 @@ class ShaderCube : public Dynacoe::Entity {
 
         // Seems alright, lets attach it to a material 
         // and attach the material to the program.
-        Dynacoe::Material & mat = renderer.Material();
+        Dynacoe::Material & mat = renderer->Material();
         mat.SetProgram(program.GetID());        
 
 
@@ -98,8 +98,8 @@ class ShaderCube : public Dynacoe::Entity {
     }
 
   private:
-    Dynacoe::RenderMesh renderer;
-    Dynacoe::Shader     program;
+    Dynacoe::RenderMesh * renderer;
+    Dynacoe::Shader       program;
 
 };
 

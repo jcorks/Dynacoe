@@ -41,6 +41,11 @@ using namespace Dynacoe;
 // previous ones but call sound-related functions.
 
  SoundEffects::SoundEffects() {
+    kick  = AddComponent<Dynacoe::Shape2D>();
+    snare = AddComponent<Dynacoe::Shape2D>();
+
+
+
 
 
     // Load resources
@@ -53,17 +58,15 @@ using namespace Dynacoe;
     snareImage = Assets::Load("png", "snare.png");
     baseImage  = Assets::Load("png", "base.png");
 
-    AddComponent(&kick);
-    AddComponent(&snare);
 
 
-    kick.node.Position() = {
+    kick->node.Position() = {
         Graphics::GetRenderCamera().Width()  * .1, 
         Graphics::GetRenderCamera().Height()  * .2
     };
 
 
-    snare.node.Position() = {
+    snare->node.Position() = {
         Graphics::GetRenderCamera().Width()  * .5, 
         Graphics::GetRenderCamera().Height()  * .2
     };
@@ -90,10 +93,10 @@ void SoundEffects::OnStep() {
 
     
     // It is also possible to get whether the sound is currently playing.
-    kick.FormImage(Sound::IsPlaying(kickSound)?
+    kick->FormImage(Sound::IsPlaying(kickSound)?
             kickImage : baseImage);
 
-    snare.FormImage(Sound::IsPlaying(snareSound)?
+    snare->FormImage(Sound::IsPlaying(snareSound)?
             snareImage : baseImage);
 
 }

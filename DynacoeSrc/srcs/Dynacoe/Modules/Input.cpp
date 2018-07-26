@@ -439,10 +439,21 @@ void Input::AddListener(ButtonListener * b, const std::string & i) {
 
 
 void Input::RemoveListener(ButtonListener * b) {
-    padCallbackMap.erase(padCallbackMap.find(b));
-    mouseCallbackMap.erase(mouseCallbackMap.find(b));
-    keyCallbackMap.erase(keyCallbackMap.find(b));
+
+    auto pFind = padCallbackMap.find(b);
+    if (pFind != padCallbackMap.end()) padCallbackMap.erase(pFind);
+
+    auto mFind = mouseCallbackMap.find(b);
+    if (mFind != mouseCallbackMap.end()) mouseCallbackMap.erase(mFind);
+
+    auto kFind = keyCallbackMap.find(b);
+    if (kFind != keyCallbackMap.end()) keyCallbackMap.erase(kFind);
+
+    auto sFind = strCallbackMap.find(b);
+    if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
 }
+
+
 
 
 

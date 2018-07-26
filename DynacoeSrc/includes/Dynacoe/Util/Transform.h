@@ -30,12 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#ifndef H_DC_Node3D_INCLUDED
-#define H_DC_Node3D_INCLUDED
+#ifndef H_DC_Transform3D_INCLUDED
+#define H_DC_Transform3D_INCLUDED
 
 #include <Dynacoe/Util/Vector.h>
 #include <Dynacoe/Util/TransformMatrix.h>
-#include <Dynacoe/Component.h>
 #include <Dynacoe/Backends/Renderer/Renderer.h>
 
 namespace Dynacoe{
@@ -45,17 +44,17 @@ namespace Dynacoe{
  * \brief A hierarchical transform object.
  *
  * Allows for chaining transformation information including
- * position, rotation, and scaling. Because Nodes are hierarchical,
+ * position, rotation, and scaling. Because Transforms are hierarchical,
  * each has a local transform and a global transform.
  *
  *
  */
-class Node : public Component {
+class Transform {
   public:
 
 
-    Node();
-    ~Node();
+    Transform();
+    ~Transform();
 
     
     
@@ -94,69 +93,51 @@ class Node : public Component {
     
 
 
-    /// \brief Gets the global transform of the node based on its 
-    /// nodal ancestry.
-    const TransformMatrix & GetGlobalTransform();
 
 
+    class OnTransformUpdate {
+      public:
+        virtual void operator()(Transform * source) = 0;
+        
+        // If returns true, the Transform that contains thsi 
+        // functor also owns the rights to free it up.
+        // Usually this happens when the Transform is distroyed.
+        virtual bool OwnedByTransform() = 0;
+    };
 
 
-    std::string GetInfo();
-    void OnStep();
+    
+    /// \brief Gets the transform matrix representative
+    /// of this Transform. At this time, any requests to modify 
+    /// the transform are processed. If any such request was made, 
+    /// the transform is updated and any OnTransformUpdate functors 
+    /// are called.
+    const TransformMatrix & GetMatrix();
 
+    /// \brief Adds a transform update.
+    void AddTransformCallback(OnTransformUpdate *);
 
+    /// \brief removes a transform callback
+    void RemoveTransformCallback(OnTransformUpdate *);
 
-    //Returns a 16-float array that signifies the internal transform array.
-    //This is intended for quick renderer upload. This will always
-    //reflect the global transform
-    void UpdateModelTransforms(RenderBufferID id);
-
-    void SetManualParent(Node *);
-
-    void OnAttach();
-
-
-  protected:
-
-
-    // manually calls to update the transform.
-    void updateTransform();
-
-    // Runs after updateTransform is called
-    virtual void OnTransformUpdate() {};
-
-    // Runs before the aspect is drawn
-    virtual void OnDraw() {}
-
+    /// \brief Returns whether an update to this transform is 
+    /// pending.
+    bool NeedsUpdate() const;
+  
   private:
 
-
-    void UpdateParentReference();
+    
     void ComputeLocal();
 
     TransformMatrix localTransform;
-    TransformMatrix normalTransform;
-    TransformMatrix globalTransform;
 
-    //Transform transformLastState;
-
-    LookupID id;
-    LookupID parent;
-
-    bool localTransformValid;
-    bool parentTransformValid;
     bool reverse;
-
+    bool needsUpdate;
     Vector position;
     Vector rotation;
     Vector scale;
     
-
-    Node * overrideParent;
-    Node * parentNode;
-
-    std::set<Node*> * manualChildren;
-
+    std::vector<OnTransformUpdate*> callbacks;
 };
 }
 

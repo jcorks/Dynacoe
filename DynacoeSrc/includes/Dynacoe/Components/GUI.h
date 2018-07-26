@@ -33,7 +33,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef H_DC_GUI_COMPONENT_INCLUDED
 #define H_DC_GUI_COMPONENT_INCLUDED
 
-#include <Dynacoe/Components/Node.h>
+#include <Dynacoe/Spatial.h>
+#include <Dynacoe/Component.h>
 
 namespace Dynacoe {
 
@@ -48,10 +49,9 @@ namespace Dynacoe {
 /// - "on-drag"
 /// - "on-focus"
 /// - "on-unfocus"
-class GUI : public Component {
+class GUI : public Component, public Spatial {
   public:
     GUI();
-    GUI(Node *);
     ~GUI();
 
 
@@ -81,7 +81,6 @@ class GUI : public Component {
     ///
     bool IsBeingDragged();
 
-    Node & node;
 
 
     /// \brief Attempts to grab the input focus for this GUI.
@@ -136,7 +135,6 @@ class GUI : public Component {
     
     void OnStep();
     std::string GetInfo();
-    void OnAttach();
 
   private:
     void Initialize();

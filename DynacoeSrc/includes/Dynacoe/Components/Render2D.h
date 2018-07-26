@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Backends/Renderer/Renderer.h>
 #include <Dynacoe/Component.h>
-#include <Dynacoe/Components/Node.h>
+#include <Dynacoe/Spatial.h>
 namespace Dynacoe {
 
 
 /// \brief Base component to render a 2D object.
 ///
-class Render2D : public Component {
+class Render2D : public Component, public Spatial {
   public:
 
     /// \brief A RenderMode specifies how the aspect should be expressed.
@@ -58,9 +58,6 @@ class Render2D : public Component {
     /// See Renderer.h
     RenderMode mode;
 
-    /// \brief The Node for the visual. Z is ignored.
-    ///
-    Node & node;
 
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 
     /// pixel values on the display or should be within the hierarchy. The default is false.
@@ -84,19 +81,16 @@ class Render2D : public Component {
 
   protected:
     Render2D(const std::string &);
-    Render2D(const std::string &, Node *);
 
     void SetVertices(const std::vector<Renderer::Vertex2D> &);
     void SetPolygon(Renderer::Polygon);
-
+    void OnUpdateTransform();
 
   private:
      std::vector<uint32_t> vertexSrc;
      int objectID;
      
      Renderer::Polygon polygon;
-     void OnAttach();
-     void OnStep();
 };
 
 }

@@ -41,7 +41,7 @@ class ShaderExample : public Dynacoe::Entity {
   public:
 
     // The aspect member holds the image we are going to draw.
-    Dynacoe::RenderMesh renderer;
+    Dynacoe::RenderMesh * renderer;
     Dynacoe::Shader     program;
     Dynacoe::Material   mat;
 
@@ -50,12 +50,12 @@ class ShaderExample : public Dynacoe::Entity {
     ShaderExample() {
         SetName("ShaderExample");
 
-        AddComponent(&renderer);
+        renderer = AddComponent<Dynacoe::RenderMesh>();
         
 
 
         // We're going to just draw some rectangles
-        renderer.AddMesh(Dynacoe::Mesh::Basic_Cube());        
+        renderer->AddMesh(Dynacoe::Mesh::Basic_Cube());        
 
         // We are going to read the vertex and fragment shaders into 
         // InputBuffers. (Open them in text files to see notes on their implementation)
@@ -90,7 +90,7 @@ class ShaderExample : public Dynacoe::Entity {
         mat.AddTexture(Dynacoe::Material::TextureSlot::Color,  Dynacoe::Assets::Load("png", "pic.png"));    
         mat.AddTexture(Dynacoe::Material::TextureSlot::Normal, Dynacoe::Assets::Load("png", "normal.png"));        
         //mat.SetFramebufferSource(Dynacoe::Graphics::GetActiveCamera());
-        renderer.Material() = mat;
+        renderer->Material() = mat;
 
 
         
@@ -98,7 +98,7 @@ class ShaderExample : public Dynacoe::Entity {
         // Lets put our camera a good distance so we can see the rectangles.
         target = {0, .4, 1.3f};
 
-        Dynacoe::RenderLight * light = Dynacoe::Graphics::GetCamera3D().BindComponent<Dynacoe::RenderLight>();
+        Dynacoe::RenderLight * light = Dynacoe::Graphics::GetCamera3D().AddComponent<Dynacoe::RenderLight>();
         light->FormLight(Dynacoe::RenderLight::Light::Directional);
         light->state.position = {-.2, -1, -.4};
         light->state.intensity = 2;
@@ -108,9 +108,9 @@ class ShaderExample : public Dynacoe::Entity {
 
 
     void OnDraw() {
-        renderer.node.Rotation().z += .1;
-        renderer.node.Rotation().x += .1;
-        renderer.node.Rotation().y += .1;
+        renderer->node.Rotation().z += .1;
+        renderer->node.Rotation().x += .1;
+        renderer->node.Rotation().y += .1;
     }
 
 
@@ -157,9 +157,9 @@ class ShaderExample : public Dynacoe::Entity {
         }
 
         // ease towards position
-        cam.node.Rotation().x = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().x, target.x, .1);
-        cam.node.Rotation().y = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().y, target.y, .1);
-        cam.node.Rotation().z = Dynacoe::Mutator::StepTowards(cam.node.GetRotation().z, target.z, .1);
+        cam.node.Position().x = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().x, target.x, .1);
+        cam.node.Position().y = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().y, target.y, .1);
+        cam.node.Position().z = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().z, target.z, .1);
 
     }
 

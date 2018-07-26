@@ -60,7 +60,6 @@ class TextState;
 class Text2D : public Render2D {
   public:
     Text2D(const std::string & str = std::string(""), const Color & color = Color("white"));
-    Text2D(Node *);
 
     ~Text2D();
 

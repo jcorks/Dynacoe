@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Mesh.h>
 #include <Dynacoe/Backends/Renderer/Renderer.h>
-#include <Dynacoe/Components/Node.h>
 
 
 
@@ -61,9 +60,8 @@ static bool arePrimitivesAllocd = false;
 
 
 
-RenderMesh::RenderMesh() : RenderMesh(new Node){}
 
-RenderMesh::RenderMesh(Node * nInst) : Component("RenderMesh"), node(*nInst){
+RenderMesh::RenderMesh() : Component("RenderMesh") {
     Alloc();
     initValues();
 }
@@ -103,7 +101,7 @@ RenderMesh & RenderMesh::operator=(const RenderMesh & other) {
     return *this;
 }
 
-RenderMesh::RenderMesh(const RenderMesh & other, Node * n) : Component("RenderMesh"), node(n?*n:*new Node()){
+RenderMesh::RenderMesh(const RenderMesh & other) : Component("RenderMesh") {
     Alloc();
     initValues(); 
     *this = other;
@@ -162,18 +160,17 @@ Dynacoe::Material & RenderMesh::Material() {
 
 
 
-// called right before Drawing
-void RenderMesh::OnTransformUpdate() {
-    
-}
 
 // TODO: remove the need for graphics-specific logic!
 void RenderMesh::OnDraw() {
-    Entity * src = GetHost();
-    if (src) {
-        node.UpdateModelTransforms(modelTransform);
-        Graphics::Draw(*this);
-    }
+        // make more efficient, thanks
+    CheckUpdate();
+
+    Graphics::Draw(*this);
+}
+
+void RenderMesh::OnUpdateTransform() {
+    UpdateModelTransforms(modelTransform);
 }
 
 
@@ -224,7 +221,6 @@ void RenderMesh::Alloc() {
     temp.SetToIdentity();
     modelTransform = Graphics::GetRenderer()->AddBuffer(nullptr, 32);
     
-    OnTransformUpdate();
 }
 
 
@@ -239,10 +235,4 @@ Renderer::Polygon RenderMesh::GetRenderPrimitive() {
 }
 
 
-void RenderMesh::OnAttach() {
-    node.SetManualParent(GetHost()->QueryComponent<Node>());
-}
 
-void RenderMesh::OnStep() {
-    node.Step();
-}

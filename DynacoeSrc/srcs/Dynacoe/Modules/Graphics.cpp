@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/Time.h>
 #include <Dynacoe/Dynacoe.h>
 #include <Dynacoe/Modules/ViewManager.h>
-#include <Dynacoe/Components/Node.h>
 #include <Dynacoe/Components/Text2D.h>
 #include <unordered_map>
 
@@ -240,37 +239,23 @@ void Graphics::RunAfter() {
 
 
 
-void Graphics::DrawString(const std::string & str, const Dynacoe::Vector & pos, const Color & c) {
-    Text2D text;
-    text.text = str;
-    text.node.Position() = pos;
-    text.SetTextColor(c);
-    text.Step();
-    text.Draw();
-}
-
-
-
-
 static Renderer::Render2DStaticParameters params2D;
 
-static DynacoeEvent(UpdateTransform2D) {
-    Graphics::GetRenderer()->Render2DVertices(params2D);
-    Camera * cam2D = &Graphics::GetCamera2D();
-    params2D.contextWidth  = cam2D->Width();
-    params2D.contextHeight = cam2D->Height();
-    params2D.contextTransform = cam2D->node.GetGlobalTransform().GetData();
 
-    
-    return true;
+void Graphics::UpdateCameraTransforms(Camera * c) {
+    Camera * cam2D = &Graphics::GetCamera2D();
+    if (cam2D == c) {
+        Graphics::GetRenderer()->Render2DVertices(params2D);
+        params2D.contextWidth  = cam2D->Width();
+        params2D.contextHeight = cam2D->Height();
+        params2D.contextTransform = cam2D->GetGlobalTransform().GetData();
+    }
 }
 
 
-
-
-void Graphics::Draw(Render2D & aspect) {
-
-
+void Graphics::Draw(Render2D & aspect) {    
+    aspect.CheckUpdate();
+    
     Camera * cam2d = &GetCamera2D();
     if (!cam2d) return;
 
@@ -281,7 +266,7 @@ void Graphics::Draw(Render2D & aspect) {
 
     if (round(params2D.contextWidth) != cam2d->Width() ||
         round(params2D.contextHeight) != cam2d->Height()) {
-        cam2d->node.EmitEvent("on-update");
+        UpdateCameraTransforms(cam2d);
     }
 
     drawBuffer->Queue2DVertices(
@@ -493,13 +478,11 @@ void Graphics::SetCamera3D(Camera & c) {
 void Graphics::SetCamera2D(Camera & c) {
     auto cam = state.currentCamera2D.IdentifyAs<Camera>();
     if (cam) {
-        cam->node.UninstallHook("on-update", UpdateTransform2D);
         cam->node.SetReverseTranslation(false);
     }
     state.currentCamera2D = c.GetID();
     c.node.SetReverseTranslation(true);
-    c.node.InstallHook("on-update", UpdateTransform2D);
-    c.node.EmitEvent("on-update");
+    cam->Invalidate();
 }
 
 void Graphics::SetRenderCamera(Camera & c) {

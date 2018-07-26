@@ -48,15 +48,15 @@ class SoundEffects : public Dynacoe::Entity {
     void OnStep();
 
 
-    Dynacoe::Shape2D     kick;
+    Dynacoe::Shape2D     *kick;
     Dynacoe::AssetID     kickSound;
     Dynacoe::AssetID     kickImage;
 
-    Dynacoe::Shape2D     snare;
+    Dynacoe::Shape2D     *snare;
     Dynacoe::AssetID     snareSound;
     Dynacoe::AssetID     snareImage;
 
-    Dynacoe::Shape2D     base;
+    Dynacoe::Shape2D     *base;
     Dynacoe::AssetID     baseImage;
     
 

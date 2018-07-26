@@ -41,7 +41,7 @@ using namespace Dynacoe;
 
 class EParticle : public Entity {
     public:
-        Shape2D shape;
+        Shape2D *  shape;
 
         EParticle();
 
@@ -154,19 +154,19 @@ class EParticle : public Entity {
 
             node.Position() = {x, y};
             node.Rotation().z = (rotation);
-            shape.color = Color(red, green, blue, alpha);
+            shape->color = Color(red, green, blue, alpha);
             //imm.SetTranslucent(true);
             if (!img.Valid()) {
-                shape.FormRectangle(125 * xScale * multiScale,
+                shape->FormRectangle(125 * xScale * multiScale,
                                           125 * yScale * multiScale);
-                shape.node.Position() = -Vector(125 * xScale * multiScale,
+                shape->node.Position() = -Vector(125 * xScale * multiScale,
                                           125 * yScale * multiScale)/2.f;
 
 
             } else {
-                shape.node.Position() = -(center/2);
+                shape->node.Position() = -(center/2);
                 node.Scale() = Vector(xScale * multiScale, yScale * multiScale, 1.f);
-                shape.FormImageFrame(
+                shape->FormImageFrame(
                     img, frame
                 );
 
@@ -226,7 +226,7 @@ EParticle::EParticle() {
         filter = true;
         paralax = true;
 
-        AddComponent(&shape);
+        shape = AddComponent<Shape2D>();
 
 
 }
@@ -308,7 +308,7 @@ void ParticleEmitter2D::EmitParticle(AssetID i, int num) {
         Console::Error()<<("[PARTICLE] Couldn't instantiate particle! Emit failed")<< Console::End;
         return;
     }
-    Dynacoe::Vector v = node.GetGlobalTransform().Transform({});
+    Dynacoe::Vector v = GetGlobalTransform().Transform({});
     for(uint32_t n = 0; n < num; ++n) {
         EParticle * temp = instantiateParticle(&Assets::Get<Particle>(i));
 

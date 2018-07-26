@@ -40,12 +40,13 @@ class InputExample : public Dynacoe::Entity {
   public:
 
     // A square to show where our little entity is
-    Dynacoe::Shape2D mouseSquare;
+    Dynacoe::Shape2D * mouseSquare;
 
 
 
     InputExample() {
         SetName("InputEx");
+        mouseSquare = AddComponent<Dynacoe::Shape2D>();
 
 
         // Let's center our Entity.
@@ -53,10 +54,9 @@ class InputExample : public Dynacoe::Entity {
         node.Position().y = Dynacoe::ViewManager::GetViewHeight() / 2;
 
 
-        mouseSquare.FormRectangle(4, 4);
-        mouseSquare.node.Position() = {-2, -2};
-        mouseSquare.color = "yellow";
-        AddComponent(&mouseSquare);
+        mouseSquare->FormRectangle(4, 4);
+        mouseSquare->node.Position() = {-2, -2};
+        mouseSquare->color = "yellow";
     }
 
     void OnStep() {

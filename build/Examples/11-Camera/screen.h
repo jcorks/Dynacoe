@@ -50,14 +50,14 @@ class Screen : public Dynacoe::Entity {
     Entity::ID   camera;
     
     // The surface to display the rendered results
-    Dynacoe::RenderMesh surface;
+    Dynacoe::RenderMesh * surface;
 
     Screen() {
         // Adds the surface, but as a component ot be updated *AFTER* the entity's Draw/Step
-        AddComponent(&surface, UpdateClass::After);
+        surface = AddComponent<Dynacoe::RenderMesh>(UpdateClass::After);
         
         // Surface is now a square
-        surface.AddMesh(Dynacoe::Mesh::Basic_Square());
+        surface->AddMesh(Dynacoe::Mesh::Basic_Square());
 
         // Basic transform info
         node.Rotation().x = 90;
@@ -77,12 +77,12 @@ class Screen : public Dynacoe::Entity {
         camera = Dynacoe::Engine::Root().Identify()->CreateChild<Dynacoe::Camera>()->GetID();
 
         // The surface will just hold the texture, so we dont need anything fancy...
-        surface.Material().SetProgram(Dynacoe::Material::CoreProgram::Basic);
+        surface->Material().SetProgram(Dynacoe::Material::CoreProgram::Basic);
         
         // ...Except this. THis call explicitly tells the Material for the surface 
         // to always use the custom camera's Framebuffer (the image representing rendered results)
         // as a texture.
-        surface.Material().SetFramebufferSource(*camera.IdentifyAs<Dynacoe::Camera>());
+        surface->Material().SetFramebufferSource(*camera.IdentifyAs<Dynacoe::Camera>());
 
     }
 

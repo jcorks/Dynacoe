@@ -93,14 +93,14 @@ Dynacoe::DataGrid::DataGrid() {
     spanWidth = 0;
     viewIndex = 0;
     SetRowsVisible(10);
-    AddComponent(&wheelZone);
-    AddComponent(&scroll, UpdateClass::After);
-    AddComponent(&scrollGrab);
+    wheelZone = AddComponent<GUI>();
+    scroll = AddComponent<Shape2D>(UpdateClass::After);
+    scrollGrab = AddComponent<GUI>();
 
-    scrollGrab.InstallHandler("on-click", begin_scroll_drag);
+    scrollGrab->InstallHandler("on-click", begin_scroll_drag);
 
     scrollAlpha = 0;
-    scroll.color = {.5f, .25f, 1.f, 1.f};
+    scroll->color = {.5f, .25f, 1.f, 1.f};
     SetName("DataGrid");
 }
 
@@ -125,11 +125,11 @@ void Dynacoe::DataGrid::AddColumn(const std::string & title, int width, const Co
         visibleRows[i]->FormRectangle(spanWidth, lineHeight);
         visibleGUI[i]->DefineRegion(spanWidth, lineHeight);
 
-        next = new Text2D;
+        next = AddComponent<Text2D>();
         next->node.Position().y = (i)*(lineHeight);
         next->node.Position().x = c.x;
         next->SetTextColor(color);
-        AddComponent(next);
+        
         visibleText[i].push_back(next);
     }
 
@@ -225,7 +225,7 @@ void Dynacoe::DataGrid::RefreshView() {
     }
 
 
-    wheelZone.DefineRegion(spanWidth, visibleRows.size()*lineHeight);
+    wheelZone->DefineRegion(spanWidth, visibleRows.size()*lineHeight);
 
     // redefine scroll region
     //
@@ -238,15 +238,15 @@ void Dynacoe::DataGrid::RefreshView() {
         int pad = (height - scrollHeight) / 2;
         float position = viewIndex / (float) unseenRows;
         Vector scrollDim = {(float)scroll_width_c, (float) (scrollHeight < 3 ? 3 : scrollHeight)};
-        scroll.node.Position().x = spanWidth-scroll_width_c;
-        scroll.node.Position().y = (position * (pad*2));
-        scroll.FormRectangle(scrollDim.x, scrollDim.y);
+        scroll->node.Position().x = spanWidth-scroll_width_c;
+        scroll->node.Position().y = (position * (pad*2));
+        scroll->FormRectangle(scrollDim.x, scrollDim.y);
         //scroll.color.a = 1.f;
 
         // "true" scroll bar
         //scrollGrab.node.local.position.x = spanWidth-scroll_width_c*2;
         //scrollGrab.DefineRegion(scrollDim.x*2, height);
-        scrollGrab.DefineRegion(spanWidth, visibleRows.size()*lineHeight);
+        scrollGrab->DefineRegion(spanWidth, visibleRows.size()*lineHeight);
 
     }
 
@@ -346,7 +346,7 @@ void Dynacoe::DataGrid::OnStep() {
 
     }
     if (rowCount > visibleRows.size()) {
-        if (wheelZone.IsHovered()) {
+        if (wheelZone->IsHovered()) {
             if (Input::MouseWheel() < 0) {
                 if (viewIndex < GetRowCount() - visibleRows.size())
                     SetViewPosition(viewIndex+1);
@@ -387,29 +387,27 @@ void Dynacoe::DataGrid::OnStep() {
     }
 
 
-    scroll.color.a = Mutator::StepTowards(scroll.color.a, scrollAlpha, .6, Mutator::Function::Quadratic);
+    scroll->color.a = Mutator::StepTowards(scroll->color.a, scrollAlpha, .6, Mutator::Function::Quadratic);
     RefreshView();
 }
 
 void Dynacoe::DataGrid::SetRowsVisible(uint32_t rows) {
     while(visibleRows.size() > rows) {
         RemoveComponent(visibleRows[visibleRows.size()-1]);
-        delete visibleRows[visibleRows.size()-1];
         visibleRows.erase(visibleRows.begin() + visibleRows.size()-1);
 
         for(uint32_t i = 0; i < columns.size(); ++i) {
             RemoveComponent(visibleText[visibleText.size()-1][i]);
-            delete visibleText[visibleText.size()-1][i];
         }
         visibleText.erase(visibleText.begin() + visibleText.size()-1);
     }
     while(rows > visibleRows.size()) {
-        Shape2D * rowBG = new Shape2D();
+        Shape2D * rowBG = AddComponent<Shape2D>();
         rowBG->FormRectangle(spanWidth, lineHeight);
         rowBG->color = ((rowCount+1)%2) ? real_backgroundOddColor : real_backgroundEvenColor;
         rowBG->node.Position() = Vector(0, visibleRows.size()*lineHeight);
 
-        GUI * gui = new GUI();
+        GUI * gui = AddComponent<GUI>();
         gui->DefineRegion(spanWidth, lineHeight);
         gui->node.Position() = rowBG->node.GetPosition();
         // skip for title row
@@ -420,19 +418,17 @@ void Dynacoe::DataGrid::SetRowsVisible(uint32_t rows) {
         }
         rowmap[gui] = visibleGUI.size();
 
-        AddComponent(gui);
-        AddComponent(rowBG);
+        
         visibleRows.push_back(rowBG);
         visibleGUI.push_back(gui);
 
         Text2D * next;
         visibleText.push_back(std::vector<Text2D *>());
         for(uint32_t i = 0; i < columns.size(); ++i) {
-            next = new Text2D;
+            next = AddComponent<Text2D>();
             next->node.Position().y = (visibleText.size()-1)*(lineHeight);
             next->node.Position().x = columns[i].x;
             next->SetTextColor(columns[i].color);
-            AddComponent(next);
             visibleText[visibleText.size()-1].push_back(next);
         }
     }

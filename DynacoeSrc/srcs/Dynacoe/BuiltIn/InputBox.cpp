@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/BuiltIn/InputBox.h>
 #include <Dynacoe/Modules/Input.h>
-#include <Dynacoe/Components/Node.h>
 
 #include <cstdlib>
 #include <sstream>
@@ -63,15 +62,15 @@ static Color dormantBox (10, 10, 10, 255);
 
 void InputBox::Activate(bool act) {
     if (act) {
-        gui.SetFocus();
+        gui->SetFocus();
     } else {
-        gui.Unfocus();
+        gui->Unfocus();
     }        
 }
 
 void InputBox::Resize(int w, int h) {
-    bg.FormRectangle(w, h);
-    gui.DefineRegion(w, h);
+    bg->FormRectangle(w, h);
+    gui->DefineRegion(w, h);
 }
 
 std::string InputBox::GetText() {
@@ -96,21 +95,21 @@ InputBox::InputBox() : Entity("InputBox") {
     text   = ""; 
     visibleText = "";
 
-    AddComponent(&gui);
-    AddComponent(&bg);
-    AddComponent(&text2D);
+    gui = AddComponent<GUI>();
+    bg = AddComponent<Shape2D>();
+    text2D = AddComponent<Text2D>();
     Resize(50, 12);
     
     
 
-    gui.InstallHandler("on-click", Event_OnClick);
+    gui->InstallHandler("on-click", Event_OnClick);
 }
 
 
 
 void InputBox::OnStep() {
 
-    if (gui.IsFocused()) {
+    if (gui->IsFocused()) {
         char last = 0;
         if (last = Input::GetLastUnicode()) {
             if (last == '\n') {
@@ -123,7 +122,7 @@ void InputBox::OnStep() {
             }
 
 
-            int maxLen = gui.GetRegionW() / 6 - 1; // div by char widget
+            int maxLen = gui->GetRegionW() / 6 - 1; // div by char widget
             if (text.size() >= maxLen) {
                 visibleText = text.substr(text.size() - maxLen, maxLen);
             } else {
@@ -132,26 +131,26 @@ void InputBox::OnStep() {
         }
 
         textColor = activeText;
-        bg.color = activeBox;
-    } else if (gui.IsHovered())  {
-        bg.color = (dormantBox + Color(10, 40, 10, 0));
+        bg->color = activeBox;
+    } else if (gui->IsHovered())  {
+        bg->color = (dormantBox + Color(10, 40, 10, 0));
     } else {
         textColor = dormantText;
-        bg.color = (dormantBox);
+        bg->color = (dormantBox);
     }
 }
 
 
 void InputBox::OnDraw() {
-    int w = gui.GetRegionW();
-    int h = gui.GetRegionH();
+    int w = gui->GetRegionW();
+    int h = gui->GetRegionH();
 
     std::string drawnText = visibleText;
-    if (gui.IsFocused())
+    if (gui->IsFocused())
         drawnText += "|";
 
-    text2D.text = drawnText;
-    text2D.SetTextColor(textColor);
+    text2D->text = drawnText;
+    text2D->SetTextColor(textColor);
 }
 
 

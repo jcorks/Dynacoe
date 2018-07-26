@@ -90,10 +90,6 @@ class Component {
     ///
     std::string GetTag() { return tag; };
 
-    /// \brief Sets the current host of the component.
-    ///
-    void SetHost(Entity *);
-
     /// \brief Returns the set host of the component. If no host is set,
     /// nullptr is returned.
     ///
@@ -104,9 +100,9 @@ class Component {
     template<typename T>
     T * GetHostAs() const {return dynamic_cast<T*>(GetHost());}
 
-    /// \brief Returns a ID of the host. If there is none, an empty ID is returned.
+    /// \brief Returns a ID of the host. 
     ///
-    Entity::ID GetHostID() const {return host ? host->GetID() : Entity::ID();}
+    Entity::ID GetHostID() const {return host->GetID();}
 
     /// \brief Returns a string containing human-readable information on the state of the
     /// component.
@@ -208,9 +204,15 @@ class Component {
     ///
     void UninstallEvent(const std::string &);
 
-
-
+    Component();
+    void * operator new(std::size_t);
+    void * operator new[](std::size_t);
+    void operator delete(void * ptr);
+    void operator delete[](void * ptr);
+    
   private:
+    void SetHost(Entity *);
+      
     friend class Entity;
     std::string tag;
     Entity * host;

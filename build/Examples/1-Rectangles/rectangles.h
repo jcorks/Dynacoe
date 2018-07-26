@@ -44,30 +44,30 @@ DEALINGS IN THE SOFTWARE.
 
 class ExampleRectangles : public Dynacoe::Entity { // enherits from the base Entity
   public:
-    Dynacoe::Shape2D shape;
+    Dynacoe::Shape2D * shape;
 
     // Setting a name helps identify our instance during runtime
     ExampleRectangles() : Entity("ExRectangles") {
-        AddComponent(&shape);
+        shape = AddComponent<Dynacoe::Shape2D>();
 
         // Since we aren't going to change the colors,
         // lets set their colors now.
 
         // Color objects can be created from RGB integers, or via
         // a string.
-        shape.color = "cyan";
+        shape->color = "cyan";
 
 
         float length = Dynacoe::Graphics::GetRenderCamera().Height()  / 2.0;
 
-        shape.FormRectangle(length, length);
+        shape->FormRectangle(length, length);
 
         node.Position() = {
             Dynacoe::Graphics::GetRenderCamera().Width()   / 2.f,
             Dynacoe::Graphics::GetRenderCamera().Height()  / 2.f
         };
 
-        shape.node.Position() = {-length/2.f, -length/2.f};
+        shape->node.Position() = {-length/2.f, -length/2.f};
         node.Rotation().z = 5;
 
 

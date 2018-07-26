@@ -46,7 +46,6 @@ const float linear_slow_rate    = .1f; // percent of full fill
 const float linear_fast_rate    = .5;
 
 FillBar::FillBar() {
-    AddComponent(&obj2d);
     SetName("FillBar");
 
     fraction    = 0;
@@ -56,13 +55,13 @@ FillBar::FillBar() {
     
     empty = CreateChild<Entity>();
     empty->SetName("empty");
-    empty->AddComponent(new Shape2D());
+    empty->AddComponent<Shape2D>();
     empty->QueryComponent<Shape2D>()->color = Dynacoe::Color(0, 0, 0);
     Attach(empty->GetID());
     
     full = CreateChild<Entity>();
     full->SetName("full");
-    full->AddComponent(new Shape2D());
+    full->AddComponent<Shape2D>();
     full->QueryComponent<Shape2D>()->color = Dynacoe::Color(255, 255, 255);
     Attach(full->GetID());
 
@@ -74,10 +73,10 @@ FillBar::FillBar() {
     borderRight = CreateChild<Entity>();
     
     
-    borderUp->AddComponent(new Shape2D());
-    borderDown->AddComponent(new Shape2D());
-    borderLeft->AddComponent(new Shape2D());
-    borderRight->AddComponent(new Shape2D());
+    borderUp->AddComponent<Shape2D>();
+    borderDown->AddComponent<Shape2D>();
+    borderLeft->AddComponent<Shape2D>();
+    borderRight->AddComponent<Shape2D>();
 
 
 
@@ -102,10 +101,10 @@ void FillBar::SetDims(int w, int h) {
     height = h;
 
     if (border) {
-        borderUp->   QueryComponent<Node>()->Position() = {(float)border, 0.f};
-        borderDown-> QueryComponent<Node>()->Position() = {(float)border, (float)height - border};
-        borderLeft-> QueryComponent<Node>()->Position() = {0.f, 0.f};
-        borderRight->QueryComponent<Node>()->Position() = {(float)width - border, 0.f};
+        borderUp->   node.Position() = {(float)border, 0.f};
+        borderDown-> node.Position() = {(float)border, (float)height - border};
+        borderLeft-> node.Position() = {0.f, 0.f};
+        borderRight->node.Position() = {(float)width - border, 0.f};
 
 
         borderUp->QueryComponent<Shape2D>()->   FormRectangle(width - border*2, border);
@@ -122,7 +121,7 @@ void FillBar::SetDims(int w, int h) {
 
 void FillBar::SetBorder(int px) {
     border = px;
-    empty->QueryComponent<Node>()->Position() = {(float)px, (float)px};
+    empty->node.Position() = {(float)px, (float)px};
     SetFill(fraction);
     SetDims(width, height);
 }
@@ -164,7 +163,7 @@ void FillBar::Run() {
     if (fraction != realFraction) {
         switch(fill) {
           case FillDirection::Up:
-            full->QueryComponent<Node>()->Position() = (Vector(border, height - border));
+            full->node.Position() = (Vector(border, height - border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 width-border*2,
                 -((height-border*2)*realFraction)
@@ -172,7 +171,7 @@ void FillBar::Run() {
             break;
         
           case FillDirection::Right:
-            full->QueryComponent<Node>()->Position() = (Vector(border, border));
+            full->node.Position() = (Vector(border, border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 (width - border*2)*realFraction,
                 height - border*2
@@ -180,7 +179,7 @@ void FillBar::Run() {
             break;
 
           case FillDirection::Down:
-            full->QueryComponent<Node>()->Position() = (Vector(border, border));
+            full->node.Position() = (Vector(border, border));
             full->QueryComponent<Shape2D>()->FormRectangle(
                 width-border*2,
                 ((height-border*2)*realFraction)
@@ -188,7 +187,7 @@ void FillBar::Run() {
             break;
 
           case FillDirection::Left:
-            full->QueryComponent<Node>()->Position() = Vector(width - border, height - border);
+            full->node.Position() = Vector(width - border, height - border);
             full->QueryComponent<Shape2D>()->FormRectangle(
                 -(width - border*2)*realFraction,
                 -(height - border*2)

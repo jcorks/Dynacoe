@@ -66,28 +66,12 @@ class ModelViewer : public Dynacoe::Entity {
         // Lets back the camera up too so we can see the model.
         target = {0, 0, 3};
 
-        light.FormLight(Dynacoe::RenderLight::Light::Point);
-        light.state.position = {-.5, -.5, -.5};
-
-        light2.FormLight(Dynacoe::RenderLight::Light::Directional);
-        light2.state.position = {5, .5, 5};
-
-        node.Rotation() = {270, 0, 0};
-
 
     }
 
     void OnStep() {
         // controls the camera with input
         controlCamera();
-
-        
-        /*for(uint32_t i = 0; i < Model->GetMesh().NumChildren(); ++i) {
-            Model->GetMesh().GetChild(i).SetRotation(
-                Model->GetMesh().GetChild(i).GetRotation() + Dynacoe::Vector(.01, .3, .001)
-            );
-        }*/
-        
         node.Rotation() += Dynacoe::Vector(0, .01, 0);
         
     }
@@ -100,10 +84,9 @@ class ModelViewer : public Dynacoe::Entity {
     Dynacoe::Vector target;
     Dynacoe::Vector camPos;
     Dynacoe::AssetID id;
-    Dynacoe::RenderMesh mesh;
 
-    Dynacoe::RenderLight light;
-    Dynacoe::RenderLight light2;
+    Dynacoe::RenderLight * light;
+    Dynacoe::RenderLight * light2;
     Dynacoe::Material m;
 
     // Utility function that lets you look around with WASD, QE.
