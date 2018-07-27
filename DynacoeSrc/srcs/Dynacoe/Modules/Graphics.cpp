@@ -482,7 +482,7 @@ void Graphics::SetCamera2D(Camera & c) {
     }
     state.currentCamera2D = c.GetID();
     c.node.SetReverseTranslation(true);
-    cam->Invalidate();
+    c.Invalidate();
 }
 
 void Graphics::SetRenderCamera(Camera & c) {
