@@ -87,7 +87,7 @@ void Object2D::OnAttach() {
 
 void Object2D::Update() {
     if (!GetHost()->IsStepping()) return;
-    Transform * node = &GetHost()->node;
+    Transform * node = &GetHost()->Node();
     
 
     Vector delta = GetNextPosition() - GetHost()->GetGlobalTransform().Transform({});
@@ -115,7 +115,7 @@ void Object2D::AddVelocity(double factor, double direction) {
 }
 
 void Object2D::AddVelocityTowards(double factor, const Dynacoe::Vector & p) {
-    Transform * n = &GetHost()->node;
+    Transform * n = &GetHost()->Node();
     Vector delta;    
     Vector src = GetHost()->GetGlobalTransform().Transform({});
     
@@ -130,7 +130,6 @@ void Object2D::SetVelocity(double factor, double direction) {
 }
 
 void Object2D::SetVelocityTowards(double factor, const Dynacoe::Vector & p) {
-    Transform * node = &GetHost()->node;
     Vector delta;
     Vector src = GetHost()->GetGlobalTransform().Transform({});
     delta.x = p.x - src.x;

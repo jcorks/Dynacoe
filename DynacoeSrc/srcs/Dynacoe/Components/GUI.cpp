@@ -58,7 +58,7 @@ class TooltipManager : public Entity {
 
         draw = false;
         step = false;
-        text->node.Position() = {5, 5};
+        text->Node().Position() = {5, 5};
 
         shape->color = {0.f, 0.f, 0.f, 1.f};
         source = nullptr;
@@ -66,7 +66,7 @@ class TooltipManager : public Entity {
 
 
     void OnStep() {
-        node.Position() = Graphics::GetCamera2D().node.GetPosition() +
+        Node().Position() = Graphics::GetCamera2D().Node().GetPosition() +
             Vector(Input::MouseX(), Input::MouseY()) +
             Vector(10, 10);
 
@@ -240,7 +240,7 @@ void GUI::OnStep() {
 
 
 std::string GUI::GetInfo() {
-    return (Chain() << "@" << node.GetPosition() << " w/h:" << w << ", " << h << "\n"
+    return (Chain() << "@" << Node().GetPosition() << " w/h:" << w << ", " << h << "\n"
                     << "Clicked? " << (IsClicked() ? "Yes" : "Nope") << "\n"
                     << "Hovered? " << (IsHovered() ? "Yes" : "Nope") << "\n"
                     << "Focused? " << (IsFocused() ? "Yes" : "Nope") << "\n");

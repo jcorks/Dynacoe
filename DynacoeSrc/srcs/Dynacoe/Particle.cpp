@@ -152,20 +152,20 @@ class EParticle : public Entity {
 
 
 
-            node.Position() = {x, y};
-            node.Rotation().z = (rotation);
+            Node().Position() = {x, y};
+            Node().Rotation().z = (rotation);
             shape->color = Color(red, green, blue, alpha);
             //imm.SetTranslucent(true);
             if (!img.Valid()) {
                 shape->FormRectangle(125 * xScale * multiScale,
                                           125 * yScale * multiScale);
-                shape->node.Position() = -Vector(125 * xScale * multiScale,
+                shape->Node().Position() = -Vector(125 * xScale * multiScale,
                                           125 * yScale * multiScale)/2.f;
 
 
             } else {
-                shape->node.Position() = -(center/2);
-                node.Scale() = Vector(xScale * multiScale, yScale * multiScale, 1.f);
+                shape->Node().Position() = -(center/2);
+                Node().Scale() = Vector(xScale * multiScale, yScale * multiScale, 1.f);
                 shape->FormImageFrame(
                     img, frame
                 );

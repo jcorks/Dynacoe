@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-class SpatialTransformUpdate : public Transform::OnTransformUpdate {
+class Dynacoe::SpatialTransformUpdate : public Transform::OnTransformUpdate {
 public:
     Spatial * parent;
     SpatialTransformUpdate(Spatial * p) {
@@ -52,12 +52,13 @@ public:
         parent->Invalidate();
     }
     
-    bool OwnedByTransform() {return true;}
+    bool OwnedByTransform() {return false;}
 };
 
-Spatial::Spatial() : node(*new Transform) {
-    transformOwned = &node;
-    transformOwned->AddTransformCallback(new SpatialTransformUpdate(this));
+Spatial::Spatial() : node(new Transform) {
+    transformOwned = node;
+	transformUpdate = new SpatialTransformUpdate(this);
+    transformOwned->AddTransformCallback(transformUpdate);
     needsUpdate = true;
     parent = nullptr;
 }
@@ -69,6 +70,7 @@ void Spatial::Invalidate() {
 Spatial::~Spatial() {
     SetAsParent(nullptr);
     delete transformOwned;
+	delete transformUpdate;
 }
 
 TransformMatrix & Spatial::GetGlobalTransform() {
@@ -77,12 +79,15 @@ TransformMatrix & Spatial::GetGlobalTransform() {
 }
 
 
+
 void Spatial::ReplaceTransform(Transform * t) {
+	node->RemoveTransformCallback(transformUpdate);
     if (!t) {
-        node = *transformOwned;
+        node = transformOwned;
     } else {
-        node = *t;
+        node = t;
     }
+    node->AddTransformCallback(transformUpdate);
 }
 
 
@@ -147,12 +152,12 @@ void Spatial::SendUpdateSignal() {
 }
 
 void Spatial::CheckUpdate() {
-    if (node.NeedsUpdate()) needsUpdate = true;
+    if (node->NeedsUpdate()) needsUpdate = true;
     if (!needsUpdate) return;
     if (parent) {
-        global = parent->GetGlobalTransform() * node.GetMatrix();
+        global = parent->GetGlobalTransform() * node->GetMatrix();
     } else {
-        global = node.GetMatrix();
+        global = node->GetMatrix();
     }
     SendUpdateSignal();
 

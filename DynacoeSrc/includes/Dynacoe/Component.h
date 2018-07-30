@@ -172,7 +172,7 @@ class Component {
     ///
     std::vector<std::string> GetKnownEvents() const;
     ///\}
-
+	virtual ~Component(){}
   protected:
     Component(const std::string &);
 

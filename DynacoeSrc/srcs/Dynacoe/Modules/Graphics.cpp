@@ -173,7 +173,7 @@ void Graphics::Init() {
         state.currentCamera3D.IdentifyAs<Camera>()->SetType(Camera::Type::Perspective3D);
         SetRenderCamera(*state.currentCamera2D.IdentifyAs<Camera>());
 
-        //GetCamera2D().node.local.reverse = true;
+        //GetCamera2D().Node().local.reverse = true;
 
         Graphics::storeSystemImages(); // TODO: make proper. It should be that images stored with no renderer initialized are just cached until a display is given.
 
@@ -478,10 +478,10 @@ void Graphics::SetCamera3D(Camera & c) {
 void Graphics::SetCamera2D(Camera & c) {
     auto cam = state.currentCamera2D.IdentifyAs<Camera>();
     if (cam) {
-        cam->node.SetReverseTranslation(false);
+        cam->Node().SetReverseTranslation(false);
     }
     state.currentCamera2D = c.GetID();
-    c.node.SetReverseTranslation(true);
+    c.Node().SetReverseTranslation(true);
     c.Invalidate();
 }
 

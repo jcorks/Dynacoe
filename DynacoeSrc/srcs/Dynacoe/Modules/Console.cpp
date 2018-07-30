@@ -80,7 +80,7 @@ class Dynacoe::DebugMessage : public Entity {
         y = 0;
         text->text = message;
         text->SetFontSize(13);
-        text->node.Position().x = 6;
+        text->Node().Position().x = 6;
         
         bg->FormRectangle(bg_width, bg_height);
         bg->color = (bg_color);
@@ -119,7 +119,7 @@ class Dynacoe::DebugMessage : public Entity {
         }
 
         x = -bg_width;
-        node.Position().x = -bg_width + Graphics::GetCamera2D().node.GetPosition().x;
+        Node().Position().x = -bg_width + Graphics::GetCamera2D().Node().GetPosition().x;
 
     }
 
@@ -153,8 +153,8 @@ class Dynacoe::DebugMessage : public Entity {
 
         x = -bg_width * life->Value();
         y = Mutator::StepTowards((others.size()-index-1)*v_spacing_pixels, y, .5);
-        node.Position().x = Graphics::GetCamera2D().node.GetPosition().x + x;
-        node.Position().y = Graphics::GetCamera2D().node.GetPosition().y + y;
+        Node().Position().x = Graphics::GetCamera2D().Node().GetPosition().x + x;
+        Node().Position().y = Graphics::GetCamera2D().Node().GetPosition().y + y;
         
         if (y > Graphics::GetRenderCamera().Height()) {
             Remove();
@@ -301,7 +301,7 @@ class ConsoleInputStream : public Entity {
         static float saturation = 0.f;
         cursorStringAspect->color = (Color(255, 255, 255, 255*(.5*(1+sin(saturation)))));
         saturation += .04;
-        node.Position() = Vector(0, Graphics::GetRenderCamera().Height() - 12);
+        Node().Position() = Vector(0, Graphics::GetRenderCamera().Height() - 12);
 
         
 
@@ -387,7 +387,7 @@ class ConsoleInputStream : public Entity {
             12
         );
         
-        cursorStringAspect->node.Position() = (inputStringAspect->GetCharPosition(3+cursorIter));
+        cursorStringAspect->Node().Position() = (inputStringAspect->GetCharPosition(3+cursorIter));
 
     }
 
@@ -464,8 +464,8 @@ void Console::Init() {
     
     mainGrid = Entity::Create<DataGrid>().IdentifyAs<DataGrid>();
     mainGridRoot->Attach(mainGrid->GetID());
-    mainGridRoot->node.Rotation().x = 180;
-    mainGridRoot->node.Rotation().y = 180;
+    mainGridRoot->Node().Rotation().x = 180;
+    mainGridRoot->Node().Rotation().y = 180;
 
     mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
     mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
@@ -697,7 +697,7 @@ void Console::DrawAfter() {
         mainGridRoot->draw = false;
         return;
     } else {
-        mainGridRoot->node.local.position = Graphics::GetCamera2D().node.local.position 
+        mainGridRoot->Node().local.position = Graphics::GetCamera2D().Node().local.position 
                     + Vector(basePositionOffsetRatio * Graphics::GetRenderCamera().Width(), 0);
 
         mainGridRoot->draw = true;
@@ -710,9 +710,9 @@ void Console::DrawAfter() {
         mainGridRoot->draw = false;
         return;
     } else {
-        mainGridRoot->node.Rotation().x = basePositionOffsetRatio*180;
-        mainGridRoot->node.Rotation().y = basePositionOffsetRatio*180;
-        mainGridRoot->node.Position() = Graphics::GetCamera2D().node.GetPosition();
+        mainGridRoot->Node().Rotation().x = basePositionOffsetRatio*180;
+        mainGridRoot->Node().Rotation().y = basePositionOffsetRatio*180;
+        mainGridRoot->Node().Position() = Graphics::GetCamera2D().Node().GetPosition();
         mainGridRoot->draw = true;
         
     }

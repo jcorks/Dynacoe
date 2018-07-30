@@ -104,26 +104,26 @@ void Camera::SetTarget(const Dynacoe::Vector & pos) {
     if (type == Type::Perspective3D) {
         /*
         transform.ResetView();
-        transform.LookAt(node.local.position,
+        transform.LookAt(Node().local.position,
                   pos,
                   Vector(0, 1.f, 0));
         transform.RetrieveViewMatrix(&matr);
         */
 
 
-        node.Rotation() = Vector();
-        Vector p = GetGlobalTransform().Transform(node.GetPosition());
+        Node().Rotation() = Vector();
+        Vector p = GetGlobalTransform().Transform(Node().GetPosition());
         TransformMatrix m = Matrix_ViewLookAt(p,
                   pos,
                   Vector(0, 1.f, 0));
-        node.Rotation() = {
+        Node().Rotation() = {
             m.Transform(Vector(1, 0, 0)).RotationZ(),
             m.Transform(Vector(0, 0, 1)).RotationY(),
             m.Transform(Vector(0, 1, 0)).RotationX()
         };
 
     } else {
-        node.Position() = pos;
+        Node().Position() = pos;
     }
 }
 
@@ -183,7 +183,7 @@ void Camera::OnStep() {
 
 
 
-    //node.UpdateModelTransforms(modelView);
+    //Node().UpdateModelTransforms(modelView);
 
     if (fb && type == Type::Orthographic2D) {
         if (lastW != Graphics::GetRenderer()->GetTarget()->Width() ||

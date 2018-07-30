@@ -47,6 +47,7 @@ namespace Dynacoe{
  *
  *
  */
+class SpatialTransformUpdate;
 class Spatial {
   public:
     Spatial();
@@ -54,7 +55,7 @@ class Spatial {
 
     // Gets the transform for this spatial object alone.
     // Modifications to it affect the global transform calculations
-    Transform & node;
+    inline Transform & Node() {return *node;}
     
     // Gets the transform matrix that represets this Transform and its 
     // child parent transforms. If changes have been queued for children 
@@ -78,6 +79,8 @@ class Spatial {
     //This is intended for quick renderer upload. This will always
     //reflect the global transform
     void UpdateModelTransforms(RenderBufferID id);
+	
+	
     
   protected:
     virtual void OnUpdateTransform(){}
@@ -88,8 +91,9 @@ class Spatial {
     Transform * transformOwned;
     TransformMatrix global;
     bool needsUpdate;
-    
+    SpatialTransformUpdate * transformUpdate;
     void SendUpdateSignal();
+	Transform * node;
 };
 }
 

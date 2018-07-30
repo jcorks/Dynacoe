@@ -282,24 +282,24 @@ DebugWindow::DebugWindow() {
     // titlebar
     base = {0, 0};
 
-    title->node.Position() = base + text_offset_c;
+    title->Node().Position() = base + text_offset_c;
     titleBarGrab->DefineRegion(default_w_c,
         grab_bar_height_c +
         location_row_height_c +
         info_bar_height_c
     );
-    titleBarGrab->node.Position() = base;
+    titleBarGrab->Node().Position() = base;
     titleBarGrab->InstallHandler("on-click", event_drag_begin_window);
 
 
 
     // exit
-    exit->node.Position() = {default_w_c - exit_button_width_c, 0};
+    exit->Node().Position() = {default_w_c - exit_button_width_c, 0};
     exit->color = exit_color;
     exit->FormRectangle(exit_button_width_c, grab_bar_height_c);
 
 
-    exitButton->node.Position() = exit->node.GetPosition();
+    exitButton->Node().Position() = exit->Node().GetPosition();
     exitButton->DefineRegion(exit_button_width_c, grab_bar_height_c);
     exitButton->InstallHandler("on-click", event_click_exit);
     exitButton->InstallHandler("on-enter", event_hover_enter_exit);
@@ -308,12 +308,12 @@ DebugWindow::DebugWindow() {
 
 
     // pause
-    pause->node.Position() = {default_w_c -2* exit_button_width_c, 0};
+    pause->Node().Position() = {default_w_c -2* exit_button_width_c, 0};
     pause->color = back_color;
     pause->FormRectangle(exit_button_width_c, grab_bar_height_c);
 
 
-    pauseButton->node.Position() = pause->node.GetPosition();
+    pauseButton->Node().Position() = pause->Node().GetPosition();
     pauseButton->DefineRegion(exit_button_width_c, grab_bar_height_c);
     pauseButton->InstallHandler("on-click", event_click_pause);
     pauseButton->InstallHandler("on-enter", event_hover_enter_pause);
@@ -323,34 +323,34 @@ DebugWindow::DebugWindow() {
 
     // location / link
     base = {0, (float)grab_bar_height_c};
-    linkBar->node.Position() = Vector(back_button_width_c, 0) + base;
+    linkBar->Node().Position() = Vector(back_button_width_c, 0) + base;
     linkBar->FormRectangle(default_w_c - back_button_width_c, location_row_height_c);
     linkBar->color = location_color;
 
-    link->node.Position() = linkBar->node.GetPosition() + text_offset_c;
+    link->Node().Position() = linkBar->Node().GetPosition() + text_offset_c;
 
-    linkBackButton->node.Position() = base;
+    linkBackButton->Node().Position() = base;
     linkBackButton->DefineRegion(back_button_width_c, location_row_height_c);
     linkBackButton->InstallHandler("on-click", event_click_back);
     linkBackButton->InstallHandler("on-enter", event_hover_enter_back);
     linkBackButton->InstallHandler("on-leave", event_hover_leave_back);
 
-    linkBack->node.Position() = base;
+    linkBack->Node().Position() = base;
     linkBack->color = back_color;
     linkBack->FormRectangle(back_button_width_c, grab_bar_height_c);
 
-    linkBackText->node.Position() = base + Vector(6, 6);
+    linkBackText->Node().Position() = base + Vector(6, 6);
     linkBackText->text = "<";
 
 
 
     // status bar
     base.y += grab_bar_height_c;
-    statusBar->node.Position() = base;
+    statusBar->Node().Position() = base;
     statusBar->FormRectangle(default_w_c, info_bar_height_c);
     statusBar->color = "#00000056";
 
-    status->node.Position() = base;
+    status->Node().Position() = base;
     status->SetTextColor(info_text_color);
     status->SetFontSize(9);
 
@@ -359,41 +359,41 @@ DebugWindow::DebugWindow() {
 
     // attached button
     base.y += info_bar_height_c;
-    attached->node.Position() = base;
+    attached->Node().Position() = base;
     attached->FormRectangle(default_w_c/2, tab_bar_height_c);
     attached->color = tab_color;
 
-    attachedText->node.Position() = base;
+    attachedText->Node().Position() = base;
     attachedText->text = attached_string_c;
     attachedText->SetTextColor(tab_text_color);
 
-    attachedButton->node.Position() = base;
+    attachedButton->Node().Position() = base;
     attachedButton->DefineRegion(default_w_c/2, tab_bar_height_c);
     attachedButton->InstallHandler("on-click", event_click_attached);
     attachedButton->InstallHandler("on-enter", event_hover_enter_attached);
     attachedButton->InstallHandler("on-leave", event_hover_leave_attached);
 
-    variables->node.Position() = base + Vector(default_w_c/2, 0);
+    variables->Node().Position() = base + Vector(default_w_c/2, 0);
     variables->FormRectangle(default_w_c/2, tab_bar_height_c);
     variables->color = tab_color;
 
-    variablesText->node.Position() = base + Vector(default_w_c/2, 0);
+    variablesText->Node().Position() = base + Vector(default_w_c/2, 0);
     variablesText->text = variable_string_c;
     variablesText->SetTextColor(tab_text_color);
 
-    variablesButton->node.Position() = base + Vector(default_w_c/2, 0);
+    variablesButton->Node().Position() = base + Vector(default_w_c/2, 0);
     variablesButton->DefineRegion(default_w_c, tab_bar_height_c);
     variablesButton->InstallHandler("on-click", event_click_variables);
     variablesButton->InstallHandler("on-enter", event_hover_enter_variables);
     variablesButton->InstallHandler("on-leave", event_hover_leave_variables);
 
 
-    node.Position() = {100, 100};
+    Node().Position() = {100, 100};
 
     base.y += tab_bar_height_c;
     attachedTable = CreateChild<DataGrid>();
     attachedTable->clickCallback = event_click_table_attached;
-    attachedTable->node.Position() = base;
+    attachedTable->Node().Position() = base;
     attachedTable->titleColor = {.6f, .6f, .6f, 1.f};
     attachedTable->AddColumn("ID",          130);
     attachedTable->AddColumn("Name",        190);
@@ -406,7 +406,7 @@ DebugWindow::DebugWindow() {
     attachedTableGUIcontainer = attachedTable->CreateChild<Entity>();
     for(uint32_t i = 0; i < attachedTable->GetRowsVisible(); ++i) {
         Entity * child = attachedTableGUIcontainer->CreateChild<Entity>();
-        child->node.Position().y = (i+1)*attachedTable->RowHeight(); // +1 to skip titles
+        child->Node().Position().y = (i+1)*attachedTable->RowHeight(); // +1 to skip titles
 
         DataTable * data = child->AddComponent<DataTable>();
         data->Write("index", i);
@@ -416,7 +416,7 @@ DebugWindow::DebugWindow() {
     SetName("DebugWindow");
 
     variablesTable = CreateChild<DataGrid>();
-    variablesTable->node.Position() = base;
+    variablesTable->Node().Position() = base;
     variablesTable->titleColor = {.6f, .6f, .6f, 1.f};
     variablesTable->AddColumn("Name",            120, {.7f, .9f, .7f, 1.f});
     variablesTable->AddColumn("Value/State",     280);
@@ -674,15 +674,15 @@ void DebugWindow::UpdateInfoVariables() {
 
     uint32_t lineIndex = 0;
     variablesTable->Get(0, lineIndex) = "Position";
-    variablesTable->Get(1, lineIndex) = (Chain() << e->node.GetPosition());
+    variablesTable->Get(1, lineIndex) = (Chain() << e->Node().GetPosition());
     lineIndex++;
     
     variablesTable->Get(0, lineIndex) = "Scale";
-    variablesTable->Get(1, lineIndex) = (Chain() << e->node.GetScale());
+    variablesTable->Get(1, lineIndex) = (Chain() << e->Node().GetScale());
     lineIndex++;
 
     variablesTable->Get(0, lineIndex) = "Rotation";
-    variablesTable->Get(1, lineIndex) = (Chain() << e->node.GetRotation());
+    variablesTable->Get(1, lineIndex) = (Chain() << e->Node().GetRotation());
     lineIndex++;
 
 
@@ -753,7 +753,7 @@ void DebugWindow::OnStep() {
             isBeingDragged = false;
             return;
         }
-        node.Position() += {
+        Node().Position() += {
             (float)Input::MouseXDelta(),
             (float)Input::MouseYDelta()
         };
@@ -910,28 +910,28 @@ class ProcessTimeFeedback : public Dynacoe::Entity {
 
 
         //Graphics::DrawString(timing.c_str() , timingOrigin, Color(255, 255, 255, 255));
-        timeString->node.Position() = textOrigin;
-        titleString->node.Position() = {0, 0};
+        timeString->Node().Position() = textOrigin;
+        titleString->Node().Position() = {0, 0};
         timeString->SetTextColor("white");
 
 
         // legend
-        drawRect->node.Position() = legendSquareOrigin;
+        drawRect->Node().Position() = legendSquareOrigin;
         drawRect->FormRectangle(2, 12);
         drawRect->color = drawColor;
 
 
-        runRect->node.Position() = legendSquareOrigin + Vector{0, 12};
+        runRect->Node().Position() = legendSquareOrigin + Vector{0, 12};
         runRect->FormRectangle(2, 12);
         runRect->color = runColor;
 
 
-        sysRect->node.Position() = legendSquareOrigin +Vector{0, 24};
+        sysRect->Node().Position() = legendSquareOrigin +Vector{0, 24};
         sysRect->FormRectangle(2, 12);
         sysRect->color = sysColor;
 
 
-        debugRect->node.Position() = legendSquareOrigin +Vector{0, 36};
+        debugRect->Node().Position() = legendSquareOrigin +Vector{0, 36};
         debugRect->FormRectangle(2, 12);
         debugRect->color = debugColor;
 
@@ -953,23 +953,23 @@ class ProcessTimeFeedback : public Dynacoe::Entity {
 
 
         barBG->FormRectangle(graphWidth + 2, 12);
-        barBG->node.Position() = graphOrigin + Vector(-1, -1);
+        barBG->Node().Position() = graphOrigin + Vector(-1, -1);
         barBG->color = bgColor;
 
 
-        barDraw->node.Position() = graphOrigin;
+        barDraw->Node().Position() = graphOrigin;
         barDraw->color = drawColor;
 
 
-        barRunTransform = &barRun->node;
+        barRunTransform = &barRun->Node();
         barRun->color = runColor;
 
 
-        barSysTransform = &barSys->node;
+        barSysTransform = &barSys->Node();
         barSys->color = sysColor;
 
 
-        barDebugTransform = &barDebug->node;
+        barDebugTransform = &barDebug->Node();
         barDebug->color = debugColor;
 
     }
@@ -1150,7 +1150,7 @@ class DebuggerBase : public Entity {
         draw = show;
         step = show;
 
-        node.Position().x = -width;
+        Node().Position().x = -width;
     }
 
     void CreateBase() {
@@ -1176,7 +1176,7 @@ class DebuggerBase : public Entity {
 
     void OnStep() {
         mouseXY->text = (Chain() << Input::MouseX() << ", " << Input::MouseY());
-        hover->node.Position().x = Mutator::StepTowards(hover->node.GetPosition().x, hoverX);
+        hover->Node().Position().x = Mutator::StepTowards(hover->Node().GetPosition().x, hoverX);
         if (updateTimer->IsExpired()) {
             UpdateCycle();
             updateTimer->Set(1500);
@@ -1216,7 +1216,7 @@ class DebuggerBase : public Entity {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         base->acc++;
         base->hover->draw = (base->acc > 0);
-        base->hoverX = gui->node.Position().x;
+        base->hoverX = gui->Node().Position().x;
         return true;
     }
 
@@ -1255,14 +1255,14 @@ class DebuggerBase : public Entity {
         h->FormRectangle(50, 1);
         h->color = "#AAFFAA";
 
-        overviewText->node.Position() = {0, 0};
-        entityText->node.Position()   = {49, 0};
-        varsText->node.Position()     = {99, 0};
+        overviewText->Node().Position() = {0, 0};
+        entityText->Node().Position()   = {49, 0};
+        varsText->Node().Position()     = {99, 0};
 
 
         hover = h;
         hover->draw = false;
-        hover->node.Position() = {0, 15};
+        hover->Node().Position() = {0, 15};
         acc = 0;
 
 
@@ -1270,9 +1270,9 @@ class DebuggerBase : public Entity {
         entityButton->  DefineRegion(50, 20);
         varsButton->    DefineRegion(50, 20);
 
-        overviewButton->node.Position() = {0, 0};
-        entityButton->node.Position() = {50, 0};
-        varsButton->node.Position() = {100, 0};
+        overviewButton->Node().Position() = {0, 0};
+        entityButton->Node().Position() = {50, 0};
+        varsButton->Node().Position() = {100, 0};
 
         overviewButton->InstallHandler("on-click", ButtonClickEvent);
         overviewButton->InstallHandler("on-enter", ButtonEnterEvent);
@@ -1297,7 +1297,7 @@ class DebuggerBase : public Entity {
     void CreateOverviewPage() {
 
         overview = CreateChild<Entity>();
-        overview->node.Position() = Vector(0, 20);
+        overview->Node().Position() = Vector(0, 20);
 
 
         const float label_column_c = 0.f;
@@ -1305,13 +1305,13 @@ class DebuggerBase : public Entity {
         const float line_height_c = 10.f;
 
         ProcessTimeFeedback * p = overview->CreateChild<ProcessTimeFeedback>();
-        p->node.Position() = {10, 0};
+        p->Node().Position() = {10, 0};
 
 
 
 
         table = overview->CreateChild<DataGrid>();
-        table->node.Position() = {0, 100};
+        table->Node().Position() = {0, 100};
         for(int i = 0; i < slowestCount; ++i)
             table->AddRow();
 
@@ -1328,7 +1328,7 @@ class DebuggerBase : public Entity {
     DataGrid * searchResults;
     void CreateEntityPage() {
         entity = CreateChild<Entity>();
-        entity->node.Position() = {0, 20};
+        entity->Node().Position() = {0, 20};
         search = entity->CreateChild<InputBox>();
         search->Resize(width, 12);
 
@@ -1340,7 +1340,7 @@ class DebuggerBase : public Entity {
         for(int i = 0; i < 100; ++i) {
             searchResults->AddRow();
         }
-        searchResults->node.Position() = {0, 40};
+        searchResults->Node().Position() = {0, 40};
         search->SetText("Search...");
     }
 
@@ -1396,7 +1396,7 @@ class DebuggerBase : public Entity {
                     table->GetTooltip(i) = Chain() <<
                         "Entity Info:\n"
                         "ID:       " << it->second.String() << "\n"
-                        "Position: " << it->second.Identify()->node.GetPosition()
+                        "Position: " << it->second.Identify()->Node().GetPosition()
                     ;
                 }
 
@@ -1415,7 +1415,7 @@ class DebuggerBase : public Entity {
                 searchResults->GetTooltip(i) = Chain() <<
                     "Entity Info:\n"
                     "ID:       " << ent->GetID().String() << "\n"
-                    "Position: " << ent->node.GetPosition()
+                    "Position: " << ent->Node().GetPosition()
                 ;
             }
             searchIDs = results;
@@ -1431,15 +1431,15 @@ class DebuggerBase : public Entity {
         base->mutate->Clear(-base->width);
         base->mutate->NewMutation(base->slide_duration_s, 0, Mutator::Function::Logarithmic);
         base->mutate->Start();
-        base->mutate->Bind(base->node.Position().x);
+        base->mutate->Bind(base->Node().Position().x);
         return true;
     }
 
     static DynacoeEvent(State_SlideIn_Step) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         if (base->mutate->Expired()) {
-            base->mutate->Unbind(base->node.Position().x);
-            base->node.Position().x = 0;
+            base->mutate->Unbind(base->Node().Position().x);
+            base->Node().Position().x = 0;
             base->state->Halt();
         }
         return true;
@@ -1449,20 +1449,20 @@ class DebuggerBase : public Entity {
 
     static DynacoeEvent(State_SlideOut_Init) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
-        base->mutate->Clear(base->node.GetPosition().x);
-        base->mutate->NewMutation(base->slide_duration_s, base->node.GetPosition().x-base->width, Mutator::Function::Quadratic);
+        base->mutate->Clear(base->Node().GetPosition().x);
+        base->mutate->NewMutation(base->slide_duration_s, base->Node().GetPosition().x-base->width, Mutator::Function::Quadratic);
         base->mutate->Start();
-        base->mutate->Bind(base->node.Position().x);
+        base->mutate->Bind(base->Node().Position().x);
         return false;
     }
 
     static DynacoeEvent(State_SlideOut_Step) {
         DebuggerBase * base = self.IdentifyAs<DebuggerBase>();
         if (base->mutate->Expired()) {
-            base->mutate->Unbind(base->node.Position().x);
+            base->mutate->Unbind(base->Node().Position().x);
             base->draw = false;
             base->step = false;
-            base->node.Position().x = -base->width;
+            base->Node().Position().x = -base->width;
             base->state->Halt();
         }
         return false;
@@ -1494,7 +1494,7 @@ Backend * Debugger::GetBackend() {
 }
 
 void Debugger::RunBefore() {
-    debuggerBase.Identify()->GetParent().node.Position() = Graphics::GetCamera2D().node.GetPosition();
+    debuggerBase.Identify()->GetParent().Node().Position() = Graphics::GetCamera2D().Node().GetPosition();
     if (Input::IsPressed(Keyboard::Key_F3)) {
         debuggerBase.IdentifyAs<DebuggerBase>()->Toggle();
     }
