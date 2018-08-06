@@ -222,6 +222,7 @@ uint32_t Renderer2D::Add2DVertex() {
     float * dataCopy = new float[newSize/sizeof(float)];
     data->vertexData->GetData(dataCopy, 0, data->vertexData->Size()/sizeof(float));
     data->vertexData->Define(dataCopy, newSize/sizeof(float));
+    delete[] dataCopy;
     return data->vertexID++;
 }
 
@@ -252,6 +253,7 @@ uint32_t Renderer2D::Add2DObject() {
     float * dataCopy = new float[newSize/sizeof(float)];
     data->objectData->GetData(dataCopy, 0, data->objectData->Size()/sizeof(float));
     data->objectData->Define(dataCopy, newSize/sizeof(float));
+    delete[] dataCopy;
     return data->objectID++;
 }
 
