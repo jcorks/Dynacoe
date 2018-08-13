@@ -62,13 +62,13 @@ class ExampleRectangles : public Dynacoe::Entity { // enherits from the base Ent
 
         shape->FormRectangle(length, length);
 
-        node.Position() = {
+        Node().Position() = {
             Dynacoe::Graphics::GetRenderCamera().Width()   / 2.f,
             Dynacoe::Graphics::GetRenderCamera().Height()  / 2.f
         };
 
-        shape->node.Position() = {-length/2.f, -length/2.f};
-        node.Rotation().z = 5;
+        shape->Node().Position() = {-length/2.f, -length/2.f};
+        Node().Rotation().z = 5;
 
 
 
@@ -77,9 +77,9 @@ class ExampleRectangles : public Dynacoe::Entity { // enherits from the base Ent
 
 
     void OnStep() {
-        node.Rotation().z += .4;
-        node.Rotation().x += .5;
-        node.Rotation().y += .3;
+        Node().Rotation().z += .4;
+        Node().Rotation().x += .5;
+        Node().Rotation().y += .3;
 
 
 

@@ -137,6 +137,10 @@ GLuint RenderBuffer_GL3_1::GenerateBufferID() {
     if (!stateChanged) return lastID;
     
     // recycling may have issues?
+    if (usedIDs.size() > 10) {
+        ReclaimIDs();
+    }
+
     
     GLuint glID;
     if (!deadIDs.empty()) {
