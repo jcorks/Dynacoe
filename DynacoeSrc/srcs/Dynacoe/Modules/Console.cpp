@@ -82,13 +82,13 @@ class Dynacoe::DebugMessage : public Entity {
         text->SetFontSize(13);
         text->Node().Position().x = 6;
         
-        bg->FormRectangle(bg_width, bg_height);
+
         bg->color = (bg_color);
         
 
 
 
-        others.push_back(GetID());
+        others.insert(others.begin(), GetID());
         life->Clear(1.f);
         life->NewMutation(enter_life, 0.f, Mutator::Function::Logarithmic);
         life->NewMutation(enter_life + non_fade_life, 0.f, Mutator::Function::Constant);
@@ -96,7 +96,7 @@ class Dynacoe::DebugMessage : public Entity {
         life->Start();
 
 
-        tag->FormRectangle(5, bg_height);
+
         switch(type) {
             case ConsoleStream::MessageType::Normal:
                 tag->color = (Color("white"));
@@ -121,9 +121,20 @@ class Dynacoe::DebugMessage : public Entity {
         x = -bg_width;
         Node().Position().x = -bg_width + Graphics::GetCamera2D().Node().GetPosition().x;
 
+        float requestedW = text->GetDimensions().x + text->Node().Position().x + 12;
+        float requestedH = text->GetDimensions().y + 6;
+        height = bg_height < requestedH ? requestedH : bg_height;
+        width =  bg_width  < requestedW ? requestedW : bg_width;
+
+        bg->FormRectangle(
+            width,
+            height
+        );
+        tag->FormRectangle(5, height);
+
     }
 
-    ~DebugMessage() {
+    void OnRemove() {
         for(int i = 0; i < others.size(); ++i) {
             if (others[i] == GetID()) {
                 others.erase(others.begin() + i);
@@ -142,23 +153,38 @@ class Dynacoe::DebugMessage : public Entity {
         if (life->Expired()) Remove();
 
 
-        int index;
-        for(int i = 0; i < others.size(); ++i) {
-            if (others[i] == GetID()) {
-                index = i;
-                break;
-            }
-        }
 
 
-        x = -bg_width * life->Value();
-        y = Mutator::StepTowards((others.size()-index-1)*v_spacing_pixels, y, .5);
+        if (others[0] != GetID()) return;
+        y = Mutator::StepTowards(0, y, .2);
+        x = -width * life->Value();
+
         Node().Position().x = Graphics::GetCamera2D().Node().GetPosition().x + x;
         Node().Position().y = Graphics::GetCamera2D().Node().GetPosition().y + y;
-        
-        if (y > Graphics::GetRenderCamera().Height()) {
-            Remove();
+
+        for(uint32_t i = 1; i < others.size(); ++i) {
+            DebugMessage * self   = others[i  ].IdentifyAs<DebugMessage>();
+            DebugMessage * parent = others[i-1].IdentifyAs<DebugMessage>();
+
+            if (!(self && parent)) continue;
+
+            self->x = -self->width * self->life->Value();
+            if (parent) {
+                self->y = Mutator::StepTowards(parent->y + parent->height + 10, self->y, .7);
+            }
+
+            self->Node().Position().x = Graphics::GetCamera2D().Node().GetPosition().x + self->x;
+            self->Node().Position().y = Graphics::GetCamera2D().Node().GetPosition().y + self->y;
+            self->CheckUpdate();
+            
+            if (self->y > Graphics::GetRenderCamera().Height()) {
+                self->Remove();
+            }
+
         }
+
+
+
 
     }
   private:
@@ -167,8 +193,8 @@ class Dynacoe::DebugMessage : public Entity {
     const float             enter_life = .3f;
     const float             non_fade_life = 3.f;
     const float             exit_life = .3f;
-    const float             bg_width = 400.f;
-    const float             bg_height = 50.f;
+    const float             bg_width = 100.f;
+    const float             bg_height = 20.f;
     const Dynacoe::Color    bg_color = Dynacoe::Color(32, 32, 32, 230);
 
 
@@ -184,6 +210,8 @@ class Dynacoe::DebugMessage : public Entity {
     Mutator * life;
     float x;
     float y;
+    float height;
+    float width;
 
 
 };
@@ -811,6 +839,9 @@ void Console::AcquireStreamOutput(const std::string & str, ConsoleStream::Messag
         std::pair<std::string, ConsoleStream::MessageType>(str, type)
     );
 
+    if (!shown && str.size())
+        PostMessageConsole(str, type);
+
 }
 
 void Console::ProcessStreamOutput() {
@@ -856,8 +887,7 @@ void Console::ProcessStreamIteration(const std::string & strSrc, ConsoleStream::
         } else {
             mainGrid->AddRow();
             // break up input with multiple lines into separate message calls
-            if (!shown)
-                PostMessageConsole(mainGrid->Get(0, originalIndx+newLineIndex), message);
+
 
             //if (lines.size()*fontHeight > Graphics::GetRenderResolutionHeight())            
             if (console_overflow)
