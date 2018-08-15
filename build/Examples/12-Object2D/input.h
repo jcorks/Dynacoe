@@ -85,15 +85,15 @@ class Dumb : public Dynacoe::Entity {
     Dumb() {
         o2 = Dynacoe::Entity::CreateChild<CollideObject>();
         o2->Set(Dynacoe::Random::Value()*10 + 5, Dynacoe::Random::Value()*10 + 5);
-        node.Position() = {Dynacoe::Random::Value()*500, Dynacoe::Random::Value()*500};
+        Node().Position() = {Dynacoe::Random::Value()*500, Dynacoe::Random::Value()*500};
 
     }
 
     void OnStep() {
 
-        /*if (o2->node.global.position.x < 0)
+        /*if (o2->Node().global.position.x < 0)
             o2->obj.AddVelocity(4, 0);
-        else if (o2->node.global.position.x > 200) 
+        else if (o2->Node().global.position.x > 200) 
             o2->obj.AddVelocity(-4, 0);*/
     }
 
@@ -114,12 +114,12 @@ class InputExample : public Dynacoe::Entity {
 
 
         // Let's center our Entity.
-        node.Position().x = Dynacoe::ViewManager::GetViewWidth() / 2;
-        node.Position().y = Dynacoe::ViewManager::GetViewHeight() / 2;
+        Node().Position().x = Dynacoe::ViewManager::GetViewWidth() / 2;
+        Node().Position().y = Dynacoe::ViewManager::GetViewHeight() / 2;
 
 
         mouseSquare->FormRectangle(4, 4);
-        mouseSquare->node.Position() = {-2, -2};
+        mouseSquare->Node().Position() = {-2, -2};
         mouseSquare->color = "yellow";
 
         CollideObject * o = Dynacoe::Entity::CreateChild<CollideObject>();
@@ -135,26 +135,26 @@ class InputExample : public Dynacoe::Entity {
         // movement
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_w)) {
-            node.Position().y -= 2;
+            Node().Position().y -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_a)) {
-            node.Position().x -= 2;
+            Node().Position().x -= 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_s)) {
-            node.Position().y += 2;
+            Node().Position().y += 2;
         }
 
         if (Dynacoe::Input::GetState(Dynacoe::Keyboard::Key_d)) {
-            node.Position().x += 2;
+            Node().Position().x += 2;
         }
 
 
         // Lets have the Entity teleport to where the mouse clicks.
         // IsPressed() will return true only when the press is registered.
         if (Dynacoe::Input::IsPressed(Dynacoe::MouseButtons::Left)) {
-            node.Position() = {
+            Node().Position() = {
                 Dynacoe::Input::MouseX(),
                 Dynacoe::Input::MouseY()
             };

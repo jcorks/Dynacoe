@@ -93,10 +93,9 @@ void Object2D::Update() {
     Vector delta = GetNextPosition() - GetHost()->GetGlobalTransform().Transform({});
     // using the "last" model, we include manual translations as part of 
     // normal collisions.
-    if (delta.Length() > .000001) {
-        EmitEvent("on-move");
+    if (delta.Length() > .000001 && EmitEvent("on-move")) {
         node->Position() += delta;
-
+        GetHost()->CheckUpdate();
     }
     last = node->GetPosition();
 
