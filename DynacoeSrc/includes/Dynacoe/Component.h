@@ -56,6 +56,10 @@ class Entity;
  * your own custom events. InstallEvent() is the protected function that adds 
  * a new recognized event with the given name. Once installed, EmitEvent() should be called 
  * at the appropriate time user functions should be run.
+ * 
+ * Any component is aware of at least 2 events: on-attach, called when a 
+ * component is bound to its host. and on-detach, right before the removal sequence is started 
+ * for a host.
  *
  *
  */

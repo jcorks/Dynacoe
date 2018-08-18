@@ -548,6 +548,9 @@ Entity::Entity() {
 
 void Entity::Remove() {
     if (removed) return;
+    for(uint32_t i = 0; i < components.size(); ++i) {
+        components[i]->EmitEvent("on-detach", id, {});
+    }
     OnRemove();
 
     auto children = PriorityList;
@@ -789,6 +792,7 @@ void Entity::AddComponentInternal(Component * c, UpdateClass when) {
     }
     c->SetHost(this);
     c->OnAttach();
+    c->EmitEvent("on-attach", id, {});
 }
 
 

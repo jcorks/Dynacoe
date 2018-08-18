@@ -308,8 +308,12 @@ class Dynacoe::TextState {
 
 
         // errHandling
-        if (!id || !neededCount || !strLen || size < 1) return;
-
+        if (!id || !neededCount || !strLen || size < 1) {
+            dimensions = {};
+            vertices.clear();
+            pos.clear();
+            return;
+        }
         // uh oh, new font! Reset cached info
         FT_Set_Pixel_Sizes(*id, 0, size);
         if (fontFace != id || fontSize != size) {

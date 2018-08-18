@@ -41,6 +41,9 @@ Component::Component(const std::string & tag_) {
     host = nullptr;
     draw = true;
     step = true;
+    
+    InstallEvent("on-attach");
+    InstallEvent("on-detach");
 }
 
 void Component::SetHost(Entity * h) {
