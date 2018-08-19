@@ -38,15 +38,17 @@ using namespace Dynacoe;
 
 StringExample::StringExample() {
     SetName("Typer");
+    textObject = AddComponent<Text2D>();
     // Lets load in the font. By default, Dynacoe 
     // can read OTF and TTF fonts.
-    textObject.SetFont    (Assets::Load("ttf", "monospace.ttf"));
-    textObject.SetFontSize(14);
+    textObject->SetFont    (Assets::Load("ttf", "monospace.ttf"));
+    textObject->SetFontSize(14);
 
-    textObject.text =     "Try typing!";
-    textObject.SetSpacingMode(Text2D::SpacingMode::Monospace);
+    textObject->text =     "Try typing!";
+    textObject->SetSpacingMode(Text2D::SpacingMode::Monospace);
 
-    AddComponent(&textObject);
+
+
 }
 
 void StringExample::OnStep() {
@@ -62,7 +64,8 @@ void StringExample::OnStep() {
         } else {
             text += (char)character;
         }
-        textObject.text =  text + '|';
+        textObject->text =  text + '|';
+        Dynacoe::Console::Info() << textObject->GetDimensions().x << ", " << textObject->GetDimensions().y << "\n";
     }
     
 
@@ -73,14 +76,14 @@ void StringExample::OnStep() {
     // most aesthetically pleasing, but is more work to predict 
     // how much real estate the text will require.
     if (Input::IsPressed(Keyboard::Key_right)) {
-        textObject.SetSpacingMode(Text2D::SpacingMode::Kerned);
+        textObject->SetSpacingMode(Text2D::SpacingMode::Kerned);
         Console::Info() << "Changed spacing mode to: Kerned\n";
     } 
 
     // 'Bitmap' text will draw the text with spacing determined from 
     // just the visual. Rarely useful, but you never know!
     if (Input::IsPressed(Keyboard::Key_left)) {
-        textObject.SetSpacingMode(Text2D::SpacingMode::Bitmap);
+        textObject->SetSpacingMode(Text2D::SpacingMode::Bitmap);
         Console::Info() << "Changed spacing mode to: Bitmap\n";
     } 
 
@@ -89,7 +92,7 @@ void StringExample::OnStep() {
     // you can predict the space usage of the text to be drawn just by 
     // the character count.
     if (Input::IsPressed(Keyboard::Key_up)) {
-        textObject.SetSpacingMode(Text2D::SpacingMode::Monospace);
+        textObject->SetSpacingMode(Text2D::SpacingMode::Monospace);
         Console::Info() << "Changed spacing mode to: Monospace\n";
 
     } 

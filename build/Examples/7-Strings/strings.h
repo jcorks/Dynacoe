@@ -44,8 +44,8 @@ class StringExample : public Dynacoe::Entity {
     void OnStep();
 
 
-    Dynacoe::Text2D  textObject;
-    Dynacoe::Shape2D cursor;
+    Dynacoe::Text2D  * textObject;
+    Dynacoe::Shape2D * cursor;
     
     std::string text;
 

@@ -413,7 +413,7 @@ class Dynacoe::TextState {
                 vertices.push_back(vertices[vertices.size() - 5]);
 
                 if (info.xOffset+xIter+info.width  > dimensions.x) dimensions.x = info.xOffset+xIter+info.width;
-                if (info.yOffset+yIter+info.height > dimensions.y) dimensions.y = info.yOffset+yIter+info.height;
+                if (info.yOffset+yIter+info.height > dimensions.y) dimensions.y = info.yOffset+yIter+(*fontFace)->size->metrics.height/64;
             }
 
 
@@ -422,7 +422,8 @@ class Dynacoe::TextState {
 
             xIter += info.xNext;
             if (info.yNext) {
-                yIter += info.yNext;
+                FT_Load_Char(*fontFace, str[i], FT_LOAD_RENDER);
+                yIter += (*fontFace)->size->metrics.height/64;
                 xIter = 0;
             }
 
