@@ -48,10 +48,12 @@ std::map<std::string, Keyboard> Input::stringMapKeyboard;
 std::map<std::string, MouseButtons> Input::stringMapMouse;
 std::map<std::string, std::pair<PadID, PadButtons>> Input::stringMapPad;
 std::vector<Input::ButtonList *> Input::buttonLists;
+static bool lockCallbackMaps = false;
 static std::map<ButtonListener*, Keyboard> keyCallbackMap;
 static std::map<ButtonListener*, MouseButtons> mouseCallbackMap;
 static std::map<ButtonListener*, std::pair<PadID, PadButtons>> padCallbackMap;
 static std::map<ButtonListener*, std::string> strCallbackMap;
+static std::vector<ButtonListener*> deletedListeners;
 
 
 bool Input::inputLocked;
@@ -98,7 +100,7 @@ void Input::InitAfter(){}
 void Input::RunBefore() {
 
     if (inputLocked) return;
-
+    lockCallbackMaps = true;
 
     for(int i = 0; i < thisState.numDevices; ++i) {
         if (thisState.devices[i])
@@ -170,6 +172,22 @@ void Input::RunBefore() {
                 i->first->OnRelease();
         }
     }
+    lockCallbackMaps = false;
+    for(uint32_t i = 0; i < deletedListeners.size(); ++i) {
+        auto b = deletedListeners[i];
+        auto pFind = padCallbackMap.find(b);
+        if (pFind != padCallbackMap.end()) padCallbackMap.erase(pFind);
+
+        auto mFind = mouseCallbackMap.find(b);
+        if (mFind != mouseCallbackMap.end()) mouseCallbackMap.erase(mFind);
+
+        auto kFind = keyCallbackMap.find(b);
+        if (kFind != keyCallbackMap.end()) keyCallbackMap.erase(kFind);
+
+        auto sFind = strCallbackMap.find(b);
+        if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
+    }
+    deletedListeners.clear();
 
     if (updated) {
         getUnicode();
@@ -439,18 +457,7 @@ void Input::AddListener(ButtonListener * b, const std::string & i) {
 
 
 void Input::RemoveListener(ButtonListener * b) {
-
-    auto pFind = padCallbackMap.find(b);
-    if (pFind != padCallbackMap.end()) padCallbackMap.erase(pFind);
-
-    auto mFind = mouseCallbackMap.find(b);
-    if (mFind != mouseCallbackMap.end()) mouseCallbackMap.erase(mFind);
-
-    auto kFind = keyCallbackMap.find(b);
-    if (kFind != keyCallbackMap.end()) keyCallbackMap.erase(kFind);
-
-    auto sFind = strCallbackMap.find(b);
-    if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
+    deletedListeners.push_back(b);
 }
 
 
