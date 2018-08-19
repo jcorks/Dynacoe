@@ -319,6 +319,7 @@ class Dynacoe::TextState {
         if (fontFace != id || fontSize != size) {
             //std::cout << "(" << fontFace << ")->" << id << '|'
             //          << "o(" << fontSize << ")->" << size << std::endl;
+
             DumpGlyphCache();
 
             fontFace = id;
@@ -422,8 +423,7 @@ class Dynacoe::TextState {
 
             xIter += info.xNext;
             if (info.yNext) {
-                FT_Load_Char(*fontFace, str[i], FT_LOAD_RENDER);
-                yIter += (*fontFace)->size->metrics.height/64;
+                yIter += glyphH;
                 xIter = 0;
             }
 
@@ -432,6 +432,89 @@ class Dynacoe::TextState {
 
         }
         pos.push_back(Vector(xIter, yIter));
+
+
+
+
+    }
+    
+    
+    void PredictSize(
+        const char * str, uint32_t strLen, int size, FT_Face * id, // in
+        Vector & dimensions
+    ) {
+        uint32_t neededCount = strLen*6; // just assume no spaces for worst case alloc
+        
+
+
+
+        // errHandling
+        if (!id || !neededCount || !strLen || size < 1) {
+            dimensions = {};
+            return;
+        }
+        // uh oh, new font! Reset cached info
+        FT_Set_Pixel_Sizes(*id, 0, size);
+        if (fontFace != id || fontSize != size) {
+            //std::cout << "(" << fontFace << ")->" << id << '|'
+            //          << "o(" << fontSize << ")->" << size << std::endl;
+            DumpGlyphCache();
+
+            fontFace = id;
+            fontSize = size;
+
+            RebaseSizing();
+
+        }
+
+
+
+
+
+
+        // gen vertices for each character
+        Renderer::Vertex2D * vtex;
+        int xIter = 0;
+        int yIter = 0;
+
+        for(uint32_t i = 0; i < strLen; ++i) {
+            static GlyphInfo info;
+
+
+
+            if (mode == Text2D::SpacingMode::Monospace) {
+                GetMonospaceInfo(str, i, &info);
+            } else if (mode == Text2D::SpacingMode::Bitmap) {
+                GetBitmapInfo(str, i, &info);
+            } else {
+                GetKerningInfo(str, i, &info);
+            }
+
+
+
+
+            if (info.empty) {
+            
+                
+            } else {
+                
+
+                if (info.xOffset+xIter+info.width  > dimensions.x) dimensions.x = info.xOffset+xIter+info.width;
+                if (info.yOffset+yIter+info.height > dimensions.y) dimensions.y = info.yOffset+yIter+(*fontFace)->size->metrics.height/64;
+            }
+
+
+
+
+
+            xIter += info.xNext;
+            if (info.yNext) {
+                yIter += glyphH;
+                xIter = 0;
+            }
+
+
+        }
 
 
 
@@ -455,7 +538,7 @@ class Dynacoe::TextState {
         //for(uint32_t i = 'A'; i < 'Z'; ++i) {
 
         for(uint32_t i = 33; i < 126; ++i) {
-            status = FT_Load_Char(*fontFace, i, FT_LOAD_RENDER);
+            status = FT_Load_Char(*fontFace, i, FT_LOAD_DEFAULT);
             assert(status==0);
             if (glyphW < glyph->bitmap.width)
                 glyphW = glyph->bitmap.width;
@@ -464,7 +547,8 @@ class Dynacoe::TextState {
             if (glyphL < glyph->bitmap.rows - glyph->metrics.horiBearingY/64)
                 glyphL = glyph->bitmap.rows - glyph->metrics.horiBearingY/64;
         }
-
+        
+        glyphH = (*fontFace)->size->metrics.height/64;
     }
 
     // delete all textures, reset image cache
@@ -548,6 +632,7 @@ class Dynacoe::TextState {
     int                  glyphW;
     int                  glyphU; // glyph "upper": pixels above the baseline
     int                  glyphL; // glyph "lower": pixels below the baseline
+    int                  glyphH;
     Text2D::SpacingMode mode;
 
 };
@@ -803,6 +888,14 @@ Vector Text2D::GetDimensions() {
     return dimensions;
 }
 
+Vector Text2D::GetDimensions(const std::string & sim) {
+    Vector v = {};
+    modeInst->PredictSize(
+        sim.c_str(), sim.size(), fontSize, (FT_Face*)fontFace,
+        v
+    );
+    return v;
+}
 
 //// private:
 

@@ -119,6 +119,11 @@ class Text2D : public Render2D {
     ///
     Vector GetDimensions();
 
+    /// \brief Returns a simulated boundings box for the given string 
+    /// if it were set as the text for this component. When calculating 
+    /// spacing, this is much more efficient than rerendering and getting 
+    /// dimensions.
+    Vector GetDimensions(const std::string &);
 
     void OnDraw();
     std::string GetInfo();
