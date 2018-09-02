@@ -60,13 +60,13 @@ using namespace Dynacoe;
 
 
 
-    kick->node.Position() = {
+    kick->Node().Position() = {
         Graphics::GetRenderCamera().Width()  * .1, 
         Graphics::GetRenderCamera().Height()  * .2
     };
 
 
-    snare->node.Position() = {
+    snare->Node().Position() = {
         Graphics::GetRenderCamera().Width()  * .5, 
         Graphics::GetRenderCamera().Height()  * .2
     };

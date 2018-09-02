@@ -4,6 +4,7 @@ class AudioProcessorIO {
 
     AudioProcessorIO() {
         status = 0;
+        lock = 0;
     }
 
 
@@ -18,10 +19,10 @@ class AudioProcessorIO {
     };
 
     uint32_t status;
-
+    int lock;
 
     // current objects being processed by the stream
-    StateArray<AudioStreamObject*> stream;
+    StateArray<AudioStreamObject*> current;
 
     // client-given commands to the processor
     StateArray<Command> commands;
@@ -29,7 +30,8 @@ class AudioProcessorIO {
     // effect channels
     StateArray<AudioEffectChannel> channels;
 
-
+    // Newly created stream obejcts
+    StateArray<AudioStreamObject *> in;
 
 
 };

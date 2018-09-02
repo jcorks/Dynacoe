@@ -73,16 +73,9 @@ static float panning_to_multiplier_r(float panning) {
 #include "Sound_StateArray.hpp"
 #include "Sound_AudioStreamObject.hpp"
 #include "Sound_AudioEffectChannel.hpp"
-
-
-
-
-
-
-static std::recursive_mutex audio_processor_mutex;
-static Table<AudioStreamObject *> activeSounds;
-static std::vector<LookupID> activeSoundIDs;
-
+#include "Sound_AudioProcessorIO.hpp"
+#include "Sound_AudioProcessor.hpp"
+#include "Sound_AudioClient.hpp"
 
 
 
@@ -92,8 +85,12 @@ static std::vector<LookupID> activeSoundIDs;
 
 
 
-class AudioProcessor;
-static AudioProcessor * instance;
+
+
+
+
+
+
 AudioClient *      Sound::a;
 
 

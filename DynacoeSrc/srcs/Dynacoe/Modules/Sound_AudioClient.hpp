@@ -1,4 +1,8 @@
 
+static std::recursive_mutex audio_processor_mutex;
+static Table<AudioStreamObject *> activeSounds;
+static std::vector<LookupID> activeSoundIDs;
+
 
 
 // Sends commands to the audio processor
@@ -10,6 +14,7 @@ class AudioClient {
     AudioClient() {
 
         processor = new AudioProcessor(&ioShared);
+        ioOwned = ioShared;
     }
 
 
@@ -19,29 +24,46 @@ class AudioClient {
         //processor->ProcessAudio();
 
         // need a better process.. There are much more efficient ways to do this
-        auto list = activeSoundIDs;
-        auto source = ioOwned.current;
+        if (!ioShared.lock) {
+            bool wasLocked = false;
+            auto list = activeSoundIDs;
 
-        for(uint32_t i = 0; i < list.size(); ++i) {
-            auto current = activeSounds.Find(list[i]);
-            for(uint32_t n = 0; n < source.GetCount(); ++n) {
-                if (current == source.Get(n)) {
-                    source.Remove(n);
-                    list.erase(list.begin()+i);
-                    i--;
-                    break;
+            ioShared.lock++;
+            if (ioShared.lock == 1) {
+                ioOwned.current   = ioShared.current;
+                ioShared.commands = ioOwned.commands;
+                ioShared.in       = ioOwned.in;
+                ioShared.channels = ioOwned.channels;
+                wasLocked = true;
+            }
+            ioShared.lock--;
+
+
+            if (wasLocked) {
+                ioOwned.in.Clear();
+                auto source = ioOwned.current;
+                for(uint32_t i = 0; i < list.size(); ++i) {
+                    auto current = activeSounds.Find(list[i]);
+                    for(uint32_t n = 0; n < source.GetCount(); ++n) {
+                        if (current == source.Get(n)) {
+                            source.Remove(n);
+                            list.erase(list.begin()+i);
+                            i--;
+                            break;
+                        }
+                    }
+                }
+                
+                for(uint32_t i = 0; i < list.size(); ++i) {
+                    for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
+                        if (activeSoundIDs[n] == list[i]) {
+                            activeSoundIDs.erase(activeSoundIDs.begin()+n);
+                            break;
+                        }
+                    }
+                    activeSounds.Remove(list[i]);
                 }
             }
-        }
-        
-        for(uint32_t i = 0; i < list.size(); ++i) {
-            for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
-                if (activeSoundIDs[n] == list[i]) {
-                    activeSoundIDs.erase(activeSoundIDs.begin()+n);
-                    break;
-                }
-            }
-            activeSounds.Remove(list[i]);
         }
         
     }
@@ -139,12 +161,12 @@ class AudioClient {
 
     // requests the stopping of all samples in the process of being in playback
     void RequestActiveSampleDump() {
-        io.commands.Push(AudioProcessorIO::Command::DumpAllSamples);
+        ioOwned.commands.Push(AudioProcessorIO::Command::DumpAllSamples);
     }
 
     // returns the number of samples that are currently being processed
     int NumActivePlaybackSamples() {
-        return io.current.GetCount();
+        return ioOwned.current.GetCount();
     }
 
 
