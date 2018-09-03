@@ -28,12 +28,15 @@ class AudioClient {
             bool wasLocked = false;
             auto list = activeSoundIDs;
 
+            
             ioShared.lock++;
             if (ioShared.lock == 1) {
                 ioOwned.current   = ioShared.current;
                 ioShared.commands = ioOwned.commands;
                 ioShared.in       = ioOwned.in;
                 ioShared.channels = ioOwned.channels;
+                ioOwned.out       = ioShared.out;
+                ioShared.out.Clear();
                 wasLocked = true;
             }
             ioShared.lock--;
@@ -41,28 +44,25 @@ class AudioClient {
 
             if (wasLocked) {
                 ioOwned.in.Clear();
-                auto source = ioOwned.current;
-                for(uint32_t i = 0; i < list.size(); ++i) {
-                    auto current = activeSounds.Find(list[i]);
-                    for(uint32_t n = 0; n < source.GetCount(); ++n) {
-                        if (current == source.Get(n)) {
-                            source.Remove(n);
-                            list.erase(list.begin()+i);
-                            i--;
-                            break;
-                        }
-                    }
-                }
-                
-                for(uint32_t i = 0; i < list.size(); ++i) {
+                auto source = ioOwned.out;
+                for(uint32_t i = 0; i < source.GetCount(); ++i) {
+                    AudioStreamObject * aso = source.Get(i);
+                    LookupID id;
                     for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
-                        if (activeSoundIDs[n] == list[i]) {
+                        id = activeSoundIDs[n];
+                        if (activeSounds.Find(id) == aso) {
+
                             activeSoundIDs.erase(activeSoundIDs.begin()+n);
                             break;
                         }
                     }
-                    activeSounds.Remove(list[i]);
+                    activeSounds.Remove(id);
+                    delete aso;
+
                 }
+                ioOwned.out.Clear();
+                
+
             }
         }
         

@@ -32,6 +32,8 @@ class AudioProcessorIO {
 
     // Newly created stream obejcts
     StateArray<AudioStreamObject *> in;
-
+    
+    // stream objects ready to be rmeoved
+    StateArray<AudioStreamObject *> out;
 
 };

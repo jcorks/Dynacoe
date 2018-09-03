@@ -103,8 +103,6 @@ class AudioProcessor {
         if (!ioShared->lock) {
             ioShared->lock++;
             if (ioShared->lock == 1) { 
-                static int ITER = 0;
-                //printf("%d\n", ITER++);
                 io.channels = ioShared->channels;
 
 
@@ -123,20 +121,20 @@ class AudioProcessor {
 
 
                 // then copy all ioShared data
-                for(uint32_t i = 0; i < ioShared->current.GetCount(); ++i) {
-                    io.current.Get(i)->client = ioShared->current.Get(i)->client;
-                }
+                //for(uint32_t i = 0; i < ioShared->current.GetCount(); ++i) {
+                //    io.current.Get(i)->client = ioShared->current.Get(i)->client;
+                //}
 
 
                 // then, remove dead sounds and copy all to ioShared
                 for(uint32_t i = 0; i < io.current.GetCount(); ++i) {
                     AudioStreamObject * object = io.current.Get(i);
                     if (object->processor.destroy) {
-                        delete io.current.Get(i); // deletion of audiostreamobjects entirely handled by the audioprocessor
+                        ioShared->out.Push(object);
+                        //delete io.current.Get(i); // deletion of audiostreamobjects entirely handled by the audioprocessor
                         io.current.Remove(i);
                         i--;
                         //printf("Removed %d (%d left)\n", i+1, io.current.GetCount());
-
                     }
                 }
                 ioShared->current = io.current;
