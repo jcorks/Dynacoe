@@ -364,7 +364,7 @@ int TextureManager::NewTexture(int w, int h, GLubyte * data, int newTexID) {
             //std::cout << "[DBUFFER]: Reached max resizeble width, but going to increase height" << std::endl;
 
             // go to next row;
-            cursorY += cursorHeight;
+            cursorY += cursorHeight+1;
             cursorX  = 0;
 
 
@@ -431,7 +431,7 @@ int TextureManager::NewTexture(int w, int h, GLubyte * data, int newTexID) {
     // coords will define the boundaries for the image from the GUT
 
 
-    cursorX += w;
+    cursorX += w+1;
     glBindTexture(GL_TEXTURE_2D, 0);
 
 
