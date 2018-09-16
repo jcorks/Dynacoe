@@ -66,9 +66,9 @@ class Controller : public Dynacoe::Entity {
 
 
         // ease towards position
-        cam.node.Position().x = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().x, target.x, .1);
-        cam.node.Position().y = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().y, target.y, .1);
-        cam.node.Position().z = Dynacoe::Mutator::StepTowards(cam.node.GetPosition().z, target.z, .1);
+        cam.Node().Position().x = Dynacoe::Mutator::StepTowards(cam.Node().GetPosition().x, target.x, .1);
+        cam.Node().Position().y = Dynacoe::Mutator::StepTowards(cam.Node().GetPosition().y, target.y, .1);
+        cam.Node().Position().z = Dynacoe::Mutator::StepTowards(cam.Node().GetPosition().z, target.z, .1);
 
     }        
     

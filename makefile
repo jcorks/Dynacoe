@@ -3,7 +3,7 @@ all: library demos
 
 
 library:
-	$(MAKE) -C ./build/lib
+	$(MAKE) -j 4 -C ./build/lib
 
 
 demos:

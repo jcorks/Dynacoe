@@ -224,7 +224,7 @@ Removed Internal caching for Image pixel data.
 
 1/20- 1/28
     -Added image resizing!
-    -Added image rotation! (FUCK YEAR)
+    -Added image rotation! 
     -Added Window utility class
 
 

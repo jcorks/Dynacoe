@@ -5,7 +5,7 @@ DYNACOE_LIB_PATH    = $(DYNACOE_ROOT)/build/lib/
 
 OUTPUT_NAME = sound
 
-SRCS = main.cpp sound.cpp
+SRCS = main.cpp
 INCS = 
 FLGS = $(shell cat $(DYNACOE_LIB_PATH)lib_compileropts)
 LIBS = 

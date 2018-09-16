@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Dynacoe/Library.h>
-#include "console.h"
+
 
 
 /*  An example showing how to
@@ -42,9 +42,60 @@ DEALINGS IN THE SOFTWARE.
     2014, Johnathan Corkery
 */
 
-
-
 using namespace Dynacoe;
+
+
+// This entity simply posts messages to the console
+class ConsoleExample : public Entity {
+  public:
+    ConsoleExample() {
+        SetName("ConsoleEx");
+
+        // Since we are only going to be working in the console,
+        // lets have the Entity switch to the console right away for us.
+        // This can be done manually by pressing Shift + TAB at any time.
+        // While on the console, Shift+TAB will bring you back to the scene.
+        // Note that brining up the console does not stop or pause the scene.
+        Console::Show(true);
+
+        // Lets output a simple message: "Greetings"
+        Console::Info() << "Greetings";
+
+
+        // The Info() function informs Dynacoe to print output to the console. 
+        // To mark the end of the line, the message must end in a Console::End.
+        Console::Info() << " and Salutations!" << Console::End; // now the line reads: Greetings and Salutations!
+
+
+
+        // we can also chain pipe commands indefinitely:
+        Console::Info() << "How are you?" << Console::End
+                        << "What is new?" << Console::End;
+        // For readability, usually lines of output are given their own line
+        // when piping multiple lines under one call.
+
+
+        // there are other line types to try:
+        Console::Info()    << "This is system info." << Console::End; 
+        Console::Warning() << "This is a warning. Usually for things "
+                           << "that are non-fatal." << Console::End;
+        Console::Error()   << "This is an error. Usually for things "
+                           << "that aren't recoverable." << Console::End;
+
+
+        // The console piping command also accepts numbers:
+        Console::Info() << "My favorite flavor of pi is " << 3.14 << Console::End;
+
+    }
+
+
+};
+
+
+
+
+// Just as in 1-Rectagles example, this section contains just the driving code
+// just contains driving code. 
 
 int main() {
     Engine::Startup();    

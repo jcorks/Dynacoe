@@ -38,12 +38,13 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Dynacoe {
 
-/** @file */
-/// \brief Enum containing all valid keyboard key inputs.
-///
-enum class Keyboard {
 
-    // Keyboard inputs
+/** 
+ * \brief Enum containing all valid keyboard key inputs.
+ * 
+ * Each individual enum refers to the standard US keyboard keys
+ */
+enum class Keyboard {
     Key_0, ///< 0
     Key_1, ///< 1
     Key_2, ///< 2
@@ -137,7 +138,7 @@ enum class Keyboard {
     Key_insert, ///< Insert key
     Key_comma, ///< ,
     Key_period, ///< .
-    NumButtons 
+    NumButtons ///< Number of buttons
 };
 
 /// \brief Mouse Button inputs.
@@ -162,8 +163,6 @@ enum class MouseAxes {
 ///
 /// Only the first 32 buttons are registered for a pad.
 enum class PadButtons {
-
-    // Pad buttons
     Pad_b0, ///< Button 0
     Pad_b1, ///< Button 1
     Pad_b2, ///< Button 2

@@ -31,8 +31,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Dynacoe/Dynacoe.h>
-#include "input.h"
+
 
 
 /*  An example that demonstrates
@@ -44,12 +43,82 @@ DEALINGS IN THE SOFTWARE.
 
 
 
+#include <Dynacoe/Library.h>
+
 
 using namespace Dynacoe;
 
+
+
+// This entity responds to mouse input and pushing the 
+// WASD keys for movement.
+class InputExample : public Entity {
+  public:
+
+    InputExample() {
+        SetName("InputEx");
+        mouseSquare = AddComponent<Shape2D>();
+
+
+        // Let's center our Entity.
+        Node().Position().x = ViewManager::GetViewWidth() / 2;
+        Node().Position().y = ViewManager::GetViewHeight() / 2;
+
+
+        mouseSquare->FormRectangle(4, 4);
+        mouseSquare->color = "yellow";
+    }
+
+    void OnStep() {
+        // We're going to have our Entity move in response
+        // to the keys W, A, S, and D
+
+        // GetState() will return true if the button is down.
+        // Using seperate if-statements allows us to have directional
+        // movement
+
+        if (Input::GetState(Keyboard::Key_w)) {
+            Node().Position().y -= 2;
+        }
+
+        if (Input::GetState(Keyboard::Key_a)) {
+            Node().Position().x -= 2;
+        }
+
+        if (Input::GetState(Keyboard::Key_s)) {
+            Node().Position().y += 2;
+        }
+
+        if (Input::GetState(Keyboard::Key_d)) {
+            Node().Position().x += 2;
+        }
+
+
+        // Lets have the Entity teleport to where the mouse clicks.
+        // IsPressed() will return true only when the press is registered.
+        if (Input::IsPressed(MouseButtons::Left)) {
+            Node().Position() = {
+                Input::MouseX(),
+                Input::MouseY()
+            };
+
+            Console::Info() << "I've moved to: " << Input::MouseX() << ", " << Input::MouseY() << "\n";
+        }
+    }
+
+
+  private:
+    // A square to show where our little entity is
+    Shape2D * mouseSquare;
+
+};
+
+
+
+
+// As in the first 2 examples, this is just the driver code.
 int main() {
     Engine::Startup();    
-
     ViewManager::NewMain("Input Example");
 
 

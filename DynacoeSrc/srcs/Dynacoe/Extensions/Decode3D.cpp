@@ -73,6 +73,7 @@ Asset * Decode3D::operator()(
         return nullptr;
     }
 
+    /*
     Console::Info() <<
         "3D file contains the following info:\n" <<
         (scene->HasMeshes() ? "Mesh data\n" : "") <<
@@ -82,7 +83,7 @@ Asset * Decode3D::operator()(
         (scene->HasCameras() ? "Camera data\n" : "") <<
         (scene->HasAnimations() ? "Animation data\n" : "")<<
         "\n";
-
+    */
 
 
     Model * out = new Model(fname);

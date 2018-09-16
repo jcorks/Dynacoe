@@ -60,8 +60,8 @@ class Screen : public Dynacoe::Entity {
         surface->AddMesh(Dynacoe::Mesh::Basic_Square());
 
         // Basic transform info
-        node.Rotation().x = 90;
-        node.Scale() = {4, 4, 4};
+        Node().Rotation().x = 90;
+        Node().Scale() = {4, 4, 4};
 
 
         // Creates the shader object as a child of the camera so that it always
@@ -76,10 +76,10 @@ class Screen : public Dynacoe::Entity {
         // Creates a custom camera that will hold the rendered visual
         camera = Dynacoe::Engine::Root().Identify()->CreateChild<Dynacoe::Camera>()->GetID();
 
-        // The surface will just hold the texture, so we dont need anything fancy...
+        // The surface will just hold the texture, so we dont need anything fancy..
         surface->Material().SetProgram(Dynacoe::Material::CoreProgram::Basic);
         
-        // ...Except this. THis call explicitly tells the Material for the surface 
+        // ..Except this. THis call explicitly tells the Material for the surface 
         // to always use the custom camera's Framebuffer (the image representing rendered results)
         // as a texture.
         surface->Material().SetFramebufferSource(*camera.IdentifyAs<Dynacoe::Camera>());
@@ -121,7 +121,7 @@ class Screen : public Dynacoe::Entity {
     void OnStep() {
         // rotate the surface to make it more clear that 
         // the surface is indepent of the visual.
-        node.Rotation().z += .3;
+        Node().Rotation().z += .3;
     }
 
 
