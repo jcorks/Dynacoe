@@ -27,13 +27,15 @@ class AudioClient {
         if (!ioShared.lock) {
             bool wasLocked = false;
             auto list = activeSoundIDs;
-
+            
             
             ioShared.lock++;
             if (ioShared.lock == 1) {
                 ioOwned.current   = ioShared.current;
                 ioShared.commands = ioOwned.commands;
-                ioShared.in       = ioOwned.in;
+                for(uint32_t i = 0; i < ioOwned.in.GetCount(); ++i) {
+                    ioShared.in.Push(ioOwned.in.Get(i));
+                }
                 ioShared.channels = ioOwned.channels;
                 ioOwned.out       = ioShared.out;
                 ioShared.out.Clear();
@@ -43,6 +45,7 @@ class AudioClient {
 
 
             if (wasLocked) {
+
                 ioOwned.in.Clear();
                 auto source = ioOwned.out;
                 for(uint32_t i = 0; i < source.GetCount(); ++i) {
@@ -153,7 +156,6 @@ class AudioClient {
 
         // TODO: set proper hold sampels based on time since last commit to audio manager
         ioOwned.in.Push(object);
-
         auto id = activeSounds.Insert(object);
         activeSoundIDs.push_back(id);
         return id;
