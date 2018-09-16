@@ -20,5 +20,5 @@ hotfix-* - release-based fixes (distributed to dev and master)
 
 
 [Click here for the main project page, info, documentation, and current 
-builds.](http://coebeef.net/dynacoe/index.html)
+builds.](http://jcorks.github.io/Dynacoe/index.html)
 

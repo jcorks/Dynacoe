@@ -19,7 +19,7 @@ In Practice
 -----------
 
 Instead of going into detail about what exactly was installed file-by-file, we are going to build our very first Dynacoe project. 
-After you have installed the toolkit, download this [example](https://jcorks.github.io/Dynacoe/download/example.zip).
+After you have installed the toolkit, download this [example](https://jcorks.github.io/Dynacoe/example.zip).
 
 
 Once you've downloaded it:

@@ -10,7 +10,7 @@ Here you can download various sets of things to best fit your needs:
 Windows C++ Toolkit
 -------------------
 
-[Toolkit + Tools + Prereqs Installer (direct link)](https://jcorks.github.io/Dynacoe/download/DynacoeToolkit.msi)
+[Toolkit + Tools + Prereqs Installer (direct link)](https://jcorks.github.io/Dynacoe/dynacoe.msi)
 
 [visit the usage section to learn about how to use these tools.](@ref toolkit)
 
@@ -30,7 +30,7 @@ Any bugs with the installer should be filed in the bugs section [here](https://g
 Linux C++ Toolkit 
 -----------------
 
-[Toolkit + SH installer (direct link)](https://jcorks.github.io/Dynacoe/download/dynacoe-install.tar.xz)
+[Toolkit + SH installer (direct link)](https://jcorks.github.io/Dynacoe/dynacoe-install.tar.xz)
 
 Contains an install script to grant you access to the same tools as the windows toolkit, all used from your terminal.
 As such, you can [visit the usage section to learn about how to use these tools.](@ref toolkit) once you get it installed. Note that unlike most other \*nix style installs, this is meant to be installed in a directory local
@@ -42,15 +42,14 @@ Javascript/ECMAScript Bindings Toolkit
 --------------------------------------
 
 The [Sandboxe Project](https://jcorks.github.io/sandboxe) provides a standalone executable 
-with bindings to most Dynacoe symbols and features. This is recommended for projects that don't require 
-intensive heavy lifting, as it is much quicker to both get started and continue a development cycle.
+with bindings to most Dynacoe symbols and features. 
 
 
 
 Windows Library
 ---------------
 
-[Release build + headers + dependencies(direct link)](https://jcorks.github.io/Dynacoe/download/win/dynacoe.tar.xz)
+[Release build + headers + dependencies(direct link)](https://jcorks.github.io/Dynacoe/release/win/dynacoe.tar.xz)
 
 
 Only tested with MinGW GCC. Anything else, you'll need to compile the prereqs and do the 
@@ -59,7 +58,7 @@ linking yourself.
 Linux Library
 -------------
 
-[Release build + headers (direct link)](https://jcorks.github.io/Dynacoe/download/linux/dynacoe.tar.xz)
+[Release build + headers (direct link)](https://jcorks.github.io/Dynacoe/release/linux/dynacoe.tar.xz)
 
 
 Everyone else
