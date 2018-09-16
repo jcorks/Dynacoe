@@ -3,8 +3,12 @@ Downloads {#downloads}
 
 Here you can download various sets of things to best fit your needs:
 
-Windows Toolkit
----------------
+
+
+
+
+Windows C++ Toolkit
+-------------------
 
 [Toolkit + Tools + Prereqs Installer (direct link)](https://jcorks.github.io/Dynacoe/dynacoe.msi)
 
@@ -23,8 +27,8 @@ around 1 GB.
 Any bugs with the installer should be filed in the bugs section [here](https://github.com/jcorks/dynacoe-installer/issues).
 
 
-Linux Toolkit 
--------------
+Linux C++ Toolkit 
+-----------------
 
 [Toolkit + SH installer (direct link)](https://jcorks.github.io/Dynacoe/dynacoe-install.tar.xz)
 
@@ -32,6 +36,15 @@ Contains an install script to grant you access to the same tools as the windows 
 As such, you can [visit the usage section to learn about how to use these tools.](@ref toolkit) once you get it installed. Note that unlike most other \*nix style installs, this is meant to be installed in a directory local
 to each user. The actual produced directory tree is extremely tiny, so having a few unique setups is at basically no cost,
 and you wont have to worry about permissions. Simply unpack it, and run the install sh script.
+
+
+Javascript/ECMAScript Bindings Toolkit
+--------------------------------------
+
+The [Sandboxe Project](https://jcorks.github.io/sandboxe) provides a standalone executable 
+with bindings to most Dynacoe symbols and features. 
+
+
 
 Windows Library
 ---------------
