@@ -508,6 +508,7 @@ std::string ShaderGLRenderer::ProgramGetLanguage() {
         return "GLSL 1.3";
     if (GLVersionQuery(GL_Version2_1))
         return "GLSL 1.2";
+    return "";
 }
 
 
@@ -516,6 +517,7 @@ ProgramID ShaderGLRenderer::ProgramGetBuiltIn(BuiltInShaderMode b) {
         case BuiltInShaderMode::BasicShader:   return basicProgramID;
         case BuiltInShaderMode::LightMaterial: return lightProgramID;
     }
+    return ProgramID();
 }
 
 

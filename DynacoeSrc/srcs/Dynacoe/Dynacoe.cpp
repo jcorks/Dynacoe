@@ -72,7 +72,7 @@ std::string Engine::Version() {
     #endif
 
     return std::string() +
-           "v0.96."+count+" (hash:"+hash+")";
+           "v0.97."+count+" (hash:"+hash+")";
 
 
 }

@@ -66,7 +66,7 @@ RenderBuffer * Dynacoe::CreateRenderBuffer(bool forceTexture) {
         case 3: return new RenderBuffer_GL3_1();
         case 2: return new RenderBuffer_GL2_1();
     }
-    
+    return nullptr;
 }
 
 
