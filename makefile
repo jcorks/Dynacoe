@@ -12,7 +12,6 @@ demos:
 	$(MAKE) -C ./build/Examples/3-Input
 	$(MAKE) -C ./build/Examples/4-Images
 	$(MAKE) -C ./build/Examples/5-SoundEffects
-	$(MAKE) -C ./build/Examples/5.1-Sequences
 	$(MAKE) -C ./build/Examples/6-Particles
 	$(MAKE) -C ./build/Examples/7-Strings
 	$(MAKE) -C ./build/Examples/8-Model
@@ -27,10 +26,10 @@ clean:
 	$(MAKE) clean -C ./build/Examples/3-Input
 	$(MAKE) clean -C ./build/Examples/4-Images
 	$(MAKE) clean -C ./build/Examples/5-SoundEffects
-	$(MAKE) clean -C ./build/Examples/5.1-Sequences
 	$(MAKE) clean -C ./build/Examples/6-Particles
 	$(MAKE) clean -C ./build/Examples/7-Strings
 	$(MAKE) clean -C ./build/Examples/8-Model
 	$(MAKE) clean -C ./build/Examples/9-Lighting
 	$(MAKE) clean -C ./build/Examples/10-Shaders
 	$(MAKE) clean -C ./build/Examples/11-Camera
+

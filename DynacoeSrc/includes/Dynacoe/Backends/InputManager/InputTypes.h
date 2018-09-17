@@ -38,12 +38,10 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Dynacoe {
 
+/// \defgroup InputEnums Input enum values used by the Input module 
+/// @{
 
-/** 
- * \brief Enum containing all valid keyboard key inputs.
- * 
- * Each individual enum refers to the standard US keyboard keys
- */
+///  Enum containing all valid keyboard key inputs.
 enum class Keyboard {
     Key_0, ///< 0
     Key_1, ///< 1
@@ -232,6 +230,8 @@ enum class Pointers {
     NumPointers
 
 };
+
+///@}
 }
 
 
