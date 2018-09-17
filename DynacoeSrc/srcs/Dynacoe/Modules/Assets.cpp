@@ -328,6 +328,7 @@ string Assets::typeToString(Assets::Type type) {
         case Type::RawData:  return "RawData";
 
     }
+    return "RawData";
 }
 
 

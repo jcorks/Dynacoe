@@ -31,8 +31,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Dynacoe/Dynacoe.h>
-#include "shader.h"
+#include <Dynacoe/Library.h>
 
 
 /* An example that loads an image and

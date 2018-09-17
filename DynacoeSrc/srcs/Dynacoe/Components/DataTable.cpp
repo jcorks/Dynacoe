@@ -125,24 +125,25 @@ DataTable & DataTable::Write(const std::string & name, int i) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, sizeof(i));
         memcpy(&data[e.begin], &i, sizeof(i));
-        return *this;
     }
+    return *this;
+
 }
 
 DataTable & DataTable::Write(const std::string & name, uint32_t i) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, sizeof(i));
         memcpy(&data[e.begin], &i, sizeof(i));
-        return *this;
     }
+    return *this;
 }
 
 DataTable & DataTable::Write(const std::string & name, uint64_t i) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, sizeof(i));
         memcpy(&data[e.begin], &i, sizeof(i));
-        return *this;
     }
+    return *this;
 }
 
 
@@ -150,16 +151,17 @@ DataTable & DataTable::Write(const std::string & name, float i) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, sizeof(i));
         memcpy(&data[e.begin], &i, sizeof(i));
-        return *this;
     }
+    return *this;
+
 }
 
 DataTable & DataTable::Write(const std::string & name, double i) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, sizeof(i));
         memcpy(&data[e.begin], &i, sizeof(i));
-        return *this;
     }
+    return *this;
 }
 
 
@@ -167,16 +169,16 @@ DataTable & DataTable::Write(const std::string & name, const std::string & str) 
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, str.size());
         memcpy(&data[e.begin], &str[0], str.size());
-        return *this;
     }
+    return *this;
 }
 
 DataTable & DataTable::Write(const std::string & name, const std::vector<uint8_t> & str) {
     if (EmitEvent("on-write", Entity::ID(), {name})) {
         DataEntry & e = Find(name, str.size());
         memcpy(&data[e.begin], &str[0], str.size());
-        return *this;
     }
+    return *this;
 }
 
 DataTable & DataTable::Write(const std::string & name, DataTable & i) {
