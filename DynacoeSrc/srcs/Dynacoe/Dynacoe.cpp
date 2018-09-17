@@ -133,7 +133,7 @@ int Engine::Run() {
 
     Console::OverlayMessageMode(Console::MessageMode::Disabled);
     Console::Info() << "Dynacoe " << Version() << "\n\n";
-    Console::Info() << "Johnathan Corkery, 2016\nhttp://coebeef.net/dynacoe\n_________________________\n\nRegistered modules:\n\n";
+    Console::Info() << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\nRegistered modules:\n\n";
     for(int i = 0; i < modules.size(); ++i) {
         Backend * b;
         Console::Info() << "-  " << modules[i]->GetName().c_str() << ": ";

@@ -47,7 +47,7 @@ namespace Dynacoe {
 /// The rules and behavior of how the shader source will vary greatly.
 ///
 /// For the stock OpenGL backend, the shader language will be a variant of GLSL.
-/// See [http://coebeef.net/Dynacoe/Shaders.html](http://coebeef.net/Dynacoe/Shaders.html) for more info.
+/// See [https://jcorks.github.io/Dynacoe/shaders-glsl.html](https://jcorks.github.io/Dynacoe/shaders-glsl.html) for more info.
 class Shader{
   public:
     Shader();
