@@ -34,7 +34,8 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 
 
-Render2D::Render2D(const std::string & n) : Component(n){
+Render2D::Render2D(const std::string & n) : Component(){
+    SetTag(n);
     absolute = false;
     mode = RenderMode::Normal;
     polygon = Renderer::Polygon::Triangle;

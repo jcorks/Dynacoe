@@ -51,7 +51,9 @@ bool TaskMCompare(const TaskM* a, const TaskM* b) {
     return a->name < b->name;
 }
 
-Scheduler::Scheduler() : Component("Scheduler") {
+Scheduler::Scheduler() : Component() {
+    SetTag("Scheduler");
+
     tasks = new std::set<TaskM*, bool(*)(const TaskM *, const TaskM *)>(TaskMCompare);
 }
 Scheduler::~Scheduler() {

@@ -54,7 +54,9 @@ bool DelayComparison(const Delay * a, const Delay * b) {
 }
 
 
-Sequencer::Sequencer() : Component("Sequencer") {
+Sequencer::Sequencer() : Component() {
+    SetTag("Sequencer");
+
     bool (*comp)(const Delay *, const Delay *) = DelayComparison;
     soundQueue = new std::set<Delay *, bool(*)(const Delay *, const Delay *)>(comp);
     playbackActive = false;

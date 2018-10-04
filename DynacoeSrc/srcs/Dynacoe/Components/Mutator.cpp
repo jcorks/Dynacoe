@@ -135,18 +135,20 @@ void Mutator::Unbind(void * v, int t) {
     }
 }
     
-Mutator::Mutator() : Component("Mutator"),
+Mutator::Mutator() : Component(),
       begin(0),
       isLooping(false),
       registr(new MutationState(0, Function::Constant, 0, 0, 0, false))
 {
+    SetTag("Mutator");
     bindVectors = new std::vector<std::pair<void*, BindFunctionBase>>[MTBind_UInt64+1];
     hasBinds = false;
     accountForLastStep = true;
 
 }
 
-Mutator::Mutator(float b, float end, Function f, float dur) : Component("Mutator") {
+Mutator::Mutator(float b, float end, Function f, float dur) : Component() {
+    SetTag("Mutator");
     begin = b;
     isLooping = false;
     registr = new MutationState(0, Function::Constant, 0, 0, 0, false);

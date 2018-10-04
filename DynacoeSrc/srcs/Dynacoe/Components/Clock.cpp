@@ -50,7 +50,8 @@ long Dynacoe::Clock::getMS() {
 
 
 
-Dynacoe::Clock::Clock() : Component("Clock"){
+Dynacoe::Clock::Clock() : Component(){
+    SetTag("Clock");
 	InstallEvent("clock-step");
 	InstallEvent("clock-draw");
 	InstallEvent("clock-expire");

@@ -37,7 +37,9 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-RenderLight::RenderLight() : Component("RenderLight"){}
+RenderLight::RenderLight() : Component(){
+    SetTag("RenderLight");
+}
 RenderLight::~RenderLight() {
     Clear();
 }

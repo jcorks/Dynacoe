@@ -59,11 +59,13 @@ static Entity::ID manager;
    
 
 
-Object2D::Object2D() : Component("Object2D") {
+Object2D::Object2D() : Component() {
     speedX = 0.;
     speedY = 0.;
     frictionX = 0.;
     frictionY = 0.;
+
+    SetTag("Object2D");
 
     InstallEvent("on-move");
     InstallEvent("on-collide");

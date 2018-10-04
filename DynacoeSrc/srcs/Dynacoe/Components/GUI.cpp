@@ -119,7 +119,8 @@ void GUI::Initialize() {
 }
 
 
-GUI::GUI() : Component("GUI") {
+GUI::GUI() : Component() {
+    SetTag("GUI");
     Initialize();
 }
 

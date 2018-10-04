@@ -36,8 +36,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-Component::Component(const std::string & tag_) {
-    tag = tag_;
+Component::Component() {
     host = nullptr;
     draw = true;
     step = true;

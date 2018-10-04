@@ -92,7 +92,8 @@ class Component {
     /// \brief Returns a string identifier belonging to the component.
     /// Each component implementation should have a unique name.
     ///
-    std::string GetTag() { return tag; };
+    const std::string & GetTag() { return tag; };
+
 
     /// \brief Returns the set host of the component. If no host is set,
     /// nullptr is returned.
@@ -172,13 +173,16 @@ class Component {
     void UninstallHandler(const std::string & eventName, EventHandler);
 
 
-    /// \breif Returns a list of event names that this eventsystem is able to process
+    /// \brief Returns a list of event names that this eventsystem is able to process
     ///
     std::vector<std::string> GetKnownEvents() const;
     ///\}
 	virtual ~Component(){}
   protected:
-    Component(const std::string &);
+
+    /// \brief Sets a string identifier belonging to the component.
+    ///
+    void SetTag(const std::string & tag_) {tag = tag_;}
 
 
     /// \brief Function that is called upon each Run iteration.

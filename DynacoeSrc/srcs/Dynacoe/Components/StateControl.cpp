@@ -34,7 +34,9 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-StateControl::StateControl(): Component("StateControl"){
+StateControl::StateControl(): Component(){
+    SetTag("StateControl");
+
     current = "";
 }
 

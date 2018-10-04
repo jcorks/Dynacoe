@@ -474,7 +474,8 @@ void DataTable::Consolidate() {
     std::swap(entryTable, table.entryTable);
 }
 
-DataTable::DataTable() : Component("DataTable") {
+DataTable::DataTable() : Component() {
+    SetTag("DataTable");
     InstallEvent("on-write");
     InstallEvent("on-read");
     InstallEvent("on-remove");
