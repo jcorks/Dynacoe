@@ -62,7 +62,11 @@ class Render2D : public Component, public Spatial {
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 
     /// pixel values on the display or should be within the hierarchy. The default is false.
     ///
-    bool absolute;
+    void SetAbsolute(bool);
+
+    /// \brief Gets the absolute field. See SetAbsolute().
+    ///
+    bool GetAbsolute() const;
 
     /// \brief Returns the raw vertices compiled for the renderable object 
     ///
@@ -89,7 +93,7 @@ class Render2D : public Component, public Spatial {
   private:
      std::vector<uint32_t> vertexSrc;
      int objectID;
-     
+     bool absolute;
      Renderer::Polygon polygon;
 };
 

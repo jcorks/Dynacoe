@@ -78,7 +78,7 @@ Object2D::Collider::Collider(const std::vector<Dynacoe::Vector> & pts) {
 
 Object2D::Collider::Collider(float radius, uint32_t numPts) {
     std::vector<Dynacoe::Vector> inpts(numPts);
-    double RADIAN_MAX = 3.14159265359*2;
+    float RADIAN_MAX = 3.14159265359*2;
     for(uint32_t i = 0; i < numPts; ++i) {
         inpts[i].x = cos(i / RADIAN_MAX) * radius;
         inpts[i].y = sin(i / RADIAN_MAX) * radius;

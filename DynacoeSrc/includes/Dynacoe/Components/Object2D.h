@@ -108,31 +108,31 @@ class Object2D : public Component {
         ///
         /// @param factor The velocity amount to add. Can be negative.
         /// @param direction The direction to apply the velocity in degrees.
-        void AddVelocity(double factor, double direction);
-        void AddVelocityTowards(double factor, const Dynacoe::Vector &);
+        void AddVelocity(float factor, float direction);
+        void AddVelocityTowards(float factor, const Dynacoe::Vector &, float directionOffset = 0.f);
 
 
         /// \brief Sets the velocity vector of an object.
         /// 
         /// @param factor The velocity to set.
         /// @param direction The direction to set the velocity in degrees.
-        void SetVelocity(double factor, double direction);
-        void SetVelocityTowards(double factor, const Dynacoe::Vector &);
+        void SetVelocity(float factor, float direction);
+        void SetVelocityTowards(float factor, const Dynacoe::Vector &, float directionOffset = 0.f);
 
         /// \brief Sets the amount of resistance to speed measured as a percentile.
         /// 
         /// Every frame, only the amount percent of the host Entity's velocity is retained. For example,
         /// if amt is specified to be .95, every frame 5% of the Entity's speed will be lost.
         /// This is applied in the horizontal direction.
-        void SetFrictionX(double amt);
+        void SetFrictionX(float amt);
 
         /// \brief Same as SetFrictionX(), but in the vertical direction.
         ///
-        void SetFrictionY(double amt);
+        void SetFrictionY(float amt);
 
         /// \brief Returns the current direction that the entity is traveling in degrees.
         ///
-        double GetDirection();
+        float GetDirection();
 
         /// \brief Reduces the speed of the Entity to 0.
         ///
@@ -140,21 +140,21 @@ class Object2D : public Component {
 
         /// \brief Returns the horizontal component of the current velocity.
         ///
-        double GetVelocityX();
+        float GetVelocityX();
 
         /// \brief Returns the vertical component of the current velocity.
         ///
-        double GetVelocityY();
+        float GetVelocityY();
 
 
         /// \brief Returns the speed of the object.
         ///
-        double GetSpeed();
+        float GetSpeed();
 
 
         /// \brief Sets the speed of the object in the current direction
         ///
-        void SetSpeed(double);
+        void SetSpeed(float);
 
         /// \brief Returns the position of the Entity after another frame of movement.
         /// 
@@ -172,10 +172,10 @@ class Object2D : public Component {
         void Update();   
     private:
         friend class CollisionManager;
-        double speedX;
-        double speedY;
-        double frictionX;
-        double frictionY;
+        float speedX;
+        float speedY;
+        float frictionX;
+        float frictionY;
         Dynacoe::Vector last;
 
 };

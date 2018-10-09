@@ -43,13 +43,33 @@ Render2D::Render2D(const std::string & n) : Component(){
 }
 
 void Render2D::OnUpdateTransform() {
-    TransformMatrix m = GetGlobalTransform();
-    m.ReverseMajority();
-    Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
-    Graphics::GetRenderer()->Set2DObjectParameters(
-        GetObjectID(),
-        obj
-    );
+    if (!absolute) {
+        TransformMatrix m = GetGlobalTransform();
+        m.ReverseMajority();
+        Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
+        Graphics::GetRenderer()->Set2DObjectParameters(
+            GetObjectID(),
+            obj
+        );
+    } else {
+        static TransformMatrix m;
+        Renderer::Render2DObjectParameters obj = *(Renderer::Render2DObjectParameters*)m.GetData();
+        Graphics::GetRenderer()->Set2DObjectParameters(
+            GetObjectID(),
+            obj
+        );        
+    }
+}
+
+
+void Render2D::SetAbsolute(bool doIt) {
+    if (absolute == doIt) return;
+    absolute = doIt;
+    Invalidate();
+}
+
+bool Render2D::GetAbsolute() const {
+    return absolute;
 }
 
 Render2D::~Render2D() {

@@ -267,7 +267,7 @@ class CollisionManager : public Dynacoe::Entity {
             count += hits.size();
             hits.clear();
         }
-        std::cout << count / (double)(objects.size()*objects.size()) << "\n";
+        std::cout << count / (float)(objects.size()*objects.size()) << "\n";
         */
         
         

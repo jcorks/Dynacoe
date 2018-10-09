@@ -110,43 +110,43 @@ void Object2D::Update() {
 
 
 
-void Object2D::AddVelocity(double factor, double direction) {
+void Object2D::AddVelocity(float factor, float direction) {
     speedX += factor * (cos((Math::Pi() / 180.f) * direction));
     speedY += factor * (sin((Math::Pi() / 180.f) * direction));
 }
 
-void Object2D::AddVelocityTowards(double factor, const Dynacoe::Vector & p) {
+void Object2D::AddVelocityTowards(float factor, const Dynacoe::Vector & p, float directionOffset) {
     Transform * n = &GetHost()->Node();
     Vector delta;    
     Vector src = GetHost()->GetGlobalTransform().Transform({});
     
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
-    AddVelocity(factor, delta.RotationZ());    
+    AddVelocity(factor, delta.RotationZ() + directionOffset);    
 }
 
-void Object2D::SetVelocity(double factor, double direction) {
+void Object2D::SetVelocity(float factor, float direction) {
     speedX = factor * (cos((Math::Pi() / 180.f) * direction));
     speedY = factor * (sin((Math::Pi() / 180.f) * direction));
 }
 
-void Object2D::SetVelocityTowards(double factor, const Dynacoe::Vector & p) {
+void Object2D::SetVelocityTowards(float factor, const Dynacoe::Vector & p, float directionOffset) {
     Vector delta;
     Vector src = GetHost()->GetGlobalTransform().Transform({});
     delta.x = p.x - src.x;
     delta.y = p.y - src.y;
-    SetVelocity(factor, delta.RotationZ()); 
+    SetVelocity(factor, delta.RotationZ()+directionOffset); 
 
 }
-void Object2D::SetFrictionX(double amt) {
+void Object2D::SetFrictionX(float amt) {
     frictionX = amt;
 }
 
-void Object2D::SetFrictionY(double amt) {
+void Object2D::SetFrictionY(float amt) {
     frictionY = amt;
 }
 
-double Object2D::GetDirection() {
+float Object2D::GetDirection() {
     return Vector(speedX, speedY).RotationZ();
 }
 
@@ -157,11 +157,11 @@ void Object2D::Halt() {
 
 
 
-double Object2D::GetVelocityX() { return speedX; }
-double Object2D::GetVelocityY() { return speedY; }
+float Object2D::GetVelocityX() { return speedX; }
+float Object2D::GetVelocityY() { return speedY; }
 
-double Object2D::GetSpeed() { return Vector(speedX, speedY).Length(); }
-void Object2D::SetSpeed(double speed) {
+float Object2D::GetSpeed() { return Vector(speedX, speedY).Length(); }
+void Object2D::SetSpeed(float speed) {
     Vector p(speedX, speedY);
     p.SetToNormalize();
     p.x *= speed;
