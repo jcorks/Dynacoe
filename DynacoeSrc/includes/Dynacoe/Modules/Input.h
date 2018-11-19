@@ -111,7 +111,13 @@ class Input : public Module {
     /// unicode key is pressed on the keyboard input
     static int GetLastUnicode();
 
+    /// \brief Adds a UnicodeListener object to receive events when 
+    /// incoming unicode characters are processed.
+    ///
     static void AddUnicodeListener(UnicodeListener *);
+
+    /// \brief Removes an added unicode listener.
+    ///
     static void RemoveUnicodeListener(UnicodeListener *);
 
     /// \name  IsHeld
