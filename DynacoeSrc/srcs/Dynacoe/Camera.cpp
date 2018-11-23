@@ -61,6 +61,8 @@ void Camera::Initialize() {
     projection = Graphics::GetRenderer()->AddBuffer(nullptr, 16);
     lastW = lastH = 0;
     fb = (Dynacoe::Framebuffer*)Backend::CreateDefaultFramebuffer();
+    fbAux = (Dynacoe::Framebuffer*)Backend::CreateDefaultFramebuffer();
+
     autoRefresh = true;    
 }
 
@@ -98,6 +100,16 @@ void Camera::Refresh() {
     } else {
         Graphics::GetRenderer()->ClearRenderedData();
     }
+}
+
+void Camera::SwapBuffers() {
+    if (fbAux->Width() != fb->Width() || 
+        fbAux->Height() != fb->Height()) {
+        fbAux->Resize(fb->Width(), fb->Height());
+    }
+    Framebuffer * temp = fb;
+    fb = fbAux;
+    fbAux = temp;
 }
 
 void Camera::SetTarget(const Dynacoe::Vector & pos) {
@@ -308,10 +320,18 @@ TransformMatrix Matrix_ViewLookAt(const Dynacoe::Vector & camPos,
 
 
 
-AssetID Camera::CopyDisplay() {
+AssetID Camera::GetFrontVisual() {
+    return CopyDisplay(fb);
+}
+
+AssetID Camera::GetBackVisual() {
+    return CopyDisplay(fbAux);
+}
+
+AssetID Camera::CopyDisplay(Framebuffer * fbTarget) {
     std::vector<uint8_t> data;
-    data.resize(fb->Width() * fb->Height() * 4);
-    fb->GetRawData(&data[0]);
+    data.resize(fbTarget->Width() * fbTarget->Height() * 4);
+    fbAux->GetRawData(&data[0]);
 
     /*
     for(uint32_t i = 0; i < fb->Width()*fb->Height(); ++i) {
@@ -321,7 +341,7 @@ AssetID Camera::CopyDisplay() {
     AssetID out = Assets::New(Assets::Type::Image);
     Image & img = Assets::Get<Image>(out);
     img.frames.push_back(Image::Frame(
-        fb->Width(), fb->Height(), data
+        fbTarget->Width(), fbTarget->Height(), data
     ));
 
     return out;

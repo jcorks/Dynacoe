@@ -344,13 +344,16 @@ void Graphics::Commit() {
                    Renderer::Dimension::D_2D,
                    Renderer::AlphaRule::Allow);
 
-
+ 
     Display * d = ViewManager::Get(ViewManager::GetCurrent());
-
+    Framebuffer * f = Graphics::GetRenderCamera().GetFramebuffer();
     if (d)
-        d->Update();
+        d->Update(f);
 
+        
     Camera * c = &GetRenderCamera();
+    c->SwapBuffers();
+    drawBuffer->AttachTarget(c->GetFramebuffer());
     if (c && c->autoRefresh) {
         c->Refresh();
     }
@@ -500,10 +503,6 @@ void Graphics::SetRenderCamera(Camera & c) {
     Framebuffer * fb = cam->GetFramebuffer();
     drawBuffer->AttachTarget(fb);
 
-    std::vector<ViewID> views = ViewManager::ListViews();
-    for(uint32_t i = 0; i < views.size(); ++i) {
-        ViewManager::Get(views[i])->AttachSource(fb);
-    }
 
 
     state.currentCameraTarget = c.GetID();

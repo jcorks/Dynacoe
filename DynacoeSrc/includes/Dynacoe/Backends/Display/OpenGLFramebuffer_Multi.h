@@ -106,10 +106,8 @@ class OpenGLFBDisplay : public Dynacoe::Display {
     void RemoveCloseCallback(CloseCallback *);
 
     bool IsCapable(Dynacoe::Display::Capability);
-    void Update();
-    void AttachSource(Dynacoe::Framebuffer *);
+    void Update(Framebuffer *);
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers();
-    Dynacoe::Framebuffer * GetSource();
     
 
     void * GetSystemHandle();

@@ -49,6 +49,16 @@ EncodePNG::EncodePNG() :
     Encoder(Assets::Type::Image, "png"){};
 
 bool EncodePNG::operator()(Asset * src, const std::string & str, const std::string & path) {
+
+    FILE * fp = fopen(path.c_str(), "wb");
+    if (!fp) return false;
+    
+    png_structp  png     = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    png_infop    pngInfo = png_create_info_struct(png);
+
+    if (!png || !pngInfo) return false;
+
+
     Image * img = (Image*)src;
 
     std::vector<uint8_t> frame = img->frames[0].GetData();
@@ -60,12 +70,6 @@ bool EncodePNG::operator()(Asset * src, const std::string & str, const std::stri
     }
 
 
-    png_structp  png     = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    png_infop    pngInfo = png_create_info_struct(png);
-
-    if (!png || !pngInfo) return false;
-
-    FILE * fp = fopen(path.c_str(), "wb");
     png_init_io(png, fp);
     png_set_IHDR(
         png,

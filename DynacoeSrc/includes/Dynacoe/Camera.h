@@ -135,10 +135,22 @@ class Camera : public Entity {
     Framebuffer * GetFramebuffer();
 
     /// \brief Returns a copy of the last rendered visual stored
-    /// to this camera.
+    /// to this camera's front buffer. The front buffer is the one currently be rendered 
+    /// to, so it holds rendered data up until this point.
     ///
-    AssetID CopyDisplay();
+    AssetID GetFrontVisual();
 
+    /// \brief Returns a copy of the last rendered visual stored
+    /// to this camera's back buffer. The back buffer reflects what was 
+    /// finalized last frame, which will usually reflect what was last 
+    /// posted to the display.
+    ///
+    AssetID GetBackVisual();
+
+
+    /// \brief Swaps the current buffers
+    ///
+    void SwapBuffers();
 
     void OnStep();
   private:
@@ -148,12 +160,14 @@ class Camera : public Entity {
     void UpdateProjection();
     void Activate(Renderer *);
     void Deactivate();
+    AssetID CopyDisplay(Framebuffer *);
 
     int lastW, lastH;
 
     Type type;
     TransformMatrix projectionMatrix;
     Framebuffer * fb;
+    Framebuffer * fbAux;
 
 
     RenderBufferID modelView;

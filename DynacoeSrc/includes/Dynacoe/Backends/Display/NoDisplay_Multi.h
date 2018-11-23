@@ -68,9 +68,7 @@ class NoDisplay : public Display {
     void RemoveCloseCallback(CloseCallback *);
 
     bool IsCapable(Dynacoe::Display::Capability);
-    void Update(){}
-    void AttachSource(Dynacoe::Framebuffer *){}
-    Dynacoe::Framebuffer * GetSource(){return nullptr;}
+    void Update(Framebuffer *){}
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){
         return {
             Dynacoe::Framebuffer::Type::RGBA_PixelArray,

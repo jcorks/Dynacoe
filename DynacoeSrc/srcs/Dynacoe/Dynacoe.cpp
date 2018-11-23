@@ -54,7 +54,7 @@ using namespace Dynacoe;
 using std::string;
 
 static std::string origCWD;
-
+static int paused = false;
 
 
 std::string Engine::Version() {
@@ -114,11 +114,54 @@ double                  Engine::frameEnd = 0;
 
 
 Entity::ID                 Engine::universe;
-Entity::ID managers;
-
+static Entity::ID managers;
+static Entity::ID managersNonPausable;
 
 static char buffer[1024];
 string test="";
+
+void Engine::Iterate() {
+    
+    if (frameTime.GetTimeSince() >= 1000) {
+        frameTime.Reset();
+
+        diagnostics.drawTimeMS = drawTime.GetTimeSince() / (float)frameCount;
+        diagnostics.stepTimeMS = runTime.GetTimeSince() / (float)frameCount;
+        diagnostics.systemTimeMS = sysTime.GetTimeSince() / (float)frameCount;
+        diagnostics.engineRealTimeMS = engineTime.GetTimeSince() / (float) frameCount;
+
+        //if (lastDrawTime >4) cout << lastDrawTime << endl;
+
+        diagnostics.currentFPS = frameCount;
+        frameCount = 0;
+
+
+        sysTime.Set();
+        drawTime.Set();
+        runTime.Set();
+        debugTime.Set();
+        engineTime.Set();
+
+    }
+
+    update();
+    render();
+
+
+
+    engineTime.Pause();
+    if (GetMaxFPS() >= 0) {
+        Engine::Wait(GetMaxFPS());
+    }
+    engineTime.Resume();
+
+
+    drawTime.Pause();
+    runTime.Pause();
+    debugTime.Pause();
+
+    frameCount++;
+}
 
 int Engine::Run() {
 
@@ -152,53 +195,63 @@ int Engine::Run() {
 
 
     while (!(quit)) {
-
-        if (frameTime.GetTimeSince() >= 1000) {
-            frameTime.Reset();
-
-            diagnostics.drawTimeMS = drawTime.GetTimeSince() / (float)frameCount;
-            diagnostics.stepTimeMS = runTime.GetTimeSince() / (float)frameCount;
-            diagnostics.systemTimeMS = sysTime.GetTimeSince() / (float)frameCount;
-            diagnostics.engineRealTimeMS = engineTime.GetTimeSince() / (float) frameCount;
-
-            //if (lastDrawTime >4) cout << lastDrawTime << endl;
-
-            diagnostics.currentFPS = frameCount;
-            frameCount = 0;
-
-
-            sysTime.Set();
-            drawTime.Set();
-            runTime.Set();
-            debugTime.Set();
-            engineTime.Set();
-
-        }
-
-        update();
-        render();
-
-
-
-        engineTime.Pause();
-        if (GetMaxFPS() >= 0) {
-            Engine::Wait(GetMaxFPS());
-        } else {
-            return -3;
-        }
-        engineTime.Resume();
-
-
-        drawTime.Pause();
-        runTime.Pause();
-        debugTime.Pause();
-
-        frameCount++;
+        Iterate();
     }
 
 
     return 0;
 
+}
+class PlaceholderDisplay : public Entity {
+    AssetID background;
+    Shape2D * shape;
+
+  public: 
+    PlaceholderDisplay() {
+        SetName("PAUSEDISPLAY");
+        Display * disp = ViewManager::Get(ViewManager::GetCurrent());
+        if (!disp) return;
+        
+        
+        
+        
+        shape = AddComponent<Shape2D>();
+        background = Graphics::GetRenderCamera().GetBackVisual();
+        shape->FormImage(background);
+        Node().Position() = {0.f, 0.f};        
+    }
+    
+    void OnRemove() {
+        Assets::Remove(background);
+    }
+
+};
+
+static Entity::ID placeholderID;
+
+
+void Engine::Pause() {
+    paused = true;
+    placeholderID = Entity::Create<PlaceholderDisplay>();
+    Engine::AttachManager(placeholderID, false);
+    
+}
+
+void Engine::Resume() {
+    if (placeholderID.Valid()) {
+        placeholderID.Identify()->Remove();
+    }
+    paused = false;
+}
+
+void Engine::Break() {
+    paused = true;
+    placeholderID = Entity::Create<PlaceholderDisplay>();
+    Engine::AttachManager(placeholderID, false);
+
+    while(paused) {
+        Iterate();
+    }
 }
 
 void Engine::AddModule(Module * m) {
@@ -271,6 +324,7 @@ int Engine::Startup() {
     valid = true;
     universe = Entity::ID();
     managers = (new Entity())->GetID();
+    managersNonPausable = (new Entity())->GetID();
 
 
     for(int i = 0; i < modules.size(); ++i) {
@@ -291,11 +345,16 @@ Entity::ID & Engine::Root() {
     return universe;
 }
 
-void Engine::AttachManager(Entity::ID id) {
+void Engine::AttachManager(Entity::ID id, bool pausable) {
     Entity * ent = id.Identify();
     if (!ent) return;
-    if (managers.Valid())
-        managers.Identify()->Attach(id);
+    if (pausable) {
+        if (managers.Valid())
+            managers.Identify()->Attach(id);
+    } else {
+        if (managersNonPausable.Valid())
+            managersNonPausable.Identify()->Attach(id);        
+    }
 }
 
 void Engine::render() {
@@ -305,17 +364,26 @@ void Engine::render() {
     }
     sysTime.Pause();
 
-    drawTime.Resume();
-    Entity * base = universe.Identify();
-    if (base) base->Draw();
-    drawTime.Pause();
+    if (!paused) {
+        drawTime.Resume();
+        Entity * base = universe.Identify();
+        if (base) base->Draw();
+        drawTime.Pause();
+    }
 
-    sysTime.Resume();
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->DrawAfter();
     }
-    if (managers.Valid())
-        managers.Identify()->Draw();
+    sysTime.Resume();
+    
+    if (!paused) {
+        if (managers.Valid())
+            managers.Identify()->Draw();
+    }
+    
+    if (managersNonPausable.Valid())
+        managersNonPausable.Identify()->Draw();
+
     sysTime.Pause();
     
     drawTime.Resume();
@@ -332,18 +400,27 @@ void Engine::update() {
     }
     sysTime.Pause();
     
-    runTime.Resume();
-    Entity * base = universe.Identify();
-    if (base)base->Step();
-    runTime.Pause();
 
+
+    if (!paused) {
+        runTime.Resume();
+        Entity * base = universe.Identify();
+        if (base)base->Step();
+        runTime.Pause();
+    }
+    
     sysTime.Resume();
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->RunAfter();
     }
-    
-    if (managers.Valid())
-        managers.Identify()->Step();
+
+    if (!paused) {
+        
+        if (managers.Valid())
+            managers.Identify()->Step();
+    }
+    if (managersNonPausable.Valid())
+        managersNonPausable.Identify()->Step();
 
     sysTime.Pause();
 }

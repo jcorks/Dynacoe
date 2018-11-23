@@ -193,25 +193,7 @@ void Dynacoe::OpenGLFBDisplay::SetViewPolicy(ViewPolicy v) {
     policy = v;
 }
 
-void Dynacoe::OpenGLFBDisplay::AttachSource(Dynacoe::Framebuffer * f) {
-    if (!f) {
-        framebuffer = f;
-        return;
-    }
 
-
-    if (glXGetCurrentDrawable() != win) {
-        glXMakeCurrent(dpy, win, glXGetCurrentContext());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    if (f->GetHandleType() == Dynacoe::Framebuffer::Type::GLFBPacket)
-        framebuffer = f;
-}
-
-Dynacoe::Framebuffer * Dynacoe::OpenGLFBDisplay::GetSource() {
-    return framebuffer;
-}
 
 std::vector<Dynacoe::Framebuffer::Type> Dynacoe::OpenGLFBDisplay::SupportedFramebuffers() {
     return std::vector<Dynacoe::Framebuffer::Type>({
@@ -219,8 +201,15 @@ std::vector<Dynacoe::Framebuffer::Type> Dynacoe::OpenGLFBDisplay::SupportedFrame
     });
 }
 
-void Dynacoe::OpenGLFBDisplay::Update() {
+void Dynacoe::OpenGLFBDisplay::Update(Dynacoe::Framebuffer * framebuffer) {
     if (!framebuffer) return;
+    if (framebuffer->GetHandleType() != Dynacoe::Framebuffer::Type::GLFBPacket) return;
+    
+    if (glXGetCurrentDrawable() != win) {
+        glXMakeCurrent(dpy, win, glXGetCurrentContext());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+    
     framebufferImage = (*(GLRenderTarget**)framebuffer->GetHandle())->GetTexture();
     if (!dumpQueue.empty()) {
         if (dumpWait.top() <= 0) {
@@ -272,6 +261,18 @@ void Dynacoe::OpenGLFBDisplay::Update() {
     // perhaps query input here if input lib is dependent on the win manager.
     int w = Width(),
         h = Height();
+        
+        
+    if (glXGetCurrentDrawable() != win) {
+        glXMakeCurrent(dpy, win, glXGetCurrentContext());
+    }
+
+
+    if (framebuffer) {
+        (*(GLRenderTarget**)framebuffer->GetHandle())->Sync();
+    }
+    
+    
     drawFrame(w, h);
     // render tex on this context's framebuffer.
 }
@@ -321,7 +322,6 @@ Dynacoe::OpenGLFBDisplay::OpenGLFBDisplay() {
     policy = OpenGLFBDisplay::ViewPolicy::MatchSize;
     valid = realize();
 
-    framebuffer = nullptr;
 }
 
 bool Dynacoe::OpenGLFBDisplay::realize() {
@@ -457,15 +457,7 @@ bool Dynacoe::OpenGLFBDisplay::createContext() {
 void Dynacoe::OpenGLFBDisplay::drawFrame(int w, int h) {
 
 
-    if (glXGetCurrentDrawable() != win) {
-        glXMakeCurrent(dpy, win, glXGetCurrentContext());
-    }
 
-
-    if (framebuffer) {
-        (*(GLRenderTarget**)framebuffer->GetHandle())->Sync();
-
-    }
 
     int dims[4];
     int isBlending;
@@ -586,7 +578,6 @@ void Dynacoe::OpenGLFBDisplay::drawFrame(int w, int h) {
 
         glUseProgram(programHandle);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glFinish();
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(11);

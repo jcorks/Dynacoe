@@ -144,6 +144,10 @@ class Console : public Module {
     /// Calling the function again with false re-enables the toggling.
     static void Lock(bool);
 
+    /// \brief Sets whether to pause the engine when showing the console.
+    ///
+    /// The default is true.
+    static void PauseOnShow(bool);
 
     /// \brief Adds an additional command to be 
     /// recognized by the interactive interpreter.

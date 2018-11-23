@@ -67,7 +67,6 @@ void NoDisplay::RemoveResizeCallback(NoDisplay::ResizeCallback*){}
 void NoDisplay::AddCloseCallback(NoDisplay::CloseCallback*){}
 void NoDisplay::RemoveCloseCallback(NoDisplay::CloseCallback*){}
 
-
 bool NoDisplay::IsCapable(NoDisplay::Capability){return false;}
 Dynacoe::Display::DisplayHandleType NoDisplay::GetSystemHandleType(){return DisplayHandleType::Unknown;}
 void *  NoDisplay::GetSystemHandle(){return nullptr;}

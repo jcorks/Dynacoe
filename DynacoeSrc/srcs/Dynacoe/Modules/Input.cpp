@@ -653,6 +653,8 @@ void Input::getUnicode() {
     if (Input::IsPressed(Keyboard::Key_enter)) lastUnicode = '\n';
     if (Input::IsPressed(Keyboard::Key_backspace)) lastUnicode = '\b';
     if (Input::IsPressed(Keyboard::Key_space)) lastUnicode = ' ';
+    if (Input::IsPressed(Keyboard::Key_tab)) lastUnicode = '\t';
+    
     if (lastUnicode) {
         for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
             unicodeListeners[i]->OnNewUnicode(lastUnicode);

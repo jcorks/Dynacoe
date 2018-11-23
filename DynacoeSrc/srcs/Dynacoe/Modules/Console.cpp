@@ -62,6 +62,7 @@ static DataGrid * mainGrid = nullptr;
 static Entity * mainGridRoot = nullptr;
 static DynacoeEvent((*commandCallback)) = nullptr;
 static bool console_overflow = false;
+static bool pauseOnShow = true;
 const uint32_t console_text_limit_line_c = 80;
 Interpreter * Console::interp = nullptr;
 
@@ -498,10 +499,10 @@ void Console::Init() {
     mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
     mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
 
-    Engine::AttachManager(mainGridRoot->GetID());
+    Engine::AttachManager(mainGridRoot->GetID(), false);
     Entity * messageRoot = Entity::CreateReference<Entity>();
     messageRoot->Attach(messages->GetID());
-    Engine::AttachManager(messages->GetID());
+    Engine::AttachManager(messages->GetID(), false);
     mainGrid->Attach(streamIn->GetID());
     mainGrid->AddColumn("", 1, {.8f, 1.f, .9f, 1.f});
 }
@@ -552,8 +553,7 @@ void Console::RunAfter()  {
     if ((Input::IsHeld(Keyboard::Key_lshift) ||
          Input::IsHeld(Keyboard::Key_rshift)) &&
         Input::IsPressed(Keyboard::Key_tab))
-        if (!locked)
-            shown = !shown;
+        Console::Show(!shown);
 
 
 
@@ -662,7 +662,16 @@ bool Console::IsVisible() {
 
 void Console::Show(bool b) {
     if (locked) return;
+    if (pauseOnShow && (shown != true && b == true)) {
+        Engine::Pause();
+    } else if (shown == true && b != true) {
+        Engine::Resume();
+    }
     shown = b;
+}
+
+void Console::PauseOnShow(bool b) {
+    pauseOnShow = b;
 }
 
 
@@ -992,6 +1001,32 @@ class Command_Exit : public Interpreter::Command {
 };
 
 
+class Command_Pause : public Interpreter::Command {
+  public: 
+    std::string operator()(const std::vector<std::string> & argvec) {
+        Engine::Pause();
+        return "Paused";
+    }
+    std::string Help() const {
+        return "Pauses the main Engine loop.";
+    }
+    
+};
+
+class Command_Resume : public Interpreter::Command {
+  public: 
+    std::string operator()(const std::vector<std::string> & argvec) {
+        Engine::Resume();
+        return "Resumed";
+
+    }
+    std::string Help() const {
+        return "Resumes the main Engine loop.";
+    }
+    
+};
+
+
 class Command_ViewID : public Interpreter::Command {
   public:
 
@@ -1264,6 +1299,8 @@ void Console::AddDefaultCommands() {
     interp->AddCommand("quit",    new Command_Exit);
     interp->AddCommand("seeya",   new Command_Exit);
     interp->AddCommand("print",   new Command_Print);
+    interp->AddCommand("pause",   new Command_Pause);
+    interp->AddCommand("resume", new Command_Resume);
     interp->AddCommand("mod",     new EntityModCommand);
     interp->AddCommand("view-id", new Command_ViewID);
     

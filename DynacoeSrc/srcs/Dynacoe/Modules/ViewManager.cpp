@@ -120,16 +120,6 @@ ViewID ViewManager::New(const std::string & name, int w, int h) {
 
     ViewID id = displays.Insert(out);
     ids.insert(id);
-
-    ViewID cid = GetCurrent();
-    if (displays.Query(cid)) {
-        LogicalDisplay d = displays.Find(currentDisplay);
-        if (d.display->GetSource()) {
-            out.display->AttachSource(d.display->GetSource());   
-        }
-    } else { 
-        out.display->AttachSource(Graphics::GetRenderCamera().GetFramebuffer());
-    }
     return id;
 
 }

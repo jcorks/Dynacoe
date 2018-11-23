@@ -85,6 +85,23 @@ class Engine {
     /// is automated. While running, it is also possible to utilize the
     /// debugging features such as the console and Entity debugger.
     static int Run();
+    
+    
+    /// \brief Pauses the Engine execution loop.
+    ///
+    /// Once in a paused state, 
+    static void Pause();
+    
+    // like pause but disrupts the engine immediately rather than safely waiting 
+    // until the next iteration. Most useful for debugging prupose
+    static void Break();
+    
+    // resumes from a paused or broken state.
+    static void Resume();
+    
+    // Not equivalent to a frame, since frame throttling can occur.
+    static void Iterate(); 
+
 
     /// \brief Returns the toplevel Entity. 
     ///
@@ -95,7 +112,9 @@ class Engine {
 
     /// \brief Attaches a management-type entity.
     ///
-    static void AttachManager(Entity::ID);
+    /// If pausable is false, the manager will continue to update even when 
+    /// the engine is in a paused state.
+    static void AttachManager(Entity::ID, bool pausable = true);
 
 	/// \brief Ends the Engine execution loop.
 	///
