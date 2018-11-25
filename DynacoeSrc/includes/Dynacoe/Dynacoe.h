@@ -176,11 +176,11 @@ class Engine {
 
     static std::vector<Module*> modules;
 
-    static Dynacoe::Clock drawTime;
-    static Dynacoe::Clock runTime;
-    static Dynacoe::Clock sysTime;
-    static Dynacoe::Clock debugTime;
-    static Dynacoe::Clock frameTime;
+    static Dynacoe::Clock * drawTime;
+    static Dynacoe::Clock * runTime;
+    static Dynacoe::Clock * sysTime;
+    static Dynacoe::Clock * debugTime;
+    static Dynacoe::Clock * frameTime;
 
     static float lastDrawTime;
     static float lastRunTime;

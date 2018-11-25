@@ -51,6 +51,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/Filesys.h>
 
 
+static void storeSystemImages();
+
+
+
 static const float DISPLAY_PIXEL_COORD_RATIO       =   1/(256.f);
 
 
@@ -59,27 +63,55 @@ using namespace std;
 
 
 
-
-
-float *           Graphics::transformResult;
-float *           Graphics::transformResult2;
-float *           Graphics::quadVertices2D;
-
-AssetID             Graphics::fontID;
-
-bool                Graphics::autoRefresh;
-int                 Graphics::filter;
-
-
-Image *             Graphics::errorImage;
-Renderer *        Graphics::drawBuffer;
-
-AssetID             Graphics::lastDisplayID;
+static Renderer * drawBuffer;
 
 
 
-Graphics::GraphicsState     Graphics::state;
-Graphics::FontSpec          Graphics::defaultFontSpec;
+
+// draw immediates
+static float * transformResult;
+static float * transformResult2;
+static float * quadVertices2D;
+
+//Identical to coebeefSys function of the same name.
+//internal use onlyx
+
+static AssetID fontID;
+
+// Initializes a new particle as a copy of a cached particle
+static bool autoRefresh;
+static int filter;
+static AssetID lastDisplayID;
+
+
+static Image * errorImage;
+static std::vector<int> consoleTextures;
+
+
+
+struct GraphicsState {
+    Renderer::Dimension dim;
+    Renderer::Polygon polygon;
+    Renderer::AlphaRule alpha;
+
+
+
+    Entity::ID currentCamera3D;
+    Entity::ID currentCamera2D;
+    Entity::ID currentCameraTarget;
+};
+
+struct FontSpec {
+    int height;
+    int width;
+    float fontGlyphScaleWidth;
+};
+
+static GraphicsState state;
+static FontSpec defaultFontSpec;
+
+
+
 
 
 // The default coords for a quad being drawn via triangles
@@ -114,6 +146,10 @@ static float quadTex[] {
 
 
 static std::string fSearch(const std::string &);
+static void storeFont();
+static void setDisplayMode(Renderer::Polygon p, Renderer::Dimension, Renderer::AlphaRule a);
+
+
 
 
 void Graphics::Init() {
@@ -175,7 +211,7 @@ void Graphics::Init() {
 
         //GetCamera2D().Node().local.reverse = true;
 
-        Graphics::storeSystemImages(); // TODO: make proper. It should be that images stored with no renderer initialized are just cached until a display is given.
+        storeSystemImages(); // TODO: make proper. It should be that images stored with no renderer initialized are just cached until a display is given.
 
 
 
@@ -185,9 +221,6 @@ void Graphics::Init() {
 
 }
 
-Backend * Graphics::GetBackend() {
-    return Graphics::GetRenderer();
-}
 
 void Graphics::InitAfter() {
     Engine::AttachManager(state.currentCamera3D);
@@ -198,23 +231,6 @@ void Graphics::InitAfter() {
 }
 
 
-
-void Graphics::DrawBefore() {
-
-
-}
-
-void Graphics::DrawAfter() {
-
-}
-
-
-void Graphics::RunBefore() {
-
-}
-
-void Graphics::RunAfter() {
-}
 
 
 
@@ -242,15 +258,7 @@ void Graphics::RunAfter() {
 static Renderer::Render2DStaticParameters params2D;
 
 
-void Graphics::UpdateCameraTransforms(Camera * c) {
-    Camera * cam2D = &Graphics::GetCamera2D();
-    if (cam2D == c) {
-        Graphics::GetRenderer()->Render2DVertices(params2D);
-        params2D.contextWidth  = cam2D->Width();
-        params2D.contextHeight = cam2D->Height();
-        params2D.contextTransform = cam2D->GetGlobalTransform().GetData();
-    }
-}
+
 
 
 void Graphics::Draw(Render2D & aspect) {    
@@ -266,7 +274,8 @@ void Graphics::Draw(Render2D & aspect) {
 
     if (round(params2D.contextWidth) != cam2d->Width() ||
         round(params2D.contextHeight) != cam2d->Height()) {
-        UpdateCameraTransforms(cam2d);
+
+        UpdateCameraTransforms();
     }
 
     drawBuffer->Queue2DVertices(
@@ -303,21 +312,7 @@ void Graphics::Draw(RenderMesh & aspect) {
 }
 
 
-void Graphics::setDisplayMode(Renderer::Polygon p, Renderer::Dimension d, Renderer::AlphaRule a) {
-	if (state.polygon != p || state.alpha != a || state.dim != d) {
 
-        // Settings with which to draw have changed, so we commit what we have and start over
-        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
-		drawBuffer->Render2DVertices(params2D);
-
-	    state.alpha = a;
-        state.polygon = p;
-        state.dim = d;
-        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
-
-	}
-
-}
 
 
 Renderer * Graphics::GetRenderer() {
@@ -439,31 +434,6 @@ void Graphics::drawTranslucent(bool doIt) {
 
 
 
-void Graphics::storeFont() {
-    /*
-    string path = Params::GetDynacoeDirectory() + STR(IMG_PATH) + "font.png";
-
-    Image * img = _getTilesetPNG(path, 21, 21);
-    img->path = "font$SYS";
-    addToCache(img);
-    fontID = img->index;
-
-
-    defaultFontSpec.height          = getImage(fontID).height;
-    defaultFontSpec.width           = getImage(fontID).width / 2.0;
-
-    defaultFontSpec.fontFlyphScaleWidth = .5f;
-    */
-
-    defaultFontSpec.height          = Assets::Get<Image>(fontID).frames[0].Height();
-    defaultFontSpec.width           = Assets::Get<Image>(fontID).frames[0].Width();
-    defaultFontSpec.fontGlyphScaleWidth = 1.0f;
-
-    //^ how much space does the width of the glyph take up the frame?
-
-}
-
-
 
 
 
@@ -538,16 +508,81 @@ Camera & Graphics::GetRenderCamera() {
 }
 
 
-void Graphics::Flush2D() {
-    drawBuffer->Render2DVertices(params2D);
-}
 
 
 /// statics ///
 
 
+void storeFont() {
+    /*
+    string path = Params::GetDynacoeDirectory() + STR(IMG_PATH) + "font.png";
+
+    Image * img = _getTilesetPNG(path, 21, 21);
+    img->path = "font$SYS";
+    addToCache(img);
+    fontID = img->index;
 
 
+    defaultFontSpec.height          = getImage(fontID).height;
+    defaultFontSpec.width           = getImage(fontID).width / 2.0;
+
+    defaultFontSpec.fontFlyphScaleWidth = .5f;
+    */
+
+    defaultFontSpec.height          = Assets::Get<Image>(fontID).frames[0].Height();
+    defaultFontSpec.width           = Assets::Get<Image>(fontID).frames[0].Width();
+    defaultFontSpec.fontGlyphScaleWidth = 1.0f;
+
+    //^ how much space does the width of the glyph take up the frame?
+
+}
+
+
+
+
+void Graphics::Flush2D() {
+    drawBuffer->Render2DVertices(params2D);
+}
+
+void setDisplayMode(Renderer::Polygon p, Renderer::Dimension d, Renderer::AlphaRule a) {
+	if (state.polygon != p || state.alpha != a || state.dim != d) {
+
+        // Settings with which to draw have changed, so we commit what we have and start over
+        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
+		drawBuffer->Render2DVertices(params2D);
+
+	    state.alpha = a;
+        state.polygon = p;
+        state.dim = d;
+        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
+
+	}
+
+}
+
+void Graphics::UpdateCameraTransforms() {
+    Camera * cam2d = &Graphics::GetCamera2D(); 
+    Graphics::GetRenderer()->Render2DVertices(params2D);
+    params2D.contextWidth  = cam2d->Width();
+    params2D.contextHeight = cam2d->Height();
+    params2D.contextTransform = cam2d->GetGlobalTransform().GetData();
+}
+
+//Attempts to store the image(s) specified by the 32-bit pixel buffer given.
+//
+// Hidden denotes whether
+// or not the compiled Image is stored in the standard image list or
+// the private System one.
+static AssetID storePixels(std::vector<uint32_t*> & pixels, std::string ID, int w, int h, bool hidden) {
+    //Image * out = new Image();
+    AssetID id = Assets::New(Assets::Type::Image, ID+(hidden?"$SYS" : ""));
+    Image * out = &Assets::Get<Image>(id);
+    for(uint32_t i = 0; i < pixels.size(); i++) {
+        std::vector<uint8_t> data((uint8_t*)pixels[i], ((uint8_t*)pixels[i])+w*h*4);
+        out->frames.push_back(Image::Frame(w, h, data));
+    }
+    return id;
+}
 
 string fSearch(const string & file) {
     Filesys fs;
@@ -557,3 +592,6 @@ string fSearch(const string & file) {
     fs.ChangeDir(cd);
     return fullPath;
 }
+
+
+#include <Dynacoe/SystemImages>

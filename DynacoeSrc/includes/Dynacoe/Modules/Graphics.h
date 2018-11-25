@@ -74,17 +74,16 @@ class Renderer;
 
 
 
-/** \brief The central class for rendering.
+/** \brief The namespace for rendering.
  *
- * All user requests or rendering are done through this class.
+ * All user requests or rendering are done through functions here.
  * Users may draw 2D and 3D primitives upon request,
  * alter the 2D and 3D viewing transformations,
  * load 2D and 3D visual assets and more.
  *
  *
  */
-class Graphics : public Module {
-  public:
+namespace Graphics {
 
 
 
@@ -101,7 +100,7 @@ class Graphics : public Module {
 
     /// \brief Draws an Aspect to the current display.
     ///
-    static void Draw(Render2D &);
+    void Draw(Render2D &);
 
 
 
@@ -116,7 +115,7 @@ class Graphics : public Module {
 
     /// \brief Draws an Aspect to the current display.
     ///
-    static void Draw(      RenderMesh &);
+    void Draw(      RenderMesh &);
 
     ///\}
 
@@ -132,17 +131,17 @@ class Graphics : public Module {
     /// \brief Forces the rendered scene to be drawn on the screen. This is normally done for you.
     ///
 
-    static void Commit();
+    void Commit();
 
 
 
     /// \brief Sets whether or not to automatically draw, commit, and clear.
     ///
-    static void DrawEachFrame(bool doIt);
+    void DrawEachFrame(bool doIt);
 
     /// \brief Returns whether each frame is being drawn, updated, and swapped automatically by Dynacoe or not.
     ///
-    static bool DrawEachFrame();
+    bool DrawEachFrame();
     ///\}
 
 
@@ -155,14 +154,14 @@ class Graphics : public Module {
     ///
     /// Returns a pointer to the currently active underlying renderer currently being used by
     /// the graphics plugin. You normally will not need to use such a thing, but it may come in handy.
-    static Renderer * GetRenderer();
+    Renderer * GetRenderer();
 
     /// \brief Sets the current Renderer instance.
     ///
     /// All subsequent commands will utilize the given renderer
     /// to perform drawing operations. You normally will not need to use this
     /// , but it may come in handy.
-    static void SetRenderer(Renderer *);
+    void SetRenderer(Renderer *);
 
 
 
@@ -185,7 +184,7 @@ class Graphics : public Module {
     /// \brief Disables or enables bilinear filtering of Images during rendering.
     /// Bilinear filtering makes stratched images look less grainy.
     /// The default is not to enable
-    static void EnableFiltering(bool doIt);
+    void EnableFiltering(bool doIt);
 
 
 
@@ -195,103 +194,31 @@ class Graphics : public Module {
     /// \brief Sets the current camera to view from for 3D renderings.
     ///
     /// If invalid, the current camera is not changed.
-    static void SetCamera3D(Camera &);
+    void SetCamera3D(Camera &);
 
     /// \brief Sets the current camera to view from for 2D renderings.
     ///
     /// If invalid, the current camera is not changed.
-    static void SetCamera2D(Camera &);
+    void SetCamera2D(Camera &);
 
     /// \brief Sets the current camera that processes all visuals and hands them to the display i.e. the window.
     ///
     /// If invalid, the current camera is not changed.
-    static void SetRenderCamera(Camera &);
+    void SetRenderCamera(Camera &);
 
     /// \brief Returns the current cameras.
     ///
     ///\{
-    static Camera & GetCamera3D();
-    static Camera & GetCamera2D();
-    static Camera & GetRenderCamera();
+    Camera & GetCamera3D();
+    Camera & GetCamera2D();
+    Camera & GetRenderCamera();
     ///\}
 
     
-  private:
-    friend class Assets;
-    friend class GraphicsResizeCallback;
-    friend class Image;
-
-    static Renderer * drawBuffer;
-
-
-
-    /* Drawing state and display management */
-	static void setDisplayMode(Renderer::Polygon p, Renderer::Dimension, Renderer::AlphaRule a);
-
-    // draw immediates
-    static float * transformResult;
-    static float * transformResult2;
-    static float * quadVertices2D;
-
-
-
-
-
-    //Identical to coebeefSys function of the same name.
-    //internal use onlyx
-
-    static AssetID fontID;
-
-
-    // Initializes a new particle as a copy of a cached particle
-    static bool autoRefresh;
-
-    static int filter;
-
-    static AssetID lastDisplayID;
-
-
-    friend class Aspect3D;
-    friend class Material;
-
-
-    static void storeFont();
-
-    static Image * errorImage;
-    static std::vector<int> consoleTextures;
-
-
-
-    struct GraphicsState {
-        Renderer::Dimension dim;
-        Renderer::Polygon polygon;
-        Renderer::AlphaRule alpha;
-
-
-
-        Entity::ID currentCamera3D;
-        Entity::ID currentCamera2D;
-        Entity::ID currentCameraTarget;
-    };
-
-    struct FontSpec {
-        int height;
-        int width;
-        float fontGlyphScaleWidth;
-    };
-
-    static GraphicsState state;
-    static FontSpec defaultFontSpec;
-  public:
-        static void storeSystemImages();
-
-
-  public:
-    std::string GetName() { return "Graphics"; }
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
-    static void Flush2D();
-    static void UpdateCameraTransforms(Camera * );
+    void UpdateCameraTransforms();
+    void Flush2D();
+    void Init();
+    void InitAfter();
 };
 };
 

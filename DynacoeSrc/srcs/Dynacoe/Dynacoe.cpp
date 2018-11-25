@@ -88,12 +88,12 @@ std::string Engine::Version() {
 
 static int maxFPS;
 static bool quit;
-Dynacoe::Clock        Engine::drawTime;
-Dynacoe::Clock        Engine::runTime;
-Dynacoe::Clock        Engine::sysTime;
-Dynacoe::Clock        Engine::debugTime;
-Dynacoe::Clock        Engine::frameTime;
-static Dynacoe::Clock        engineTime;
+Dynacoe::Clock        *Engine::drawTime;
+Dynacoe::Clock        *Engine::runTime;
+Dynacoe::Clock        *Engine::sysTime;
+Dynacoe::Clock        *Engine::debugTime;
+Dynacoe::Clock        *Engine::frameTime;
+static Dynacoe::Clock        *engineTime;
 
 std::vector<Module*>  Engine::modules;
 
@@ -122,13 +122,13 @@ string test="";
 
 void Engine::Iterate() {
     
-    if (frameTime.GetTimeSince() >= 1000) {
-        frameTime.Reset();
+    if (frameTime->GetTimeSince() >= 1000) {
+        frameTime->Reset();
 
-        diagnostics.drawTimeMS = drawTime.GetTimeSince() / (float)frameCount;
-        diagnostics.stepTimeMS = runTime.GetTimeSince() / (float)frameCount;
-        diagnostics.systemTimeMS = sysTime.GetTimeSince() / (float)frameCount;
-        diagnostics.engineRealTimeMS = engineTime.GetTimeSince() / (float) frameCount;
+        diagnostics.drawTimeMS = drawTime->GetTimeSince() / (float)frameCount;
+        diagnostics.stepTimeMS = runTime->GetTimeSince() / (float)frameCount;
+        diagnostics.systemTimeMS = sysTime->GetTimeSince() / (float)frameCount;
+        diagnostics.engineRealTimeMS = engineTime->GetTimeSince() / (float) frameCount;
 
         //if (lastDrawTime >4) cout << lastDrawTime << endl;
 
@@ -136,11 +136,11 @@ void Engine::Iterate() {
         frameCount = 0;
 
 
-        sysTime.Set();
-        drawTime.Set();
-        runTime.Set();
-        debugTime.Set();
-        engineTime.Set();
+        sysTime->Set();
+        drawTime->Set();
+        runTime->Set();
+        debugTime->Set();
+        engineTime->Set();
 
     }
 
@@ -149,16 +149,16 @@ void Engine::Iterate() {
 
 
 
-    engineTime.Pause();
+    engineTime->Pause();
     if (GetMaxFPS() >= 0) {
         Engine::Wait(GetMaxFPS());
     }
-    engineTime.Resume();
+    engineTime->Resume();
 
 
-    drawTime.Pause();
-    runTime.Pause();
-    debugTime.Pause();
+    drawTime->Pause();
+    runTime->Pause();
+    debugTime->Pause();
 
     frameCount++;
 }
@@ -293,10 +293,16 @@ int Engine::Startup() {
         Filesys obj;
         origCWD = obj.GetCWD();
     }
-
+    Entity * timer = Entity::Create().Identify();
+    drawTime = timer->AddComponent<Clock>();
+    runTime = timer->AddComponent<Clock>();
+    sysTime = timer->AddComponent<Clock>();
+    frameTime = timer->AddComponent<Clock>();
+    engineTime = timer->AddComponent<Clock>();
+    debugTime = timer->AddComponent<Clock>();
+    
 
     AddModule(new Assets);
-    AddModule(new Graphics);
     AddModule(new Sound);
     AddModule(new ViewManager);
     AddModule(new Input);
@@ -315,7 +321,7 @@ int Engine::Startup() {
 
 
     frameCount = 0;
-    frameTime.Reset();
+    frameTime->Reset();
 
     //Console::Info()  << "Initialized.";
 
@@ -327,12 +333,17 @@ int Engine::Startup() {
     managersNonPausable = (new Entity())->GetID();
 
 
+    Graphics::Init();
+
     for(int i = 0; i < modules.size(); ++i) {
         (modules[i]->Init());
     }
+    Graphics::InitAfter();
+    
     for(int i = 0; i < modules.size(); ++i) {
         (modules[i]->InitAfter());
     }
+
 
 
     return 1;
@@ -358,23 +369,23 @@ void Engine::AttachManager(Entity::ID id, bool pausable) {
 }
 
 void Engine::render() {
-    sysTime.Resume();
+    sysTime->Resume();
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->DrawBefore();
     }
-    sysTime.Pause();
+    sysTime->Pause();
 
     if (!paused) {
-        drawTime.Resume();
+        drawTime->Resume();
         Entity * base = universe.Identify();
         if (base) base->Draw();
-        drawTime.Pause();
+        drawTime->Pause();
     }
 
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->DrawAfter();
     }
-    sysTime.Resume();
+    sysTime->Resume();
     
     if (!paused) {
         if (managers.Valid())
@@ -384,32 +395,32 @@ void Engine::render() {
     if (managersNonPausable.Valid())
         managersNonPausable.Identify()->Draw();
 
-    sysTime.Pause();
+    sysTime->Pause();
     
-    drawTime.Resume();
+    drawTime->Resume();
     if (Graphics::DrawEachFrame())
         Graphics::Commit();
-    drawTime.Pause();
+    drawTime->Pause();
 }
 
 
 void Engine::update() {
-    sysTime.Resume();
+    sysTime->Resume();
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->RunBefore();
     }
-    sysTime.Pause();
+    sysTime->Pause();
     
 
 
     if (!paused) {
-        runTime.Resume();
+        runTime->Resume();
         Entity * base = universe.Identify();
         if (base)base->Step();
-        runTime.Pause();
+        runTime->Pause();
     }
     
-    sysTime.Resume();
+    sysTime->Resume();
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->RunAfter();
     }
@@ -422,7 +433,7 @@ void Engine::update() {
     if (managersNonPausable.Valid())
         managersNonPausable.Identify()->Step();
 
-    sysTime.Pause();
+    sysTime->Pause();
 }
 
 void Engine::Quit() {

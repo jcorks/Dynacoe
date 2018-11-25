@@ -87,7 +87,8 @@ void Camera::SetType(Type t) {
 }
 
 void Camera::OnUpdateTransform() {
-    Graphics::UpdateCameraTransforms(this);
+    if (this == &Graphics::GetCamera2D())
+        Graphics::UpdateCameraTransforms();
 }
 
 

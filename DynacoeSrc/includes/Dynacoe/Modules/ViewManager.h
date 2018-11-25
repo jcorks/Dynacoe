@@ -51,7 +51,6 @@ namespace Dynacoe {
 
 using ViewID = LookupID; 
 
-class Graphics;
 class Color;
 
 

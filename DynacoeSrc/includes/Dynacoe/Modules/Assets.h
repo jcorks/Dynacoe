@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Dynacoe {
 class Image;
-class Graphics;
 class Particle;
 class AudioBlock;
 class Sequence;
@@ -201,7 +200,6 @@ class Assets : public Module {
 
 
   private:
-    friend class Graphics;
 
     static void notFoundError(Assets::Type, const std::string & name);
     static std::string typeToString(Assets::Type);
@@ -225,12 +223,6 @@ class Assets : public Module {
     static void storeSystemImages();
 
 
-    //Attempts to store the image(s) specified by the 32-bit pixel buffer given.
-    //
-    // Hidden denotes whether
-    // or not the compiled Image is stored in the standard image list or
-    // the private System one.
-    static AssetID storePixels(std::vector<uint32_t*> &, std::string ID, int w, int h, bool hidden);
 
     static Asset * CreateAsset(Type type, const std::string & str);
 

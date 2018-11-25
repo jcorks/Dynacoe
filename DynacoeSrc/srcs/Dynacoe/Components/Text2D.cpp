@@ -790,7 +790,7 @@ Text2D::~Text2D() {
 void Text2D::SetFont(AssetID id) {
     if (!id.Valid()) return;
     if (modeInst) fontCache.Remove(fontSize, (FT_Face*)fontFace, fontSpacing);
-    fontFace = Assets::Get<FontAsset>(id).fontFace;
+    fontFace = Assets::Get<FontAsset>(id).GetRawFontFace();
     if (!fontFace || fontSize<=0) return;
 
     modeInst =    fontCache.Get(fontSize, (FT_Face*)fontFace, fontSpacing);

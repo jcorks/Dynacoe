@@ -397,24 +397,6 @@ string Assets::Name(AssetID id) {
 
 
 
-AssetID Assets::storePixels(vector<uint32_t*> & pixels, string ID, int w, int h, bool hidden) {
-    Image * out = new Image(ID+(hidden?"$SYS" : ""));
-    for(uint32_t i = 0; i < pixels.size(); i++) {
-        std::vector<uint8_t> data((uint8_t*)pixels[i], ((uint8_t*)pixels[i])+w*h*4);
-        out->frames.push_back(Image::Frame(w, h, data));
-    }
-
-
-    // remove pixels
-    /*
-    for(uint32_t i = 0; i < pixels.size(); i++) {
-        delete[] pixels[i];
-    }
-    */
-
-    return storeGen(out->GetAssetName(), out, Assets::Type::Image);
-
-}
 
 
 

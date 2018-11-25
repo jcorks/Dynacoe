@@ -50,10 +50,12 @@ class FontAsset : public Asset {
 
     ~FontAsset();
 
+    
+    void * GetRawFontFace() { return fontFace; }
+
+    uint8_t * GetRawFontData() { return data; }
+
   private:
-    friend class Assets;
-    friend class Text2D;
-    friend class Graphics; // TODO: remove
     void * fontFace;
     uint8_t * data;
 

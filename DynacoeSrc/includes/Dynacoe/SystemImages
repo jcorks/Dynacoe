@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Dynacoe/Modules/Graphics.h>
 
 using std::vector;
 
@@ -77555,7 +77554,7 @@ static unsigned char DATA_CONSOLETTF[] = {
 
 using namespace Dynacoe;
 
-void Graphics::storeSystemImages() {
+void storeSystemImages() {
 
 vector <uint32_t*>  ___IMG_FONT;
 ___IMG_FONT.push_back(___FRAME_FONT0);
@@ -77686,46 +77685,46 @@ ___IMG_FONT.push_back(___FRAME_FONT124);
 ___IMG_FONT.push_back(___FRAME_FONT125);
 ___IMG_FONT.push_back(___FRAME_FONT126);
 ___IMG_FONT.push_back(___FRAME_FONT127);
-fontID = Assets::storePixels(___IMG_FONT, "FONT", 6, 10, true);
+fontID = storePixels(___IMG_FONT, "FONT", 6, 10, true);
 
 vector <uint32_t*>  ___IMG_BOX;
 ___IMG_BOX.push_back(___FRAME_BOX0);
-Assets::storePixels(___IMG_BOX, "BOX", 5, 5, true);
+storePixels(___IMG_BOX, "BOX", 5, 5, true);
 
 
 vector <uint32_t*>  ___IMG_FLARE;
 ___IMG_FLARE.push_back(___FRAME_FLARE0);
-Assets::storePixels(___IMG_FLARE, "FLARE", 100, 100, true);
+storePixels(___IMG_FLARE, "FLARE", 100, 100, true);
 
 
 vector <uint32_t*>  ___IMG_GLARE;
 ___IMG_GLARE.push_back(___FRAME_GLARE0);
-Assets::storePixels(___IMG_GLARE, "GLARE", 100, 100, true);
+storePixels(___IMG_GLARE, "GLARE", 100, 100, true);
 
 
 vector <uint32_t*>  ___IMG_LIGHT;
 ___IMG_LIGHT.push_back(___FRAME_LIGHT0);
-Assets::storePixels(___IMG_LIGHT, "LIGHT", 100, 100, true);
+storePixels(___IMG_LIGHT, "LIGHT", 100, 100, true);
 
 
 vector <uint32_t*>  ___IMG_RING;
 ___IMG_RING.push_back(___FRAME_RING0);
-Assets::storePixels(___IMG_RING, "RING", 100, 100, true);
+storePixels(___IMG_RING, "RING", 100, 100, true);
 
 
 vector <uint32_t*>  ___IMG_SPHERE;
 ___IMG_SPHERE.push_back(___FRAME_SPHERE0);
-Assets::storePixels(___IMG_SPHERE, "SPHERE", 40, 40, true);
+storePixels(___IMG_SPHERE, "SPHERE", 40, 40, true);
 
 
 vector <uint32_t*>  ___IMG_STAR;
 ___IMG_STAR.push_back(___FRAME_STAR0);
-Assets::storePixels(___IMG_STAR, "STAR", 100, 100, true);
+storePixels(___IMG_STAR, "STAR", 100, 100, true);
 
 
 vector <uint32_t*>  ___IMG_SUN;
 ___IMG_SUN.push_back(___FRAME_SUN0);
-Assets::storePixels(___IMG_SUN, "SUN", 100, 100, true);
+storePixels(___IMG_SUN, "SUN", 100, 100, true);
 
 unsigned long DATA_CONSOLETTF_size = 108476;
 
