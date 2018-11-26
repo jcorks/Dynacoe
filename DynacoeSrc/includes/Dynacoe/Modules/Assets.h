@@ -165,6 +165,15 @@ namespace Assets {
     template<typename T>
     T & Get(const AssetID & id);
 
+    /// \brief Returns a pointer to the asset. If the asset doesnt exist or doesnt exist, nullptr is returned.
+    /// 
+    Asset * GetAsset(const AssetID & id);
+
+    /// \brief Gets the default asset for the given type. 
+    ///
+    Asset * GetGenericAsset(Assets::Type type);
+
+
     /// \brief Removes the specified Asset.
     ///
     /// After removal, all remaining AssetID copies are made invalid.
@@ -202,11 +211,6 @@ namespace Assets {
     void Init();
 
 
-    // Gets the asset 
-    Asset * GetAsset(const AssetID & id);
-
-    // Gets the default asset for the given type. 
-    Asset * GetGenericAsset(Assets::Type type);
 
 
 }
