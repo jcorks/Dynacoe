@@ -38,6 +38,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-void Assets::LoadEncoders() {
+void LoadEncoders() {
      LoadEncoder(new EncodePNG());
 }

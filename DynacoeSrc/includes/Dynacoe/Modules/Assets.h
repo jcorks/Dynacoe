@@ -201,34 +201,27 @@ namespace Assets {
 
     void Init();
 
-    // internal functions (Need cleanup!)
 
     // Gets the asset 
-    Asset * GetRaw(const AssetID & id);
+    Asset * GetAsset(const AssetID & id);
 
     // Gets the default asset for the given type. 
-    Asset * GetGeneric(Assets::Type type);
+    Asset * GetGenericAsset(Assets::Type type);
 
 
-    void LoadDecoders();
-    void LoadDecoder(Decoder *);
-    Decoder * GetDecoder(const std::string &);
-    void LoadEncoders();
-    void LoadEncoder(Encoder *);
-    
 }
 
 
 
 template<typename T>
 T & Assets::Get(const AssetID & id) {
-    T * i =dynamic_cast<T*>(Assets::GetRaw(id));
+    T * i =dynamic_cast<T*>(Assets::GetAsset(id));
     if (i) return *i;
-    if (!GetRaw(id))
+    if (!GetAsset(id))
         Console::Error() <<("Error getting from cache: Used deleted ID\n");
     else
         Console::Error() <<("Asset exists, but is a different type than the template given.\n");
-    return *(T*)GetGeneric((Assets::Type)id.GetType());
+    return *(T*)GetGenericAsset((Assets::Type)id.GetType());
 }
 
 }

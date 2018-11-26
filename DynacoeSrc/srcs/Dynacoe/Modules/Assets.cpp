@@ -74,6 +74,9 @@ static std::unordered_map<std::string, AssetID> assetMap[AssetID::NUMTYPES];
 static void storeSystemImages();
 
 
+    
+
+
 
 static Asset * CreateAsset(Assets::Type type, const std::string & str);
 
@@ -366,7 +369,7 @@ AssetID storeGen(const string & path, Asset * asset, Assets::Type type) {
     return out;
 }
 
-Decoder * Assets::GetDecoder(const string & ext) {
+Decoder * GetDecoder(const string & ext) {
     auto it = decoders.find(ext);
     if (it == decoders.end()) {
         Console::Error()  << "[Dynacoe::Assets]: Could not find a loader supporting the filetype " << ext<< Console::End();
@@ -431,7 +434,7 @@ vector<string> Assets::SupportedWriteExtensions (Assets::Type type) {
     return out;
 }
 
-void Assets::LoadDecoder(Decoder * dec) {
+void LoadDecoder(Decoder * dec) {
     if (!dec) return;
     vector<std::string> exts = dec->GetExtensions();
     for(uint32_t i = 0; i < exts.size(); ++i) {
@@ -448,7 +451,7 @@ void Assets::LoadDecoder(Decoder * dec) {
     }
 }
 
-void Assets::LoadEncoder(Encoder * enc) {
+void LoadEncoder(Encoder * enc) {
     if (!enc) return;
     encoders[(int)enc->GetType()][enc->GetExtension()] = enc;
 }
@@ -469,7 +472,7 @@ string Assets::Name(AssetID id) {
 }
 
 
-Asset * Assets::GetRaw(const AssetID & id) {
+Asset * Assets::GetAsset(const AssetID & id) {
     if (!id.Valid()) {
         Console::Error() << ("Error getting from cache: Non-existent ID\n");
         return errorInstances[id.GetType()];
@@ -480,7 +483,7 @@ Asset * Assets::GetRaw(const AssetID & id) {
 }
 
 
-Asset * Assets::GetGeneric(Assets::Type type) {
+Asset * Assets::GetGenericAsset(Assets::Type type) {
     return errorInstances[(int)type];
 }
 
@@ -502,3 +505,7 @@ string fSearch(const string & file) {
     fs.ChangeDir(cd);
     return fullPath;
 }
+
+
+#include <Dynacoe/Decoders/DecoderList>
+#include <Dynacoe/Encoders/EncoderList>

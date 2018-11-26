@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-void Assets::LoadDecoders() {
+void LoadDecoders() {
     LoadDecoder(new DecodeOGG());
     LoadDecoder(new DecodePNG());
     LoadDecoder(new DecodeWAV());
