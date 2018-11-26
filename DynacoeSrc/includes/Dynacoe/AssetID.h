@@ -43,6 +43,7 @@ class AssetID {
 
   public:
     AssetID() : type(NO_TYPE), handle(-1) {}
+    AssetID(int h, int t) {handle = h; type = t;};
 
     /// \brief Returns whether this AssetID refers to an actual
     /// Asset.
@@ -55,8 +56,6 @@ class AssetID {
         return Valid() && a.Valid() && (handle == a.handle) && type == a.type;
     }
 
-
-  private:
     enum AssetType {
         NO_TYPE,
         IMAGE,
@@ -69,10 +68,18 @@ class AssetID {
         ACTOR,
         NUMTYPES
     };
-    friend class Assets;
-    friend class Asset;
 
-    AssetID(int h, int t) {handle = h; type = t;};
+
+    int GetHandle() const { return handle;}
+    int GetType() const { return type; }
+
+
+    
+
+  private:
+
+
+
     int handle;
     int type;
 };

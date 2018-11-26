@@ -40,11 +40,10 @@ long Dynacoe::Clock::getMS() {
 	return time;
 }
 #else
-#include <time.h>
-static struct timespec timeQuery;
 long Dynacoe::Clock::getMS() {
-    clock_gettime(CLOCK_MONOTONIC, &timeQuery);
-	return timeQuery.tv_nsec/1000000 + timeQuery.tv_sec*1000;
+	struct timeval timeValue;
+	gettimeofday(&timeValue, 0);
+	return timeValue.tv_usec/1000 + timeValue.tv_sec*1000;
 }
 #endif
 

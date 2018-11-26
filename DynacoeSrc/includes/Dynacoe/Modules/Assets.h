@@ -93,8 +93,7 @@ class Asset {
 /// may be used for that purpose.
 ///
 
-class Assets : public Module {
-  public:
+namespace Assets {
 
     /// \brief A classification of individual Assets.   
     ///
@@ -127,7 +126,7 @@ class Assets : public Module {
     /// @param nameOnly If true, Dynacoe treats the file argument as a name of a file and recursively searches
     /// for the file in the current working directory. Else, the file argument is treated as a
     /// full path to the file.
-    static AssetID Load(const std::string & fileType, const std::string & file, bool  nameOnly=true);
+    AssetID Load(const std::string & fileType, const std::string & file, bool  nameOnly=true);
 
 
     /// \brief Loads the specified asset from memory into, err, memory.
@@ -137,40 +136,40 @@ class Assets : public Module {
     /// @param fileType The registered file type. See output from SupportedLoadExtensions() to see which strings are valid.
     /// @param name The unique identifier of the asset, allowing for use with Query() calls.
     /// @param data The bytes consisting of the Asset's data.
-    static AssetID LoadFromBuffer(const std::string & filetype, const std::string & name, const std::vector<uint8_t> & data);
+    AssetID LoadFromBuffer(const std::string & filetype, const std::string & name, const std::vector<uint8_t> & data);
 
 
     /// \brief Returns a list of supported file types that Dynacoe can load.
     ///
     /// These extensions should be passed as the fileType argument to Assets::Load()
     /// @param type The type of asset to ask available extensions for.
-    static std::vector<std::string> SupportedLoadExtensions(Assets::Type type);
+    std::vector<std::string> SupportedLoadExtensions(Assets::Type type);
 
     /// \brief Returns the AssetID associated with the name and type
     ///
     /// For the query to be successful, both the type and name must match.
     /// @param type The type of asset to ask about.
     /// @param name The name of the asset to check.
-    static AssetID Query(Assets::Type type, const std::string & name);
+    AssetID Query(Assets::Type type, const std::string & name);
 
     /// \brief Generates a new instance of the specified Asset type and returns its ID.
     ///
     /// An invalid AssetID is returned if unsuccessful.
     /// @param type The type of the new asset.
     /// @param name The unique identifier of the new asset.
-    static AssetID New(Assets::Type type, const std::string & name = "");
+    AssetID New(Assets::Type type, const std::string & name = "");
 
     /// \brief Returns the Asset reference associated with the given ID.
     ///
     /// @param id The asset to retrieve.
     template<typename T>
-    static T & Get(AssetID id);
+    T & Get(const AssetID & id);
 
     /// \brief Removes the specified Asset.
     ///
     /// After removal, all remaining AssetID copies are made invalid.
     /// @param id The asset to remove.
-    static bool    Remove(AssetID id);
+    bool    Remove(AssetID id);
 
     /// \brief Attempts to dump the asset to a file
     ///
@@ -181,87 +180,18 @@ class Assets : public Module {
     /// @param id The asset to write.
     /// @param enconderExtension The type to write the asset as.
     /// @param outputName The namem of the file.
-    static bool    Write(AssetID id, const std::string & encoderExtension, const std::string & outputName);
+    bool    Write(AssetID id, const std::string & encoderExtension, const std::string & outputName);
 
     /// \brief Returns a vector of strings containing the
     /// currently supported types that can be written to.
     ///
     /// @param type The type of asset to ask about.
-    static std::vector<std::string> SupportedWriteExtensions(Assets::Type type);
+    std::vector<std::string> SupportedWriteExtensions(Assets::Type type);
 
     /// \brief Returns the name associated with the Asset.
     ///
     /// @param type The asset to ask about.
-    static std::string Name(AssetID type);
-
-
-
-
-
-
-  private:
-
-    static void notFoundError(Assets::Type, const std::string & name);
-    static std::string typeToString(Assets::Type);
-
-    static std::map<std::string, Decoder *> decoders;
-    static std::vector<Asset *> errorInstances;
-    static std::vector<std::map<std::string, Encoder *>> encoders;
-    static AssetID storeGen(const std::string &, Asset *, Assets::Type);
-    static void LoadDecoders();
-    static void LoadDecoder(Decoder *);
-    static Decoder * GetDecoder(const std::string &);
-    static void LoadEncoders();
-    static void LoadEncoder(Encoder *);
-    static bool Encode(int, Asset *, const std::string & ext, const std::string &);
-
-    // all storage buckets
-    static std::vector<Asset *> assetList[AssetID::NUMTYPES];
-    // zombie buckets of indices
-    static std::stack<int> deadList[AssetID::NUMTYPES];
-    static std::unordered_map<std::string, AssetID> assetMap[AssetID::NUMTYPES];
-    static void storeSystemImages();
-
-
-
-    static Asset * CreateAsset(Type type, const std::string & str);
-
-    // Dynacoe's Asset Registration Process
-
-    // The string representing the data is
-    // hashed and mapped to an index. The index
-    // refers to where it is placed in the vector.
-    //
-    // Registration:
-    //      - path is hashed to check is already existed        (O(path.length()))
-    //      - if it does AND != -1,
-    //                    then done.                            done
-    //      - else,
-    //          get the next immediate free index.
-    //          - if !deadList.empty()                          (O(1))
-    //              - then deadList.pop()                       (O(1))
-    //              - use this index as the free index
-    //              - chunkList[free index] = AudioBlock        (O(1))
-    //          - else
-    //              - chunkList.push_back(Asset)           (average = O(1), worst = O(n))
-    //              - use size() - 1 as the free index
-    //      - hash(path, free index)                            (O(path.length()))
-    //      - return index
-    // Retrieval (index)
-    //      - if index < -1, retrun NULL
-    //      - return chunkList[index]                           (O(1))
-    // Retrieval (string)
-    //      - if (hash(path) == DNE || -1) return NULL;         (O(path.length))
-    //      - else return index
-    // Removal
-    //      - hash(string, -1);                                 (O(path.length())
-    //      - deadList.push(old index);                         (O(1))
-    //      - chunkList[old index] == NULL;                     (O(1))
-    //      - * free data *                                     (worst = O(Asset.size())???)
-
-
-
-    // Private Members
+    std::string Name(AssetID type);
 
 
 
@@ -269,55 +199,36 @@ class Assets : public Module {
 
 
 
+    void Init();
 
-    static size_t assetCounter;
+    // internal functions (Need cleanup!)
 
+    // Gets the asset 
+    Asset * GetRaw(const AssetID & id);
 
-
-
-
-
-
-
-    // Private Methods
+    // Gets the default asset for the given type. 
+    Asset * GetGeneric(Assets::Type type);
 
 
-    static void initBase();
-    /* Image storage */
-
-    static std::string fSearch(const std::string &);
-
-
-
-
-
-
-
-
-
-  public:
-    std::string GetName() { return "Asset Manager"; }
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
-};
+    void LoadDecoders();
+    void LoadDecoder(Decoder *);
+    Decoder * GetDecoder(const std::string &);
+    void LoadEncoders();
+    void LoadEncoder(Encoder *);
+    
+}
 
 
 
 template<typename T>
-T & Assets::Get(AssetID id) {
-    if (!id.Valid()) {
-        Console::Error() << ("Error getting from cache: Non-existent ID\n");
-        return *((T*)errorInstances[id.type]);
-    }
-    Asset * i;
-    i = dynamic_cast<T*>(assetList[id.type][id.handle]);
-
-    if (i) return *((T*)i);
-    if (!assetList[id.type][id.handle])
+T & Assets::Get(const AssetID & id) {
+    T * i =dynamic_cast<T*>(Assets::GetRaw(id));
+    if (i) return *i;
+    if (!GetRaw(id))
         Console::Error() <<("Error getting from cache: Used deleted ID\n");
     else
         Console::Error() <<("Asset exists, but is a different type than the template given.\n");
-    return *((T*)errorInstances[id.type]);
+    return *(T*)GetGeneric((Assets::Type)id.GetType());
 }
 
 }

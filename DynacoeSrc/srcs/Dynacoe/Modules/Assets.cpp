@@ -50,19 +50,101 @@ using namespace std;
 using namespace Dynacoe;
 using namespace Dynacoe;
 
+
+
+static void notFoundError(Assets::Type, const std::string & name);
+static std::string typeToString(Assets::Type);
+
+static std::map<std::string, Decoder *> decoders;
+static std::vector<Asset *> errorInstances;
+static std::vector<std::map<std::string, Encoder *>> encoders;
+static AssetID storeGen(const std::string &, Asset *, Assets::Type);
+static void LoadDecoders();
+static void LoadDecoder(Decoder *);
+static Decoder * GetDecoder(const std::string &);
+static void LoadEncoders();
+static void LoadEncoder(Encoder *);
+static bool Encode(int, Asset *, const std::string & ext, const std::string &);
+
+// all storage buckets
+static std::vector<Asset *> assetList[AssetID::NUMTYPES];
+// zombie buckets of indices
+static std::stack<int> deadList[AssetID::NUMTYPES];
+static std::unordered_map<std::string, AssetID> assetMap[AssetID::NUMTYPES];
+static void storeSystemImages();
+
+
+
+static Asset * CreateAsset(Assets::Type type, const std::string & str);
+
+// Dynacoe's Asset Registration Process
+
+// The string representing the data is
+// hashed and mapped to an index. The index
+// refers to where it is placed in the vector.
+//
+// Registration:
+//      - path is hashed to check is already existed        (O(path.length()))
+//      - if it does AND != -1,
+//                    then done.                            done
+//      - else,
+//          get the next immediate free index.
+//          - if !deadList.empty()                          (O(1))
+//              - then deadList.pop()                       (O(1))
+//              - use this index as the free index
+//              - chunkList[free index] = AudioBlock        (O(1))
+//          - else
+//              - chunkList.push_back(Asset)           (average = O(1), worst = O(n))
+//              - use size() - 1 as the free index
+//      - hash(path, free index)                            (O(path.length()))
+//      - return index
+// Retrieval (index)
+//      - if index < -1, retrun NULL
+//      - return chunkList[index]                           (O(1))
+// Retrieval (string)
+//      - if (hash(path) == DNE || -1) return NULL;         (O(path.length))
+//      - else return index
+// Removal
+//      - hash(string, -1);                                 (O(path.length())
+//      - deadList.push(old index);                         (O(1))
+//      - chunkList[old index] == NULL;                     (O(1))
+//      - * free data *                                     (worst = O(Asset.size())???)
+
+
+
+// Private Members
+
+
+
+
+
+
+
+
+static size_t assetCounter;
+
+
+
+
+
+
+
+
+// Private Methods
+
+
+static void initBase();
+/* Image storage */
+
+
+
+
+
+
+
+
+
 static const int DYNACOE_SAMPLE_RATE =        44100;       // (Samples processed per second)
-
-// What a mouthful!
-vector<Asset *> Assets::assetList[AssetID::NUMTYPES];
-stack<int> Assets::deadList[AssetID::NUMTYPES];
-unordered_map<string, AssetID> Assets::assetMap[AssetID::NUMTYPES];
-size_t Assets::assetCounter;
-
-
-
-vector<Asset*> Assets::errorInstances;
-map<string, Decoder*> Assets::decoders;
-vector<map<string, Encoder*>> Assets::encoders;
 
 
 Asset::~Asset(){}
@@ -82,11 +164,6 @@ void Assets::Init() {
     LoadEncoders();
 }
 
-void Assets::InitAfter (){}
-void Assets::RunBefore( ){}
-void Assets::RunAfter()  {}
-void Assets::DrawBefore(){}
-void Assets::DrawAfter() {}
 
 
 
@@ -176,12 +253,12 @@ bool Assets::Write(AssetID id, const std::string & ext, const std::string & name
         Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End;
         return false;
     }
-    Asset * asset = assetList[id.type][id.handle];
+    Asset * asset = assetList[id.GetType()][id.GetHandle()];
     if (!asset) {
         Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End;
         return false;
     }
-    return Encode(id.type, asset, ext, name);
+    return Encode(id.GetType(), asset, ext, name);
 }
 
 
@@ -208,12 +285,12 @@ AssetID Assets::New(Type type, const string & id) {
     return storeGen(actual, CreateAsset(type, actual), type);
 }
 
-Asset * Assets::CreateAsset(Type type, const string & str) {
+Asset * CreateAsset(Assets::Type type, const string & str) {
     switch(type) {
-        case Type::Image:    return new Image(str);
-        case Type::Audio:    return new AudioBlock(str);
-        case Type::Sequence: return new Sequence(str);
-        case Type::Model:     return new Model(str);
+        case Assets::Type::Image:    return new Image(str);
+        case Assets::Type::Audio:    return new AudioBlock(str);
+        case Assets::Type::Sequence: return new Sequence(str);
+        case Assets::Type::Model:     return new Model(str);
         default:
             Console::Error()<<("[Dynacoe::Assets]: It is not currently possible to create a new " + typeToString(type) + " \nasset during runtime; it must be loaded\n");
             return nullptr;
@@ -222,23 +299,23 @@ Asset * Assets::CreateAsset(Type type, const string & str) {
 }
 
 bool Assets::Remove(AssetID id) {
-    if (id.type == AssetID::NO_TYPE) {
+    if (id.GetType() == AssetID::NO_TYPE) {
         Console::Error()<<("[Dynacoe::Assets]: Couldn't remove asset. The given ID refers to no existing asset.")<< Console::End;
         return false;
     }
 
-    if (!assetList[id.type][id.handle]) {
+    if (!assetList[id.GetType()][id.GetHandle()]) {
         Console::Error()<<("[Dynacoe::Assets]: Attempted to retrieve asset that was removed.")<< Console::End;
         return false;
     }
 
 
-    assetMap[id.type].erase(assetList[id.type][id.handle]->GetAssetName());
-    delete assetList[id.type][id.handle];
-    assetList[id.type][id.handle] = NULL;
+    assetMap[id.GetType()].erase(assetList[id.GetType()][id.GetHandle()]->GetAssetName());
+    delete assetList[id.GetType()][id.GetHandle()];
+    assetList[id.GetType()][id.GetHandle()] = NULL;
 
 
-    deadList[id.type].push(id.handle);
+    deadList[id.GetType()].push(id.GetHandle());
     return true;
 }
 
@@ -266,7 +343,7 @@ return fail <---                                     | if not possible         -
 
 */
 
-AssetID Assets::storeGen(const string & path, Asset * asset, Assets::Type type) {
+AssetID storeGen(const string & path, Asset * asset, Assets::Type type) {
     if (!asset) {
         Console::Error()<<("[Dynacoe::Assets]: Cannot add asset! Invalid data.")<< Console::End;
         return AssetID();
@@ -299,7 +376,7 @@ Decoder * Assets::GetDecoder(const string & ext) {
     return it->second;
 }
 
-bool Assets::Encode(int type, Asset * asset, const std::string & ext, const std::string & str) {
+bool Encode(int type, Asset * asset, const std::string & ext, const std::string & str) {
     map<std::string, Encoder*> localEncs = encoders[type];
     auto iter = localEncs.find(ext);
     if (iter == localEncs.end()) {
@@ -311,21 +388,21 @@ bool Assets::Encode(int type, Asset * asset, const std::string & ext, const std:
 }
 
 
-void Assets::notFoundError(Assets::Type type, const std::string & name) {
+void notFoundError(Assets::Type type, const std::string & name) {
     Console::Error()  << "[Dynacoe::Assets]: Could not find " << typeToString(type)
              << " \"" << name << "\""<< Console::End;
 }
 
 
-string Assets::typeToString(Assets::Type type) {
+string typeToString(Assets::Type type) {
     switch(type) {
-        case Type::Image:    return "Image";
-        case Type::Font:     return "Font";
-        case Type::Audio:    return "Audio";
-        case Type::Sequence: return "Sequence";
-        case Type::Model:    return "Model";
-        case Type::Particle: return "Particle";
-        case Type::RawData:  return "RawData";
+        case Assets::Type::Image:    return "Image";
+        case Assets::Type::Font:     return "Font";
+        case Assets::Type::Audio:    return "Audio";
+        case Assets::Type::Sequence: return "Sequence";
+        case Assets::Type::Model:    return "Model";
+        case Assets::Type::Particle: return "Particle";
+        case Assets::Type::RawData:  return "RawData";
 
     }
     return "RawData";
@@ -383,7 +460,7 @@ string Assets::Name(AssetID id) {
         return "";
     }
 
-    Asset * asset = assetList[id.type][id.handle];
+    Asset * asset = assetList[id.GetType()][id.GetHandle()];
     if (!asset) {
         Console::Error()  << "[Dynacoe::Assets]: Failed to get name of asset: asset not found!"<< Console::End;
         return "";
@@ -392,26 +469,32 @@ string Assets::Name(AssetID id) {
 }
 
 
+Asset * Assets::GetRaw(const AssetID & id) {
+    if (!id.Valid()) {
+        Console::Error() << ("Error getting from cache: Non-existent ID\n");
+        return errorInstances[id.GetType()];
+    }   
+    return (assetList[id.GetType()][id.GetHandle()]);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-Backend * Assets::GetBackend() {
-    return nullptr;
 }
 
 
-string Assets::fSearch(const string & file) {
+Asset * Assets::GetGeneric(Assets::Type type) {
+    return errorInstances[(int)type];
+}
+
+
+
+
+
+
+
+
+
+
+
+string fSearch(const string & file) {
     Filesys fs;
     string cd = fs.GetCWD();
     fs.ChangeDir(Engine::GetBaseDirectory());

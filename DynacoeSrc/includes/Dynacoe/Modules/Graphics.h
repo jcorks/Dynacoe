@@ -63,7 +63,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 namespace Dynacoe {
-class Assets;
 class Renderer;
 
 
