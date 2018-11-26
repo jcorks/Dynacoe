@@ -193,7 +193,7 @@ AssetID Assets::Load(const string & ext, const string & name, bool standard) {
     InputBuffer * f = new InputBuffer;
     f->Open(path.c_str());
     if (!f->Size()) {
-        Console::Error() << "[Dynacoe::Assets]: Failed to load file " << name<< Console::End;
+        Console::Error() << "[Dynacoe::Assets]: Failed to load file " << name<< Console::End();
         delete f;
         return AssetID();
     }
@@ -240,7 +240,7 @@ AssetID Assets::LoadFromBuffer(
 
     if (!out) {
         Console::Error()  << "[Dynacoe::Assets]: Failed to load "<< typeToString(dec->GetType())
-                 << " \"" << name << "\" !" << Console::End;
+                 << " \"" << name << "\" !" << Console::End();
         return AssetID();
     }
 
@@ -250,12 +250,12 @@ AssetID Assets::LoadFromBuffer(
 
 bool Assets::Write(AssetID id, const std::string & ext, const std::string & name) {
     if (!id.Valid()) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End;
+        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
         return false;
     }
     Asset * asset = assetList[id.GetType()][id.GetHandle()];
     if (!asset) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End;
+        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
         return false;
     }
     return Encode(id.GetType(), asset, ext, name);
@@ -278,7 +278,7 @@ AssetID Assets::New(Type type, const string & id) {
         i++;
     }
     if (assetMap[(int) type].find(actual) != assetMap[(int)type].end()) {
-        Console::Error()<<("[Dynacoe::Assets]: Cannot create asset: asset with this name already exists!")<< Console::End;
+        Console::Error()<<("[Dynacoe::Assets]: Cannot create asset: asset with this name already exists!")<< Console::End();
         return AssetID();
     }
 
@@ -300,12 +300,12 @@ Asset * CreateAsset(Assets::Type type, const string & str) {
 
 bool Assets::Remove(AssetID id) {
     if (id.GetType() == AssetID::NO_TYPE) {
-        Console::Error()<<("[Dynacoe::Assets]: Couldn't remove asset. The given ID refers to no existing asset.")<< Console::End;
+        Console::Error()<<("[Dynacoe::Assets]: Couldn't remove asset. The given ID refers to no existing asset.")<< Console::End();
         return false;
     }
 
     if (!assetList[id.GetType()][id.GetHandle()]) {
-        Console::Error()<<("[Dynacoe::Assets]: Attempted to retrieve asset that was removed.")<< Console::End;
+        Console::Error()<<("[Dynacoe::Assets]: Attempted to retrieve asset that was removed.")<< Console::End();
         return false;
     }
 
@@ -345,7 +345,7 @@ return fail <---                                     | if not possible         -
 
 AssetID storeGen(const string & path, Asset * asset, Assets::Type type) {
     if (!asset) {
-        Console::Error()<<("[Dynacoe::Assets]: Cannot add asset! Invalid data.")<< Console::End;
+        Console::Error()<<("[Dynacoe::Assets]: Cannot add asset! Invalid data.")<< Console::End();
         return AssetID();
     }
 
@@ -369,7 +369,7 @@ AssetID storeGen(const string & path, Asset * asset, Assets::Type type) {
 Decoder * Assets::GetDecoder(const string & ext) {
     auto it = decoders.find(ext);
     if (it == decoders.end()) {
-        Console::Error()  << "[Dynacoe::Assets]: Could not find a loader supporting the filetype " << ext<< Console::End;
+        Console::Error()  << "[Dynacoe::Assets]: Could not find a loader supporting the filetype " << ext<< Console::End();
 
         return nullptr;
     }
@@ -390,7 +390,7 @@ bool Encode(int type, Asset * asset, const std::string & ext, const std::string 
 
 void notFoundError(Assets::Type type, const std::string & name) {
     Console::Error()  << "[Dynacoe::Assets]: Could not find " << typeToString(type)
-             << " \"" << name << "\""<< Console::End;
+             << " \"" << name << "\""<< Console::End();
 }
 
 
@@ -456,13 +456,13 @@ void Assets::LoadEncoder(Encoder * enc) {
 
 string Assets::Name(AssetID id) {
     if (!id.Valid()) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to get name of asset: asset not found!"<< Console::End;
+        Console::Error()  << "[Dynacoe::Assets]: Failed to get name of asset: asset not found!"<< Console::End();
         return "";
     }
 
     Asset * asset = assetList[id.GetType()][id.GetHandle()];
     if (!asset) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to get name of asset: asset not found!"<< Console::End;
+        Console::Error()  << "[Dynacoe::Assets]: Failed to get name of asset: asset not found!"<< Console::End();
         return "";
     }
     return asset->GetAssetName();

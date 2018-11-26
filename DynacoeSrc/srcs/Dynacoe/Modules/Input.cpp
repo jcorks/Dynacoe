@@ -42,12 +42,58 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 using namespace std;
 
-InputManager * Input::manager;
 
-std::map<std::string, Keyboard> Input::stringMapKeyboard;
-std::map<std::string, MouseButtons> Input::stringMapMouse;
-std::map<std::string, std::pair<PadID, PadButtons>> Input::stringMapPad;
-std::vector<Input::ButtonList *> Input::buttonLists;
+
+static bool IsShiftMod();
+
+static void getUnicode();
+
+struct InputState {
+    InputDevice ** devices;
+    int numDevices;
+};
+
+
+
+static InputManager * manager;
+static int lastUnicode;
+
+
+// Aggregate button state
+struct ButtonList {
+    std::vector<Keyboard> keys;
+    std::vector<MouseButtons> mouseButtons;
+    std::vector<std::pair<PadID, std::vector<PadButtons>>> padButtons;
+
+    void addButton(Keyboard);
+    void addButton(MouseButtons);
+    void addButton(PadID, PadButtons);
+    bool GetState();
+    bool IsPressed();
+    bool IsHeld();
+    bool IsReleased();
+};
+
+//static std::map<std::string, ButtonList*> stringMap;
+static std::map<std::string, Keyboard> stringMapKeyboard;
+static std::map<std::string, MouseButtons> stringMapMouse;
+static std::map<std::string, std::pair<PadID, PadButtons>> stringMapPad;
+static std::vector<ButtonList*> buttonLists;
+
+
+
+
+
+
+static bool inputLocked;
+
+static InputState thisState;
+static InputState prevState;
+
+
+
+
+
 static bool lockCallbackMaps = false;
 static std::map<ButtonListener*, Keyboard> keyCallbackMap;
 static std::map<ButtonListener*, MouseButtons> mouseCallbackMap;
@@ -56,11 +102,6 @@ static std::map<ButtonListener*, std::string> strCallbackMap;
 static std::vector<ButtonListener*> deletedListeners;
 
 
-bool Input::inputLocked;
-int Input::lastUnicode;
-
-Input::InputState Input::thisState;
-Input::InputState Input::prevState;
 
 
 static int MouseXDeviceToWorld2D(int);
@@ -89,11 +130,6 @@ void Input::Init() {
 
 }
 
-Backend * Input::GetBackend() {
-    return manager;
-}
-
-void Input::InitAfter(){}
 
 
 
@@ -193,11 +229,6 @@ void Input::RunBefore() {
         getUnicode();
     }
 }
-
-void Input::RunAfter() {}
-void Input::DrawBefore(){}
-void Input::DrawAfter(){}
-
 
 
 bool Input::IsPressed(Keyboard k) {
@@ -467,7 +498,7 @@ void Input::RemoveListener(ButtonListener * b) {
 // Private methods
 
 
-void Input::ButtonList::addButton(Keyboard k) {
+void ButtonList::addButton(Keyboard k) {
     bool added = false;
     for(Keyboard key : keys) {
         if (k == key) {
@@ -479,7 +510,7 @@ void Input::ButtonList::addButton(Keyboard k) {
     if (!added) keys.push_back(k);
 }
 
-void Input::ButtonList::addButton(MouseButtons k) {
+void ButtonList::addButton(MouseButtons k) {
     bool added = false;
     for(MouseButtons key : mouseButtons) {
         if (k == key) {
@@ -491,7 +522,7 @@ void Input::ButtonList::addButton(MouseButtons k) {
     if (!added) mouseButtons.push_back(k);
 }
 
-void Input::ButtonList::addButton(PadID id, PadButtons k) {
+void ButtonList::addButton(PadID id, PadButtons k) {
     bool added = false;
 
     vector<PadButtons> * vec = nullptr;
@@ -522,7 +553,7 @@ void Input::ButtonList::addButton(PadID id, PadButtons k) {
 
 
 
-bool Input::ButtonList::GetState() {
+bool ButtonList::GetState() {
     bool out = false;
     for(Keyboard k : keys) {
         out |= Input::GetState(k);
@@ -541,7 +572,7 @@ bool Input::ButtonList::GetState() {
 }
 
 
-bool Input::ButtonList::IsPressed() {
+bool ButtonList::IsPressed() {
     bool out = false;
     for(Keyboard k : keys) {
         out |= Input::IsPressed(k);
@@ -560,7 +591,7 @@ bool Input::ButtonList::IsPressed() {
 }
 
 
-bool Input::ButtonList::IsHeld() {
+bool ButtonList::IsHeld() {
     bool out = false;
     for(Keyboard k : keys) {
         out |= Input::IsHeld(k);
@@ -586,12 +617,12 @@ bool Input::ButtonList::IsHeld() {
 
 
 
-bool Input::IsShiftMod() {
+bool IsShiftMod() {
     return thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)Keyboard::Key_lshift] ||
            thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)Keyboard::Key_rshift];
 }
 
-void Input::getUnicode() {
+void getUnicode() {
     // Go through a - z
     InputDevice * kb = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
     lastUnicode = 0;

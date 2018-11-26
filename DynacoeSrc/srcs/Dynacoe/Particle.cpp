@@ -305,7 +305,7 @@ void ParticleEmitter2D::EnableTranslucency(bool d) {
 
 void ParticleEmitter2D::EmitParticle(AssetID i, int num) {
     if (!i.Valid()) {
-        Console::Error()<<("[PARTICLE] Couldn't instantiate particle! Emit failed")<< Console::End;
+        Console::Error()<<("[PARTICLE] Couldn't instantiate particle! Emit failed")<< Console::End();
         return;
     }
     Dynacoe::Vector v = GetGlobalTransform().Transform({});

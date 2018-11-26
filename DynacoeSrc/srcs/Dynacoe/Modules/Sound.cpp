@@ -244,7 +244,7 @@ ActiveSound Sound::PlayAudio(AssetID i, uint8_t effectChannel, float volume, flo
         // play a chunk, any chunk
         return ActiveSound(a->PlayPCM(i, volume, panning, effectChannel));
     } else {
-        Console::Error()<<("Request to play sound failed!")<< Console::End;
+        Console::Error()<<("Request to play sound failed!")<< Console::End();
         return ActiveSound(LookupID());
 
     }

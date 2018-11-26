@@ -57,7 +57,7 @@ using namespace Dynacoe;
 #include <Dynacoe/Components/DataTable.h>
 
 #include <cassert>
-
+static Entity::ID debuggerBase;
 
 class DebugWindow : public Entity {
   public:
@@ -1476,21 +1476,20 @@ class DebuggerBase : public Entity {
 };
 
 
-
-
-
-void Debugger::Init() {
-
+void Debugger::ViewID(Entity::ID id) {
+    DebuggerBase * base = debuggerBase.IdentifyAs<DebuggerBase>();
+    if (!base) return;
+    DebugWindow * w = base->CreateChild<DebugWindow>();
+    w->Follow(id);
 }
+
+
+
 
 void Debugger::InitAfter() {
     Entity::ID base = Entity::Create();
     debuggerBase = base.Identify()->CreateChild<DebuggerBase>()->GetID();
     Engine::AttachManager(base);
-}
-
-Backend * Debugger::GetBackend() {
-    return nullptr;
 }
 
 void Debugger::RunBefore() {
@@ -1501,10 +1500,3 @@ void Debugger::RunBefore() {
 }
 
 
-void Debugger::RunAfter(){
-
-}
-
-void Debugger::DrawBefore(){}
-void Debugger::DrawAfter() {
-}

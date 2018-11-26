@@ -54,6 +54,44 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
+static void initBase(); 
+
+struct LineModel;
+struct LineView;
+static Shape2D * base;
+
+
+static std::vector<LineModel*>                lines;
+static std::vector<LineView*>                 lineViews;
+
+static Entity * messages;
+
+
+
+
+static bool         locked;
+static bool         shown;
+static bool         inputActive;
+static ConsoleInputStream * streamIn;
+
+
+static Console::MessageMode messageMode;
+static uint32_t viewOffsetY;    
+
+
+static void AddDefaultCommands();
+static void AcquireStreamOutput(const std::string &, ConsoleStream::MessageType);
+static void ProcessStreamOutput();
+static void ProcessStreamIteration(const std::string &, ConsoleStream::MessageType);    
+static int fontHeight;
+static float basePositionOffsetRatio;
+
+static void PostMessageConsole(const std::string & c, ConsoleStream::MessageType);
+static std::vector<std::pair<std::string, ConsoleStream::MessageType>> stream;
+static Interpreter * interp;
+
+
+
 // Console::System << "System message" << Console::End;
 // Console << "Normal message" << Console::End;
 // Console::Info << "Info Message" << Console::End;
@@ -64,7 +102,6 @@ static DynacoeEvent((*commandCallback)) = nullptr;
 static bool console_overflow = false;
 static bool pauseOnShow = true;
 const uint32_t console_text_limit_line_c = 80;
-Interpreter * Console::interp = nullptr;
 
 
 
@@ -217,15 +254,7 @@ class Dynacoe::DebugMessage : public Entity {
 
 };
 
-
 std::vector<Entity::ID> DebugMessage::others;
-
-
-
-//uint32_t Console::LineModel::counter = 0;
-Backend * Console::GetBackend() {
-    return nullptr;
-}
 
 
 
@@ -447,30 +476,16 @@ const Color info_color_c            (255, 255, 128, 255);
 const Color error_color_c           (255, 64,  64,  255);
 const Color warn_color_c            (255, 128, 64,  255);
 
-Entity *                                    Console::messages = nullptr;
 
-bool                 Console::shown = false;
-bool                 Console::locked = 0;
-Console::MessageMode Console::messageMode;
-int                  Console::fontHeight = 0;
-float                Console::basePositionOffsetRatio = -1.f;
-Shape2D *        Console::base = nullptr;
-ConsoleInputStream * Console::streamIn = nullptr;
-bool                 Console::inputActive = false;
-uint32_t             Console::viewOffsetY = 0;
 
-std::vector<std::pair<std::string, ConsoleStream::MessageType>> Console::stream;
 ConsoleStream::MessageType ConsoleStream::type;
 
-const char * Console::End = "\n";
-
-
-
-
-
-Console::Console() {
-
+const char * Console::End() {
+    return "\n";
 }
+
+
+
 
 
 void Console::Init() {
@@ -581,9 +596,8 @@ void Console::RunAfter()  {
     }
     
 }
-void Console::DrawBefore(){}
 
-void Console::OverlayMessageMode(MessageMode m) {
+void Console::OverlayMessageMode(Console::MessageMode m) {
     ProcessStreamOutput();
     messageMode = m;
 }
@@ -765,7 +779,6 @@ void Console::DrawAfter() {
 
 
     // todo
-    //AdjustViewSize();
 
 
 
@@ -807,40 +820,10 @@ void Console::DrawAfter() {
 
 /// privates
 
-// Make sure that the line views are connected to proper lines
-// and that we are even showing the proper lineviews
-/*
-void Console::AdjustViewSize() {
-    if (!base) {
-        base = new Shape2D;
-        base->color = (Dynacoe::Color(14, 14, 14, 196));
-    }
 
-    base->FormRectangle(
-        Graphics::GetRenderResolutionWidth(),
-        Graphics::GetRenderResolutionHeight()
-    );
-    int i = 0;
-
-    for(;
-            i < lines.size() &&
-            (i+3)*fontHeight < Graphics::GetRenderResolutionHeight()
-        ; ++i) {
-
-
-        while (i >= lineViews.size()) {
-            lineViews.push_back(new LineView);
-        }
-
-        if (viewOffsetY+i < lines.size())
-            lineViews[i]->Connect(lines[i+viewOffsetY]);
-    }
-    console_overflow = (i+3)*fontHeight >= Graphics::GetRenderResolutionHeight();
-}
-*/
 
 // process expired ConsoleStream
-void Console::AcquireStreamOutput(const std::string & str, ConsoleStream::MessageType type) {
+void AcquireStreamOutput(const std::string & str, ConsoleStream::MessageType type) {
     // last stream type overrides previous, so the actual used color in the line model is from the
     // streamType at the type a \n is inserted.
     std::cout << str;
@@ -853,7 +836,7 @@ void Console::AcquireStreamOutput(const std::string & str, ConsoleStream::Messag
 
 }
 
-void Console::ProcessStreamOutput() {
+void ProcessStreamOutput() {
     for(uint32_t i = 0; i < stream.size(); ++i) {
         ProcessStreamIteration(stream[i].first, stream[i].second);
     }
@@ -861,7 +844,7 @@ void Console::ProcessStreamOutput() {
 }
 
 
-void Console::ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageType message) {
+void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageType message) {
     std::string str = strSrc;
 
     // add newlines to lines of text that are too large to fit
@@ -911,11 +894,11 @@ void Console::ProcessStreamIteration(const std::string & strSrc, ConsoleStream::
 }
 
 
-void Console::PostMessageConsole(const std::string & str, ConsoleStream::MessageType type) {
+void PostMessageConsole(const std::string & str, ConsoleStream::MessageType type) {
     const int message_v_spacing = 40;
 
 
-    if (messageMode == MessageMode::Standard) {
+    if (messageMode == Console::MessageMode::Standard) {
         DebugMessage * m = Entity::CreateReference<DebugMessage>();
         m->Set(
             str,
@@ -1293,7 +1276,7 @@ void Console::SetCommandCallback(DynacoeEvent(ev)) {
 }
 
 // some built-in commands for the console
-void Console::AddDefaultCommands() {
+void AddDefaultCommands() {
     interp->AddCommand("ask",     new Command_Ask);
     interp->AddCommand("exit",    new Command_Exit);
     interp->AddCommand("quit",    new Command_Exit);

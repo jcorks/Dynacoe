@@ -87,7 +87,7 @@ class ParticlesExample : public Entity {
         if (Input::IsPressed(Keyboard::Key_tab)) {
             static bool b = false;
             particleEmitter->EnableFiltering(b);
-            Console::Info() << (b ? "Enabled" : "Disabled") << " filtering!" << Console::End;
+            Console::Info() << (b ? "Enabled" : "Disabled") << " filtering!" << Console::End();
             b = !b;
         }
 
@@ -98,7 +98,7 @@ class ParticlesExample : public Entity {
         if (Input::IsPressed(Keyboard::Key_space)) {
             static bool b = false;
             particleEmitter->EnableTranslucency(b);
-            Console::Info() << (b ? "Enabled" : "Disabled") <<  " translucency!" << Console::End;
+            Console::Info() << (b ? "Enabled" : "Disabled") <<  " translucency!" << Console::End();
             b = !b;
         }
 

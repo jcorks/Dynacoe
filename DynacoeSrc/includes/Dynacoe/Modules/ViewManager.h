@@ -63,9 +63,7 @@ class Color;
  *
  */
  // name change: ViewManager
-class ViewManager : public Module {
-public:
-    friend class Engine;
+namespace ViewManager {
     /* Display management */
 
 
@@ -73,13 +71,13 @@ public:
     /// \brief Creates a new Display with the given w and h in pixels.
     /// Its ID is returned.
     ///
-    static ViewID New(const std::string & name, int w, int h);
+    ViewID New(const std::string & name, int w, int h);
 
 
     /// \brief Convenience function for creating and immediately setting the new display as the current display to use.
     /// The graphics resultion is also set to match the display's dimensions.
     ///
-    static void NewMain(const std::string & name = "", int w = 640, int h = 480);
+    void NewMain(const std::string & name = "", int w = 640, int h = 480);
 
    
     /// \brief Destroys the specified display.
@@ -87,35 +85,35 @@ public:
     /// If this display was the main display and another display exists, 
     /// one of the existing displays will be set as the current display. It is not 
     /// specified which of the remaining displays is set to be the main one when this occurs.
-    static void Destroy(ViewID);
+    void Destroy(ViewID);
 
     /// \brief Returns the Display corresponding to the given ID.
     ///
-    static Display * Get(ViewID);
+    Display * Get(ViewID);
 
 
     /// \brief Sets the given Display as the one to update and draw to.
     ///
-    static void SetMain(ViewID);
+    void SetMain(ViewID);
 
 
     /// \brief Returns a pointer to the currently set Display.
     ///
-    static ViewID GetCurrent();
+    ViewID GetCurrent();
 
     /// \brief Gets the dimensions of the currently set Display.
     /// If no valid display is set, 0 is returned.
     ///
-    static int GetViewHeight();
+    int GetViewHeight();
 
     /// \brief Gets the width of the currently set Display.
     ///
-    static int GetViewWidth();
+    int GetViewWidth();
 
 
     /// \brief Returns a list of all currently created Displays.
     ///
-    static std::vector<ViewID> ListViews(); 
+    std::vector<ViewID> ListViews(); 
 
 
 
@@ -126,27 +124,6 @@ public:
 
 
 
-
-
-
-
-  private:
-    static void init();
-    static void initBase();
-
-    static std::string origCWD;
-    
-    struct LogicalDisplay {
-        Display * display;
-    };
-
-    static Dynacoe::Table<LogicalDisplay> displays;
-    static ViewID currentDisplay;
-
-  public:
-    std::string GetName() { return "ViewManager"; }
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
 } ;
 }
 ///\}

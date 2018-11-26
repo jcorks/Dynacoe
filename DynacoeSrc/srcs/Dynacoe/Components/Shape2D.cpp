@@ -98,7 +98,7 @@ void Shape2D::FormRectangle(
 void Shape2D::FormImage(AssetID id_, float fw, float fh) {
     Image * im;
     if (!(im = &Assets::Get<Image>(id_))) {
-        Console::Info()  << "Aspect2D::FormImage : invalid image id given" << Console::End;
+        Console::Info()  << "Aspect2D::FormImage : invalid image id given" << Console::End();
         return;
     }
     forcedWidth = fw;

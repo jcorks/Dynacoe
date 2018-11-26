@@ -44,27 +44,17 @@ namespace Dynacoe {
 /// be controlled by the user while running the program. The main use is to
 /// explore the Entity hierarchy and view detailed information on Entities.
 /// By default, the debugger is activated by the key F3.
-class Debugger : public Module {
-  public:
+namespace Debugger {
 
     /// \brief Adds a new DebugWindow set to the Entity given. If the EntityID
     /// is not valid, the window is open to the topmost level of the hierarchy.
     ///
-    static void ViewID(Entity::ID){}
+    void ViewID(Entity::ID);
 
+    void InitAfter();
+    void RunBefore();
 
-  private:
-
-    Entity::ID debuggerBase;
-
-
-
-
-
-  public:
-    std::string GetName() { return "Debugger";}
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
+  
 };
 }
 

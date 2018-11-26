@@ -79,19 +79,17 @@ class UnicodeListener {
 
 /// \brief Singleton class for querying input devices
 ///
-class Input : public Module {
-  public:       
-
+namespace Input {
 
  
     /// \name IsPressed()
     /// Returns whether or not the input was pressed.
     ///    
     /// \{
-    static bool IsPressed(Keyboard);
-    static bool IsPressed(MouseButtons);
-    static bool IsPressed(PadID, PadButtons);
-    static bool IsPressed(const std::string &);
+    bool IsPressed(Keyboard);
+    bool IsPressed(MouseButtons);
+    bool IsPressed(PadID, PadButtons);
+    bool IsPressed(const std::string &);
     ///\}
 
     /// \name GetState()
@@ -99,74 +97,74 @@ class Input : public Module {
     /// the button is activated and false returns if otherwise.
     /// 
     /// \{    
-    static bool GetState(Keyboard);
-    static bool GetState(MouseButtons);
-    static bool GetState(PadID, PadButtons);
-    static bool GetState(const std::string &);
+    bool GetState(Keyboard);
+    bool GetState(MouseButtons);
+    bool GetState(PadID, PadButtons);
+    bool GetState(const std::string &);
     /// \}
 
     /// \brief Returns the last Ascii code from keyboard.
     ///
     /// Once this is called, it will return 0 unless another
     /// unicode key is pressed on the keyboard input
-    static int GetLastUnicode();
+    int GetLastUnicode();
 
     /// \brief Adds a UnicodeListener object to receive events when 
     /// incoming unicode characters are processed.
     ///
-    static void AddUnicodeListener(UnicodeListener *);
+    void AddUnicodeListener(UnicodeListener *);
 
     /// \brief Removes an added unicode listener.
     ///
-    static void RemoveUnicodeListener(UnicodeListener *);
+    void RemoveUnicodeListener(UnicodeListener *);
 
     /// \name  IsHeld
     /// Returns whether or not the input is currently being held.
     ///
     /// \{
-    static bool IsHeld(Keyboard);
-    static bool IsHeld(MouseButtons);
-    static bool IsHeld(PadID, PadButtons);
-    static bool IsHeld(const std::string &);
+    bool IsHeld(Keyboard);
+    bool IsHeld(MouseButtons);
+    bool IsHeld(PadID, PadButtons);
+    bool IsHeld(const std::string &);
     /// \}
 
     // \name  IsReleased
     // Returns whether or not the input was released this update.
     //
-    static bool IsReleased(Keyboard);
-    static bool IsReleased(MouseButtons);
-    static bool IsReleased(PadID, PadButtons);
-    static bool IsReleased(const std::string &);
+    bool IsReleased(Keyboard);
+    bool IsReleased(MouseButtons);
+    bool IsReleased(PadID, PadButtons);
+    bool IsReleased(const std::string &);
 
     /// \brief Retrieves the a list of all valid Gamepads.
     ///
-    static std::vector<PadID> QueryPads();
+    std::vector<PadID> QueryPads();
 
     /// \name MapInput()
     /// Maps a data value to an input. The value may be queried to the specified input.
     /// \{    
-    static void MapInput(const std::string & id, Keyboard);
-    static void MapInput(const std::string & id, MouseButtons);
-    static void MapInput(const std::string & id, PadID, PadButtons);
+    void MapInput(const std::string & id, Keyboard);
+    void MapInput(const std::string & id, MouseButtons);
+    void MapInput(const std::string & id, PadID, PadButtons);
     ///\}
 
     /// \brief Disassociates a string with its corresponding InputID if any
     ///
-    static void UnmapInput(const std::string & id);
+    void UnmapInput(const std::string & id);
 
     /// \brief Maps an InputCallback to the specifed key.
     /// 
     /// Only one InputCallback may be associated 
     /// with a given InputID.
-    static void AddListener(ButtonListener *, Keyboard);
-    static void AddListener(ButtonListener *, MouseButtons);
-    static void AddListener(ButtonListener *, PadID, PadButtons);
-    static void AddListener(ButtonListener *, const std::string &);
+    void AddListener(ButtonListener *, Keyboard);
+    void AddListener(ButtonListener *, MouseButtons);
+    void AddListener(ButtonListener *, PadID, PadButtons);
+    void AddListener(ButtonListener *, const std::string &);
     
 
     /// \brief Disassociates the corresponding InputCallback if any.
     ///
-    static void RemoveListener(ButtonListener *);
+    void RemoveListener(ButtonListener *);
 
 
     /// \name Mouse Convenience Functions
@@ -174,111 +172,51 @@ class Input : public Module {
 
     /// \brief Current X position of the Mouse.
     ///
-    static int MouseX();
+    int MouseX();
 
     /// \brief Current Y position of the Mouse.
-    static int MouseY();
+    int MouseY();
 
     /// \brief Returns the change in X position since last update.
     ///
-    static int MouseXDelta();
+    int MouseXDelta();
 
     /// \brief Returns the change in Y position since the last update.    
-    static int MouseYDelta();
+    int MouseYDelta();
 
     /// \brief Returns the current state of the mouse wheel.
     ///
     /// If the wheel is neutral, 0 is returned. If scrolling up, 1 is returned,
     /// and if scrolling down, -1.
-    static int MouseWheel();
+    int MouseWheel();
     ///\}
 
 
     /// \brief Returns the axis tilt amount.
     /// The range is from -1 to 1
     ///
-    static float GetPadAxis(PadID, PadAxes);
+    float GetPadAxis(PadID, PadAxes);
 
 
     /// \brief Prevents the updating of Input until the time expires
     ///
-    static bool LockInput(float sec);
+    bool LockInput(float sec);
 
 
     
     /// \brief Update the state of input. This is done for you.
     ///
-    static void Update();
+    void Update();
     
     
     /// \brief Returns the system-dependent object that handles input requests.
     /// 
-    static InputManager * GetManager();
+    InputManager * GetManager();
 
-  private:
 
+    void RunBefore();
+    void Init();
     
-    static void initBase();
-    static bool IsShiftMod();
-
-    static void getUnicode();
-    
-    struct InputState {
-        
-        
-        InputDevice ** devices;
-        int numDevices;
-    };
-
-
-    
-    static InputManager * manager;
-    static int lastUnicode;
-
-
-    // Aggregate button state
-    struct ButtonList {
-        std::vector<Keyboard> keys;
-        std::vector<MouseButtons> mouseButtons;
-        std::vector<std::pair<PadID, std::vector<PadButtons>>> padButtons;
-
-        void addButton(Keyboard);
-        void addButton(MouseButtons);
-        void addButton(PadID, PadButtons);
-        bool GetState();
-        bool IsPressed();
-        bool IsHeld();
-        bool IsReleased();
-    };
-    
-    //static std::map<std::string, ButtonList*> stringMap;
-    static std::map<std::string, Keyboard> stringMapKeyboard;
-    static std::map<std::string, MouseButtons> stringMapMouse;
-    static std::map<std::string, std::pair<PadID, PadButtons>> stringMapPad;
-    static std::vector<ButtonList*> buttonLists;
-
-
-
-
-
-
-    static bool inputLocked;
-
-    static InputState thisState;
-    static InputState prevState;
-
-
-
-
-
-
-    
-    
-    
-  public:
-    std::string GetName() {return "Input";}
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
 };
 }
 

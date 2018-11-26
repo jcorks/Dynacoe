@@ -170,7 +170,7 @@ int Engine::Run() {
 
 
     if (quit == true) {
-        Console::Error()<<("A component of Dynacoe has requested early termination of the instance")<< Console::End;;
+        Console::Error()<<("A component of Dynacoe has requested early termination of the instance")<< Console::End();;
         return -2;
     }
 
@@ -289,6 +289,7 @@ std::string Engine::GetBaseDirectory() {
 }
 
 int Engine::Startup() {
+    Random::Seed();
     {
         Filesys obj;
         origCWD = obj.GetCWD();
@@ -301,11 +302,6 @@ int Engine::Startup() {
     engineTime = timer->AddComponent<Clock>();
     debugTime = timer->AddComponent<Clock>();
     
-
-    AddModule(new ViewManager);
-    AddModule(new Input);
-    AddModule(new Debugger);
-    AddModule(new Console);
 
 
     quit = false;
@@ -334,16 +330,14 @@ int Engine::Startup() {
     Graphics::Init();
     Assets::Init();
     Sound::Init();
+    Input::Init();
+    Console::Init();
 
-    for(int i = 0; i < modules.size(); ++i) {
-        (modules[i]->Init());
-    }
     Graphics::InitAfter();
     Sound::InitAfter();
+    Debugger::InitAfter();
+    Console::InitAfter();
     
-    for(int i = 0; i < modules.size(); ++i) {
-        (modules[i]->InitAfter());
-    }
 
 
 
@@ -370,11 +364,6 @@ void Engine::AttachManager(Entity::ID id, bool pausable) {
 }
 
 void Engine::render() {
-    sysTime->Resume();
-    for(uint32_t i = 0; i < modules.size(); ++i) {
-        modules[i]->DrawBefore();
-    }
-    sysTime->Pause();
 
     if (!paused) {
         drawTime->Resume();
@@ -383,9 +372,7 @@ void Engine::render() {
         drawTime->Pause();
     }
 
-    for(uint32_t i = 0; i < modules.size(); ++i) {
-        modules[i]->DrawAfter();
-    }
+    Console::DrawAfter();
     sysTime->Resume();
     
     if (!paused) {
@@ -407,9 +394,11 @@ void Engine::render() {
 
 void Engine::update() {
     sysTime->Resume();
-    for(uint32_t i = 0; i < modules.size(); ++i) {
-        modules[i]->RunBefore();
-    }
+
+    Input::RunBefore();
+    Debugger::RunBefore();
+    Console::RunBefore();
+
     sysTime->Pause();
     
 
@@ -422,11 +411,9 @@ void Engine::update() {
     }
     
     sysTime->Resume();
-    for(uint32_t i = 0; i < modules.size(); ++i) {
-        modules[i]->RunAfter();
-    }
-    Sound::RunAfter();
 
+    Sound::RunAfter();
+    Console::RunAfter();
     if (!paused) {
         
         if (managers.Valid())

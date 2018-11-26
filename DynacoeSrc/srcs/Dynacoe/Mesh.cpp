@@ -179,7 +179,7 @@ void Mesh::DefineVertices(VertexAttribute attrib,
 
 
     if (numElts != v.size()) {
-        Console::Warning()  << "[Mesh]: Definition input vertex list data count and the mesh's vertex count do not match. Ignoring definition."<< Console::End;
+        Console::Warning()  << "[Mesh]: Definition input vertex list data count and the mesh's vertex count do not match. Ignoring definition."<< Console::End();
         return;
     }
 

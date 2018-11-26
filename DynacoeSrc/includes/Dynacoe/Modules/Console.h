@@ -92,11 +92,7 @@ class ConsoleStream {
 /// to run. There exist a number of built-in commands along with the 
 /// ability to add your own commands. And, due to the structure of adding 
 /// commands, they will all have some sort of help documentation for usage.
-class Console : public Module {
-  public:
-    friend class Engine;
-
-    Console();
+namespace Console {
 
 
 
@@ -109,76 +105,76 @@ class Console : public Module {
 
     /// \brief Marks the ending of the line.
     ///
-    static const char * End;
+    const char * End();
 
 
 
 
     /// \name Special streams
     ///\{
-    static ConsoleStream System();
-    static ConsoleStream Info  ();
-    static ConsoleStream Error ();
-    static ConsoleStream Warning();
+    ConsoleStream System();
+    ConsoleStream Info  ();
+    ConsoleStream Error ();
+    ConsoleStream Warning();
     ///\}
 
     // State
 
     /// \brief Returns whether or not the console is showing.
     /// 
-    static bool IsVisible() ;
+    bool IsVisible() ;
 
     /// \brief Activates/deactivates the console.
     ///
     /// @param doIt If true, the console will be shown. If false, the console will be hidden.
-    static void Show(bool doIt) ;
+    void Show(bool doIt) ;
 
     /// \brief Returns whether or not console has been locked.
     ///
     /// When the console is locked, the console may not be toggled.
-    static bool IsLocked() ;
+    bool IsLocked() ;
 
     /// \brief Locks the console.
     ///
     /// @param lock If true, Show() will no longer have an effect.
     /// Calling the function again with false re-enables the toggling.
-    static void Lock(bool);
+    void Lock(bool);
 
     /// \brief Sets whether to pause the engine when showing the console.
     ///
     /// The default is true.
-    static void PauseOnShow(bool);
+    void PauseOnShow(bool);
 
     /// \brief Adds an additional command to be 
     /// recognized by the interactive interpreter.
     /// @param name The base name of the command.
     /// @param command The actual command logic.
-    static void AddCommand(const std::string & name, Interpreter::Command * command);
+    void AddCommand(const std::string & name, Interpreter::Command * command);
 
 
     /// \brief Returns the number of lines of output
     /// currently held by the console
     ///
-    static uint32_t GetNumLines();
+    uint32_t GetNumLines();
 
     /// \brief Returns the i'th most recent message, where 0 is the
     /// earliest line and GetNumLines()-1 is the most recent line.
     ///
     /// @param i The line to retrieve.
-    static std::string GetLine(uint32_t i);
+    std::string GetLine(uint32_t i);
 
     /// \brief Clears all recorded messages in the Console.
     ///
-    static void Clear();
+    void Clear();
 
 
     /// \brief Sets the mode by which to display incoming Console messages.
     ///
-    static void OverlayMessageMode(MessageMode);
+    void OverlayMessageMode(MessageMode);
     
     /// \brief Returns the current message mode. MessageMode::Standard is the default.
     ///
-    static MessageMode GetOverlayMessageMode();
+    MessageMode GetOverlayMessageMode();
 
     /// \brief Sets a callback to be run for all user-entered commands, regardless of 
     /// command issued. Whether to process the command normally is returned.
@@ -187,10 +183,15 @@ class Console : public Module {
     /// will call this function first to determine whether to continue.
     /// The compiled input string is given as the first argument of args.
     /// If the callback returns false, no further action is taken.
-    static void SetCommandCallback(DynacoeEvent((*)));
+    void SetCommandCallback(DynacoeEvent((*)));
+
+    void Init();
+    void InitAfter();
+    void RunBefore();
+    void RunAfter();
+    void DrawAfter();
 
 
-  private:
 
 
 
@@ -198,48 +199,6 @@ class Console : public Module {
 
 
 
-    static void initBase(); 
-
-    struct LineModel;
-    struct LineView;
-    static Shape2D * base;
-
-
-    static std::vector<LineModel*>                lines;
-    static std::vector<LineView*>                 lineViews;
-
-    static Entity * messages;
-
-    
-
-
-    static bool         locked;
-    static bool         shown;
-    static bool         inputActive;
-    static ConsoleInputStream * streamIn;
-
-
-    static MessageMode messageMode;
-    static uint32_t viewOffsetY;    
-
-    
-    static void AddDefaultCommands();
-    static void AdjustViewSize();
-    static void AcquireStreamOutput(const std::string &, ConsoleStream::MessageType);
-    static void ProcessStreamOutput();
-    static void ProcessStreamIteration(const std::string &, ConsoleStream::MessageType);    
-    static int fontHeight;
-    static float basePositionOffsetRatio;
-
-    static void PostMessageConsole(const std::string & c, ConsoleStream::MessageType);
-    static std::vector<std::pair<std::string, ConsoleStream::MessageType>> stream;
-    static Interpreter * interp;
-    
-
-  public:
-    std::string GetName() {return "Console";}
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
 };
 }
 

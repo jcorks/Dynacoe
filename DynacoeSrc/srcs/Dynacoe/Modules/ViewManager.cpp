@@ -57,8 +57,16 @@ using namespace std;
 using namespace Dynacoe;
 
 
-Dynacoe::Table<ViewManager::LogicalDisplay>             ViewManager::displays;
-ViewID           ViewManager::currentDisplay;
+
+
+struct LogicalDisplay {
+    Display * display;
+};
+
+static Dynacoe::Table<LogicalDisplay> displays;
+static ViewID currentDisplay;
+
+
 
 
 
@@ -69,34 +77,6 @@ static std::set<LookupID> ids;
     #include <direct.h>
 #endif
 
-void ViewManager::Init() {
-
-    Random::Seed();
-    static bool spawned = false;
-
-    if (!spawned) {
-        spawned = true;
-    }
-
-
-
-}
-
-void ViewManager::InitAfter() {
-
-}
-
-void ViewManager::RunBefore() {}
-void ViewManager::RunAfter()  {}
-void ViewManager::DrawBefore(){}
-void ViewManager::DrawAfter() {}
-Backend * ViewManager::GetBackend() {
-    if (GetCurrent().Valid()) {
-        LogicalDisplay d = displays.Find(currentDisplay);
-        return d.display;
-    }
-    return nullptr;
-}
 
 
 
@@ -107,7 +87,7 @@ ViewID ViewManager::New(const std::string & name, int w, int h) {
     out.display = (Display*) Backend::CreateDefaultDisplay();
 
     if (!out.display->Valid()) {
-        Console::Error()  << "No valid Display could be created!"<< Console::End;
+        Console::Error()  << "No valid Display could be created!"<< Console::End();
         return ViewID();
     }   
     out.display->SetName(name);
@@ -158,12 +138,12 @@ Display * ViewManager::Get(ViewID id) {
 void ViewManager::SetMain(ViewID id) {
     LogicalDisplay disp;
     if (!displays.Query(id)) {
-        Console::Error()  << "Could not set main Display: invalid display given!"<< Console::End;
+        Console::Error()  << "Could not set main Display: invalid display given!"<< Console::End();
         return;
     }
     disp = displays.Find(id);
     if (!Graphics::GetRenderer()->Valid()) {
-        Console::Error()  << "A fatal error occurred while trying to attach the display: the renderer is not in a usable state. Exiting."<< Console::End;
+        Console::Error()  << "A fatal error occurred while trying to attach the display: the renderer is not in a usable state. Exiting."<< Console::End();
         Engine::Quit();        
         return;
     }
