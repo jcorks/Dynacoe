@@ -302,7 +302,6 @@ int Engine::Startup() {
     debugTime = timer->AddComponent<Clock>();
     
 
-    AddModule(new Sound);
     AddModule(new ViewManager);
     AddModule(new Input);
     AddModule(new Debugger);
@@ -334,11 +333,13 @@ int Engine::Startup() {
 
     Graphics::Init();
     Assets::Init();
+    Sound::Init();
 
     for(int i = 0; i < modules.size(); ++i) {
         (modules[i]->Init());
     }
     Graphics::InitAfter();
+    Sound::InitAfter();
     
     for(int i = 0; i < modules.size(); ++i) {
         (modules[i]->InitAfter());
@@ -424,6 +425,7 @@ void Engine::update() {
     for(uint32_t i = 0; i < modules.size(); ++i) {
         modules[i]->RunAfter();
     }
+    Sound::RunAfter();
 
     if (!paused) {
         

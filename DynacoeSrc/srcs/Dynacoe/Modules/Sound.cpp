@@ -70,6 +70,15 @@ static float panning_to_multiplier_r(float panning) {
 }
 
 
+static AudioClient * a = NULL;
+
+
+
+
+
+
+
+
 #include "Sound_StateArray.hpp"
 #include "Sound_AudioStreamObject.hpp"
 #include "Sound_AudioEffectChannel.hpp"
@@ -91,18 +100,11 @@ static float panning_to_multiplier_r(float panning) {
 
 
 
-AudioClient *      Sound::a;
-
 
 
 
 
 static const int DYNACOE_SAMPLE_RATE =        44100;       // (Samples processed per second)
-
-
-
-
-
 
 
 
@@ -211,16 +213,9 @@ void Sound::Init() {
 
 void Sound::InitAfter(){}
 
-Backend * Sound::GetBackend() {
-        return a->GetManager();
-}
-
-void Sound::RunBefore() {}
 void Sound::RunAfter()  {
     a->UpdateMain();
 }
-void Sound::DrawBefore(){}
-void Sound::DrawAfter() {}
 
 
 

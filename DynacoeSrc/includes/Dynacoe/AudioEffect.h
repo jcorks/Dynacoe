@@ -48,8 +48,6 @@ class AudioEffect {
     /// @param numvalues The number of float values in this section
     virtual void operator()(float * data, uint32_t numValues) const = 0;
 
-  private:
-    friend class Sound;
 };
 }
 

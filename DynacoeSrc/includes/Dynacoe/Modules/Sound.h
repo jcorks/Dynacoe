@@ -65,6 +65,7 @@ class ActiveSound {
     ActiveSound();
     ActiveSound(const ActiveSound &);
     ActiveSound & operator=(const ActiveSound &);
+    ActiveSound(LookupID stateID);
 
     /// \brief Sets the volume of the ActiveSound.
     ///
@@ -116,27 +117,23 @@ class ActiveSound {
     bool Valid();
 
   private:
-    friend class Sound;
 
     uint8_t * Updated();
-    ActiveSound(LookupID stateID);
+
     LookupID state;
 };
 
 
 /// \brief Module that handles all audio related functionality.
 ///
-class Sound : public Module {
-
-  public:
-
+namespace Sound {
 
 
 
 
     /// \brief Returns whether or not an instance of the sample is playing
     ///
-    static bool IsPlaying(AssetID index);
+    bool IsPlaying(AssetID index);
 
 
     /// \brief Queues audio for immediate playback
@@ -144,7 +141,7 @@ class Sound : public Module {
     /// @param effectChannel The channel to send the audio block to play on.
     /// @param panning The panning for the sound. 0.f is all the way to the left, 1.f is all the way to the right
     /// @param volume The volume the sound should play at.
-    static ActiveSound PlayAudio(AssetID, uint8_t effectChannel=0, float volume = 1.f, float panning = .5f);
+    ActiveSound PlayAudio(AssetID, uint8_t effectChannel=0, float volume = 1.f, float panning = .5f);
 
 
 
@@ -177,15 +174,15 @@ class Sound : public Module {
     /// effect channel. All further samples that play on the given channel
     /// will have this effect applied.
     ///
-    static void ChannelAddEffect(const AudioEffect *, uint8_t channel);
+    void ChannelAddEffect(const AudioEffect *, uint8_t channel);
 
     /// \brief Unregisters an AudioEffect instance.
     ///
-    static void ChannelRemoveEffect(const AudioEffect *, uint8_t channel);
+    void ChannelRemoveEffect(const AudioEffect *, uint8_t channel);
 
     /// \brief Removes all effects from a channel.
     /// This does not delete the AudioEffects given to the channel.
-    static void ChannelReset(uint8_t channel);
+    void ChannelReset(uint8_t channel);
     
     /// \brief Keeps the stream active for the given channel.
     /// By default, channels will only be active if there are samples playing through it 
@@ -193,49 +190,33 @@ class Sound : public Module {
     /// being processed through a channel. For something like reverberation, this 
     /// would cut off meaningful information from being output. Keeping the channel 
     /// awake sacrifices performance for making more quality  
-    static void ChannelKeepAwake(uint8_t, bool doIt);
+    void ChannelKeepAwake(uint8_t, bool doIt);
 
     /// \brief Sets the volume for the given channel
     /// 0.f denotes minimum volume and 1.f maximum.
     /// The values are clipped if they are beyond these bounds.
     ///
-    static void ChannelSetVolume(uint8_t channel, float);
+    void ChannelSetVolume(uint8_t channel, float);
 
     /// \brief Sets the panning for the entire channel.
     /// 0.f denotes all the way to the left and 1.f all the way to the right.
     /// The values are clipped if they are beyond these bounds.
     ///
-    static void ChannelSetPanning(uint8_t channel, float);
+    void ChannelSetPanning(uint8_t channel, float);
     ///}
 
 
-    static AudioManager * GetManager();
+    AudioManager * GetManager();
+
+
+    void Init();
+    void InitAfter();
+    void RunAfter();
 
 
 
 
-
-  private:
-
-    friend class AudioBlock;
-
-    static AudioBlock * uncompressAudio(const std::string & path);
-    static AudioClient * a;
-    static void AudioClientThreadMain();
-    static void * audioClientThread;
-    static void initBase();
-
-  public:
-    std::string GetName() {return "Sound";}
-    void Init(); void InitAfter(); void RunBefore(); void RunAfter(); void DrawBefore(); void DrawAfter();
-    Backend * GetBackend();
 };
-
-struct Export_d {
-    Sound * s;
-    std::string fileName;
-};
-
 
 
 
