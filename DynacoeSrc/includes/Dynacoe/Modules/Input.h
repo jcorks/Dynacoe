@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/InputManager/InputDevice.h>
 #include <Dynacoe/Backends/InputManager/InputManager.h>
 #include <Dynacoe/Util/Table.h>
-#include <Dynacoe/Modules/Module.h>
 #include <string>
 #include <map>
 #include <set>

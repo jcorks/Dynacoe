@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef H_DC_DEBUGGER_INCLUDED
 #define H_DC_DEBUGGER_INCLUDED
 
-#include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Entity.h>
 
 namespace Dynacoe {

@@ -47,8 +47,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 namespace Dynacoe {
-class Universe;
-class Module;
 /** \brief Main class that handles automated updates of Dynacoe.
  *
  */
@@ -65,18 +63,6 @@ namespace Engine {
     ///
     ///
     int Startup();
-
-
-    /// \breif Installs a module to be updated during the execution loop.
-    ///
-    /// A module is an updatable unit that is managed before and after
-    /// the updating of entities. It is appropriate for behavior that should
-    /// not interfere with the entity scope. FOr example, the Graphics
-    /// interface is managed through a module.
-    ///
-    /// This function adds a new module to the Engine. See Module.h
-    void AddModule(Module *);
-
 
     /// \brief Begins the Engine execution loop.
     ///

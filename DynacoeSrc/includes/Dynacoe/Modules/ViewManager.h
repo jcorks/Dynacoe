@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Dynacoe/Util/Table.h>
-#include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Backends/Display/Display.h>
 #include <string>
 #include <vector>

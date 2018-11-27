@@ -69,7 +69,6 @@ static bool EXIT;
 
 
 
-static std::vector<Module*> modules;
 
 static Dynacoe::Clock * drawTime;
 static Dynacoe::Clock * runTime;
@@ -202,18 +201,6 @@ int Engine::Run() {
     Console::OverlayMessageMode(Console::MessageMode::Disabled);
     Console::Info() << "Dynacoe " << Version() << "\n\n";
     Console::Info() << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\n";
-    for(int i = 0; i < modules.size(); ++i) {
-        Backend * b;
-        Console::Info() << "-  " << modules[i]->GetName().c_str() << ": ";
-        if ((b = modules[i]->GetBackend())) {
-            Console::Info() << b->Name()    << " [" <<
-                               b->Version() << "]";
-
-        } else {
-            Console::Info() << "[Default]";
-        }
-        Console::Info() << "\n";
-    }
     Console::Info() << "\n";
     Console::OverlayMessageMode(Console::MessageMode::Standard);
 
@@ -279,9 +266,6 @@ void Engine::Break() {
     }
 }
 
-void Engine::AddModule(Module * m) {
-    modules.push_back(m);
-}
 
 
 void Engine::Wait(int FPS) {

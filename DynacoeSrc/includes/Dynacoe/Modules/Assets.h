@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Dynacoe/AssetID.h>
-#include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Modules/Console.h>
 
 #include <vector>

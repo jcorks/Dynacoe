@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Color.h>
 #include <Dynacoe/Entity.h>
-#include <Dynacoe/Modules/Module.h>
 #include <Dynacoe/Interpreter.h>
 #include <Dynacoe/Util/Chain.h>
 #include <Dynacoe/Component.h>
