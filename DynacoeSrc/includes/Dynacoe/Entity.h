@@ -503,7 +503,6 @@ class Entity : public Spatial {
 
 
      void AddComponentInternal(Component * c, UpdateClass);
-    friend class Engine;
 
      bool WasDetachedMidExecution(Entity::ID id);
      void priorityListQueueAdd(Entity::ID);

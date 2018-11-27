@@ -52,10 +52,9 @@ class Module;
 /** \brief Main class that handles automated updates of Dynacoe.
  *
  */
-class Engine {
+namespace Engine {
 
 
-  public:
 
 
     /// \brief Initializes all Dynacoe assets.
@@ -65,7 +64,7 @@ class Engine {
     /// No other functions should be used prior to calling this function.
     ///
     ///
-    static int Startup();
+    int Startup();
 
 
     /// \breif Installs a module to be updated during the execution loop.
@@ -76,7 +75,7 @@ class Engine {
     /// interface is managed through a module.
     ///
     /// This function adds a new module to the Engine. See Module.h
-    static void AddModule(Module *);
+    void AddModule(Module *);
 
 
     /// \brief Begins the Engine execution loop.
@@ -84,23 +83,23 @@ class Engine {
     /// Once run is initiated, all drawing to the screen and logic updating
     /// is automated. While running, it is also possible to utilize the
     /// debugging features such as the console and Entity debugger.
-    static int Run();
+    int Run();
     
     
     /// \brief Pauses the Engine execution loop.
     ///
     /// Once in a paused state, 
-    static void Pause();
+    void Pause();
     
     // like pause but disrupts the engine immediately rather than safely waiting 
     // until the next iteration. Most useful for debugging prupose
-    static void Break();
+    void Break();
     
     // resumes from a paused or broken state.
-    static void Resume();
+    void Resume();
     
     // Not equivalent to a frame, since frame throttling can occur.
-    static void Iterate(); 
+    void Iterate(); 
 
 
     /// \brief Returns the toplevel Entity. 
@@ -108,17 +107,17 @@ class Engine {
     /// From here, you can 
     /// set the Entity that holds the toplevel of the project. 
     /// By default there is none.
-    static Entity::ID & Root();
+    Entity::ID & Root();
 
     /// \brief Attaches a management-type entity.
     ///
     /// If pausable is false, the manager will continue to update even when 
     /// the engine is in a paused state.
-    static void AttachManager(Entity::ID, bool pausable = true);
+    void AttachManager(Entity::ID, bool pausable = true);
 
 	/// \brief Ends the Engine execution loop.
 	///
-    static void Quit();
+    void Quit();
 
 
     /// \brief Sleeps until the time required for the target frames-per-second is reached.
@@ -126,26 +125,26 @@ class Engine {
     /// @param FPS  The target FPS; useful for loops.
     ///
     /// The actual resolution is machine-dependent, but it tends to be millisecond resolution.
-    static void Wait(int FPS);
+    void Wait(int FPS);
 
 
 
     /// \brief Sets the ideal frame per second that the main loop should clock at.
     ///
-    static void SetMaxFPS(int i);
+    void SetMaxFPS(int i);
 
     /// \brief Gets the maximum FPS allowable by the Engine.
     ///
-    static int GetMaxFPS();
+    int GetMaxFPS();
 
     /// \brief Returns the starting directory of Dynacoe.
     ///
     /// Reutrns an empty string if unavailable.
-    static std::string GetBaseDirectory();
+    std::string GetBaseDirectory();
 
     /// \brief Returns the version of the Dynacoe library as a whole.
     ///
-    static std::string Version();
+    std::string Version();
     
     
     
@@ -157,50 +156,9 @@ class Engine {
         int currentFPS;
     };
     
-    static const Diagnostics & GetDiagnostics();
-
-  private:
+    const Diagnostics & GetDiagnostics();
 
 
-
-
-    static double frameStart;
-    static double frameEnd;
-
-    static bool EXIT;
-
-
-
-
-
-
-    static std::vector<Module*> modules;
-
-    static Dynacoe::Clock * drawTime;
-    static Dynacoe::Clock * runTime;
-    static Dynacoe::Clock * sysTime;
-    static Dynacoe::Clock * debugTime;
-    static Dynacoe::Clock * frameTime;
-
-    static float lastDrawTime;
-    static float lastRunTime;
-    static float lastSysTime;
-    static float lastDebugTime;
-
-    static float curDrawTime;
-    static float curRunTime;
-    static float curSysTime;
-    static float curDebugTime;
-
-    static int frameCount;
-    static int valid;
-
-    static void render();
-    static void update();
-
-    static std::vector<Entity*> worlds;
-    static Entity::ID universe;
-    static Entity   * systemWorld;
 };
 };
 

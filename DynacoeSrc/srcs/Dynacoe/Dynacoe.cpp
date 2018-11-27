@@ -57,6 +57,50 @@ static std::string origCWD;
 static int paused = false;
 
 
+
+
+static double frameStart;
+static double frameEnd;
+
+static bool EXIT;
+
+
+
+
+
+
+static std::vector<Module*> modules;
+
+static Dynacoe::Clock * drawTime;
+static Dynacoe::Clock * runTime;
+static Dynacoe::Clock * sysTime;
+static Dynacoe::Clock * debugTime;
+static Dynacoe::Clock * frameTime;
+
+static float lastDrawTime;
+static float lastRunTime;
+static float lastSysTime;
+static float lastDebugTime;
+
+static float curDrawTime;
+static float curRunTime;
+static float curSysTime;
+static float curDebugTime;
+
+static int frameCount;
+static int valid;
+
+static void render();
+static void update();
+
+static std::vector<Entity*> worlds;
+static Entity::ID universe;
+static Entity   * systemWorld;
+
+
+
+
+
 std::string Engine::Version() {
     #ifdef DYNACOE_GIT_LINEAR_COUNT
         std::string count = DYNACOE_GIT_LINEAR_COUNT;
@@ -88,32 +132,13 @@ std::string Engine::Version() {
 
 static int maxFPS;
 static bool quit;
-Dynacoe::Clock        *Engine::drawTime;
-Dynacoe::Clock        *Engine::runTime;
-Dynacoe::Clock        *Engine::sysTime;
-Dynacoe::Clock        *Engine::debugTime;
-Dynacoe::Clock        *Engine::frameTime;
 static Dynacoe::Clock        *engineTime;
-
-std::vector<Module*>  Engine::modules;
-
-Entity *               Engine::systemWorld;
 
 
 
 static Engine::Diagnostics diagnostics;
 
 
-
-int                     Engine::frameCount;
-int                     Engine::valid = 0;
-
-
-double                  Engine::frameStart = 0;
-double                  Engine::frameEnd = 0;
-
-
-Entity::ID                 Engine::universe;
 static Entity::ID managers;
 static Entity::ID managersNonPausable;
 
@@ -176,7 +201,7 @@ int Engine::Run() {
 
     Console::OverlayMessageMode(Console::MessageMode::Disabled);
     Console::Info() << "Dynacoe " << Version() << "\n\n";
-    Console::Info() << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\nRegistered modules:\n\n";
+    Console::Info() << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\n";
     for(int i = 0; i < modules.size(); ++i) {
         Backend * b;
         Console::Info() << "-  " << modules[i]->GetName().c_str() << ": ";
@@ -323,8 +348,8 @@ int Engine::Startup() {
 
     valid = true;
     universe = Entity::ID();
-    managers = (new Entity())->GetID();
-    managersNonPausable = (new Entity())->GetID();
+    managers = Entity::Create();
+    managersNonPausable = Entity::Create();
 
 
     Graphics::Init();
@@ -363,7 +388,7 @@ void Engine::AttachManager(Entity::ID id, bool pausable) {
     }
 }
 
-void Engine::render() {
+void render() {
 
     if (!paused) {
         drawTime->Resume();
@@ -392,7 +417,7 @@ void Engine::render() {
 }
 
 
-void Engine::update() {
+void update() {
     sysTime->Resume();
 
     Input::RunBefore();

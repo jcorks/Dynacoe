@@ -98,6 +98,7 @@ static Interpreter * interp;
 
 static DataGrid * mainGrid = nullptr;
 static Entity * mainGridRoot = nullptr;
+static Mutator * mainGridRootMutator = nullptr;
 static DynacoeEvent((*commandCallback)) = nullptr;
 static bool console_overflow = false;
 static bool pauseOnShow = true;
@@ -508,8 +509,9 @@ void Console::Init() {
     
     mainGrid = Entity::Create<DataGrid>().IdentifyAs<DataGrid>();
     mainGridRoot->Attach(mainGrid->GetID());
-    mainGridRoot->Node().Rotation().x = 180;
-    mainGridRoot->Node().Rotation().y = 180;
+    mainGridRootMutator = mainGridRoot->AddComponent<Mutator>();
+    mainGridRoot->Node().Position() = {-100000, -100000};
+    
 
     mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
     mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
@@ -678,8 +680,15 @@ void Console::Show(bool b) {
     if (locked) return;
     if (pauseOnShow && (shown != true && b == true)) {
         Engine::Pause();
+        mainGridRootMutator->Clear(0);
+        mainGridRootMutator->NewMutation(.2, 1.f, Mutator::Function::Logarithmic);
+        mainGridRootMutator->Start();
     } else if (shown == true && b != true) {
         Engine::Resume();
+        mainGridRootMutator->Clear(1);
+        mainGridRootMutator->NewMutation(.2, 0, Mutator::Function::Quadratic);
+        mainGridRootMutator->Start();
+
     }
     shown = b;
 }
@@ -738,11 +747,12 @@ void Console::DrawAfter() {
 
     
     // ease position
-    basePositionOffsetRatio =
+    /*basePositionOffsetRatio =
         Mutator::StepTowards(
             basePositionOffsetRatio,
             (shown ? 0.f : -1.f), .14
         );
+    */
     /*
     if (basePositionOffsetRatio < -.99f) {
         mainGridRoot->draw = false;
@@ -756,14 +766,13 @@ void Console::DrawAfter() {
     }
     */
 
-
-    if (basePositionOffsetRatio < -.99f) {
+    
+    if (mainGridRootMutator->Expired() && !shown) {
         mainGridRoot->draw = false;
         return;
     } else {
-        mainGridRoot->Node().Rotation().x = basePositionOffsetRatio*180;
-        mainGridRoot->Node().Rotation().y = basePositionOffsetRatio*180;
-        mainGridRoot->Node().Position() = Graphics::GetCamera2D().Node().GetPosition();
+        mainGridRoot->Node().Position().x = (mainGridRootMutator->Value()-1.f)*Graphics::GetRenderCamera().Width() + Graphics::GetCamera2D().Node().GetPosition().x;
+        mainGridRoot->Node().Position().y = Graphics::GetCamera2D().Node().GetPosition().y;
         mainGridRoot->draw = true;
         
     }
