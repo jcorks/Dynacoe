@@ -1,0 +1,2 @@
+Both libogg and libvorbis were built using the repo: https://github.com/inetic/ogg-vorbis-for-android
+the includes for vorbis are here (v 1.3.3)
