@@ -1,0 +1,5 @@
+freetype library used is ver. 2.6.5
+provided here is the jni directory for building with NDK
+
+1) copy this ./jni into the freetype directory
+2) ndk-build in the freetype directory

@@ -178,14 +178,11 @@ class AudioProcessor {
     void * thread;
 
     static void ThreadControl() {
-        try {
-            // TODO: determine good, stable sleep amount
-            while(1) {
-                instance->ProcessAudio();
-                Time::SleepMS(16);
-            }
-        } catch(std::exception & e) {
-            exit(1);
+        
+        // TODO: determine good, stable sleep amount
+        while(1) {
+            instance->ProcessAudio();
+            Time::SleepMS(16);
         }
     }
 

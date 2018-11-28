@@ -82,7 +82,11 @@ LOCAL_SRC_FILES := \
 
 
 
-LOCAL_C_INCLUDES += $(DYNACOE_ROOT_INC)
+LOCAL_C_INCLUDES += $(DYNACOE_ROOT_INC) \
+	$(NDK_APP_PROJECT_PATH)/jni/deps/freetype/include/ \
+	$(NDK_APP_PROJECT_PATH)/jni/deps/ogg/include/ \
+        $(NDK_APP_PROJECT_PATH)/jni/deps/vorbis/include/ \
+	$(NDK_APP_PROJECT_PATH)/jni/deps/png/include/
 
 #LOCAL_SHARED_LIBRARIES := -lz
 LOCAL_EXPORT_LDLIBS := -lm -lpng -lz -lfreetype -lvorbisfile -lvorbis -logg
