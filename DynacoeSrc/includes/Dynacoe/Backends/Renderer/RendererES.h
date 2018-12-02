@@ -30,19 +30,28 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#ifndef H_DC_BACKENDS_NORENDER_INCLUDED
-#define H_DC_BACKENDS_NORENDER_INCLUDED
+#if (defined DC_BACKENDS_GLES_X11)
+
+#ifndef H_DC_BACKENDS_GLES_RENDERER
+#define H_DC_BACKENDS_GLES_RENDERER
+
 
 #include <Dynacoe/Backends/Renderer/Renderer.h>
 
+
 namespace Dynacoe {
-class NoRenderer : public Renderer {
+class GLES2Implementation;
+struct GLES2 : public Dynacoe::Renderer {
   public:
-    std::string Name(){return "NoRenderer";}
-    std::string Version() {return "v1.0";}
-    bool Valid() {return true;}
+    GLES2();
+    ~GLES2();
+    std::string Name(){return "OpenGL ES 2.0";}
+    std::string Version(){return "v1.0";}
+    bool Valid(){return ES!=nullptr;}
 
 
+
+    // 2D - TODO
     void Queue2DVertices(
         const uint32_t * indices,
         uint32_t count
@@ -57,56 +66,77 @@ class NoRenderer : public Renderer {
     void Set2DObjectParameters(uint32_t object, Render2DObjectParameters){}
     void Render2DVertices(const Render2DStaticParameters &){}
     void Clear2DQueue(){}
+    // 2D
+
     
+
+    // static render - TODO
     void RenderStatic(StaticState *){}
     void ClearRenderedData(){}
     RenderBufferID GetStaticViewingMatrixID(){return RenderBufferID();}
     RenderBufferID GetStaticProjectionMatrixID(){return RenderBufferID();}
+    std::string ProgramGetLanguage(){return "GLSL";}
+    ProgramID ProgramGetBuiltIn(BuiltInShaderMode){return ProgramID();}
+    ProgramID ProgramAdd(const std::string&, const std::string &, std::string &) {return ProgramID();}
+    // static render
 
-    int AddTexture(int, int, const uint8_t *){return 0;}
-    void UpdateTexture(int, const uint8_t *){}
-    void RemoveTexture(int tex){}
-    void GetTexture(int, uint8_t*){}
-    void SetTextureFilter(TexFilter){}
-    TexFilter GetTextureFilter(){return TexFilter::Linear;}
-    int GetTextureWidth(int){return 0;}
-    int GetTextureHeight(int){return 0;}
-    int MaxSimultaneousTextures(){return 0;}
-    
-    RenderBufferID AddBuffer(float *, int){return RenderBufferID();}
-    void UpdateBuffer(RenderBufferID, float *, int, int){}
-    void ReadBuffer(RenderBufferID, float *, int, int){}
-    int BufferSize(RenderBufferID){return 0;}
-    void RemoveBuffer(RenderBufferID){}
+
+
+    // texture - TODO
+    int AddTexture(int, int, const uint8_t *);
+    void UpdateTexture(int, const uint8_t *);
+    void RemoveTexture(int tex);
+    void GetTexture(int, uint8_t*);
+    void SetTextureFilter(TexFilter);
+    TexFilter GetTextureFilter();
+    int GetTextureWidth(int);
+    int GetTextureHeight(int);
+    int MaxSimultaneousTextures();
+    // texture
     
 
-    LightID AddLight(LightType){return LightID();}
-    void UpdateLightAttributes(LightID, float *){}
+    // render buffer
+    RenderBufferID AddBuffer(float *, int);
+    void UpdateBuffer(RenderBufferID, float *, int, int);
+    void ReadBuffer(RenderBufferID, float *, int, int);
+    int BufferSize(RenderBufferID);
+    void RemoveBuffer(RenderBufferID);
+    // render buffer    
+
+
+    // lighting - TODO
+    LightID AddLight(LightType) {return LightID();}
+    void UpdateLightAttributes(LightID, float *) {}
     void EnableLight(LightID, bool doIt){}
     void RemoveLight(LightID){}
     int MaxEnabledLights(){return 0;}
     int NumLights(){return 0;}
-
-    std::string ProgramGetLanguage(){return "";}
-    ProgramID ProgramGetBuiltIn(BuiltInShaderMode){return ProgramID();}
-    ProgramID ProgramAdd(const std::string&, const std::string &, std::string &){return ProgramID();}
+    // lighting
 
 
-    bool IsSupported(Capability){return true;}
+    // drawing engine options
     void SetDrawingMode(Polygon, Dimension, AlphaRule){}
     void GetDrawingMode(Polygon *, Dimension *, AlphaRule *){}
-    void AttachTarget(Dynacoe::Framebuffer * f){target = f;}
-    Dynacoe::Framebuffer * GetTarget(){return target;}
+    // drawing engine options
+
+    
+    bool IsSupported(Capability){return true;}
+    void AttachTarget(Dynacoe::Framebuffer *);
+    Dynacoe::Framebuffer * GetTarget();
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){
         return std::vector<Dynacoe::Framebuffer::Type>({
-            Dynacoe::Framebuffer::Type::RGBA_PixelArray,
             Dynacoe::Framebuffer::Type::GLFBPacket
         });
     }
+
+    
   private:
-    Dynacoe::Framebuffer * target;
+    GLES2Implementation * ES;
+    
+    
 
 };
 }
 
+#endif
 #endif

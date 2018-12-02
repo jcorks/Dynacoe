@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <string>
 #include <vector>
+#include <Dynacoe/Util/Chain.h>
 namespace Dynacoe {
 
 class SettingsData;

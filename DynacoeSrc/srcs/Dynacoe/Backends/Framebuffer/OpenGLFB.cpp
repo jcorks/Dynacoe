@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11)
+#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
 
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB_Multi.h>
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget.h>

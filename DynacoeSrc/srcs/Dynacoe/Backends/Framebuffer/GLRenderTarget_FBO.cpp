@@ -30,8 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11)
-
+#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget_FBO.h>
 
 
@@ -41,8 +40,12 @@ DEALINGS IN THE SOFTWARE.
     #ifndef GLEW_STATIC
     #define GLEW_STATIC
     #endif
-    #include <GL/glew.h>
-    #include <GL/glx.h>
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+        #include <GLES2/gl2.h>
+    #else
+        #include <GL/glew.h>
+        #include <GL/glx.h>
+    #endif
     typedef Display X11Display;
 #endif
 
@@ -87,14 +90,19 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 640,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 640,
                                             480, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_2D, texture, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 640, 480);
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 640, 480);
+    #else 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 640, 480);
+    #endif
+    
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
@@ -125,8 +133,11 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
                                            newH, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, newW, newH);
-
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, newW, newH);
+    #else 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, newW, newH);
+    #endif
     glBindTexture(GL_TEXTURE_2D, old);
     glBindRenderbuffer(GL_RENDERBUFFER, oldRB);
 
@@ -134,8 +145,9 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
     h = newH;
 }
 
-
+#include <cassert>
 void GLRenderTarget_FBO::GetRawData(uint8_t * data) {
+    /*
     GLint old;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &old);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -149,6 +161,8 @@ void GLRenderTarget_FBO::GetRawData(uint8_t * data) {
             std::swap(data32[x+y*w], data32[x+w*(h-y-1)]);
         }
     }
+    */
+    assert(!"Uh oh, not implemented yet");
 }
 
 

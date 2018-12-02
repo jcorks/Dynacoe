@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32)
+#if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
 #ifndef H_DC_DISPLAY_GLFRAME
 #define H_DC_DISPLAY_GLFRAME
 
@@ -61,8 +61,14 @@ DEALINGS IN THE SOFTWARE.
     #ifndef GLEW_STATIC
     #define GLEW_STATIC
     #endif
-    #include <GL/glew.h>
-    #include <GL/glx.h>
+
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+        #include <GLES2/gl2.h>
+        #include <EGL/egl.h>    
+    #else
+        #include <GL/glew.h>
+        #include <GL/glx.h>
+    #endif
     typedef Display X11Display; 
 #endif
 
@@ -168,7 +174,14 @@ class OpenGLFBDisplay : public Dynacoe::Display {
         XSetWindowAttributes    swa;
         Window                  win;
         Window                  root;
-        GLXContext              glc;
+        #ifdef DC_BACKENDS_GLESFRAMEBUFFER_X11
+            EGLContext glc;
+            EGLSurface glSurface;
+            EGLDisplay glDisplay;
+            EGLConfig  glConfig;
+        #else 
+            GLXContext              glc;
+        #endif
         XWindowAttributes       gwa;
         XEvent                  xev;
         std::vector<XEvent>      lastEvents;

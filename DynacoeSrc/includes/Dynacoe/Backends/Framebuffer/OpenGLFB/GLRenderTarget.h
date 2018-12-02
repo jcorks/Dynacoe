@@ -38,7 +38,11 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #ifdef DC_SUBSYSTEM_X11
-    #include <GL/glew.h>
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+        #include <GLES2/gl2.h>
+    #else
+        #include <GL/glew.h>
+    #endif
 #else
     #ifdef _MBCS 
         #include <GL/glew.h>    

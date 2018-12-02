@@ -905,7 +905,7 @@ void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageTy
 
 void PostMessageConsole(const std::string & str, ConsoleStream::MessageType type) {
     const int message_v_spacing = 40;
-
+    if (!messages) return;
 
     if (messageMode == Console::MessageMode::Standard) {
         DebugMessage * m = Entity::CreateReference<DebugMessage>();

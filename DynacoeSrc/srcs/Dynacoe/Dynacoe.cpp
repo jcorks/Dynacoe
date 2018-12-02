@@ -336,8 +336,8 @@ int Engine::Startup() {
     managersNonPausable = Entity::Create();
 
 
-    Graphics::Init();
     Assets::Init();
+    Graphics::Init();
     Sound::Init();
     Input::Init();
     Console::Init();
@@ -346,6 +346,9 @@ int Engine::Startup() {
     Sound::InitAfter();
     Debugger::InitAfter();
     Console::InitAfter();
+
+
+    
     
 
 

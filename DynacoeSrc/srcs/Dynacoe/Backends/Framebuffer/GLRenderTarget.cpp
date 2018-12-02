@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11)
+#if ( defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || defined DC_BACKENDS_LEGACYGL_WIN32 || defined DC_BACKENDS_LEGACYGL_X11 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
 
 
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget_FBO.h>
@@ -40,31 +40,34 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 
 GLRenderTarget * Dynacoe::CreateGLRenderTarget() {
-
-    if (glewIsSupported("GL_VERSION_3_0")) {
+    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
         return new GLRenderTarget_FBO();
-    } else if (glewIsSupported("GL_EXT_framebuffer_object")) {
-        static bool importedFBO = false;
-        if (!importedFBO) {
+    #else
 
-            glGenFramebuffers         = glGenFramebuffersEXT;
-            glGenRenderbuffers        = glGenRenderbuffersEXT;
-            glDeleteFramebuffers      = glDeleteFramebuffersEXT;
-            glBindFramebuffer         = glBindFramebufferEXT;
-            glBindRenderbuffer        = glBindRenderbufferEXT;
-            glFramebufferRenderbuffer = glFramebufferRenderbufferEXT;
-            glFramebufferTexture2D    = glFramebufferTexture2DEXT;
-            glRenderbufferStorage     = glRenderbufferStorageEXT;
-            importedFBO = true;
+        if (glewIsSupported("GL_VERSION_3_0")) {
+            return new GLRenderTarget_FBO();
+        } else if (glewIsSupported("GL_EXT_framebuffer_object")) {
+            static bool importedFBO = false;
+            if (!importedFBO) {
+
+                glGenFramebuffers         = glGenFramebuffersEXT;
+                glGenRenderbuffers        = glGenRenderbuffersEXT;
+                glDeleteFramebuffers      = glDeleteFramebuffersEXT;
+                glBindFramebuffer         = glBindFramebufferEXT;
+                glBindRenderbuffer        = glBindRenderbufferEXT;
+                glFramebufferRenderbuffer = glFramebufferRenderbufferEXT;
+                glFramebufferTexture2D    = glFramebufferTexture2DEXT;
+                glRenderbufferStorage     = glRenderbufferStorageEXT;
+                importedFBO = true;
+            }
+            return new GLRenderTarget_FBO();
         }
-        return new GLRenderTarget_FBO();
-    }
-    
-    
-    else {
-        return new GLRenderTarget_Legacy();
-    }
-    
+        
+        
+        else {
+            return new GLRenderTarget_Legacy();
+        }
+    #endif    
     
     return nullptr;
 }

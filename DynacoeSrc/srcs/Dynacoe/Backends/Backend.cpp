@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Backends/Renderer/ShaderGL_Multi.h>
 #include <Dynacoe/Backends/Renderer/NoRender_Multi.h>
+#include <Dynacoe/Backends/Renderer/RendererES.h>
 
 
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB_Multi.h>
@@ -79,7 +80,9 @@ Backend * Backend::CreateDefaultRenderer() {
     return new ShaderGLRenderer();
     #endif
 
-
+    #if (defined DC_BACKENDS_GLES_X11)
+    return new GLES2();
+    #endif
     return new NoRenderer();
 }
 
@@ -108,7 +111,7 @@ Backend * Backend::CreateDefaultInputManager() {
 
 
 Backend * Backend::CreateDefaultDisplay() {
-    #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32)
+    #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
     return new OpenGLFBDisplay();
     #endif
     return new NoDisplay();
@@ -116,7 +119,7 @@ Backend * Backend::CreateDefaultDisplay() {
 
 
 Backend * Backend::CreateDefaultFramebuffer() {
-    #if(defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || DC_BACKENDS_LEGACYGL_WIN32 || DC_BACKENDS_LEGACYGL_X11)
+    #if(defined DC_BACKENDS_SHADERGL_X11 || defined DC_BACKENDS_SHADERGL_WIN32 || DC_BACKENDS_LEGACYGL_WIN32 || DC_BACKENDS_LEGACYGL_X11 || DC_BACKENDS_GLESFRAMEBUFFER_X11)
     return new OpenGLFB();
     #endif
     return new NoFB();

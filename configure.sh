@@ -45,12 +45,14 @@ buildTypes="Static Dynamic"
 # backends are at the top
 renderers="
 ShaderGL_X11
+GLES_X11
 ShaderGL_Win32
 NoRender
 "
 
 displays="
 OpenGLFramebuffer_X11
+GLESFramebuffer_X11
 OpenGLFramebuffer_Win32
 NoDisplay
 "
@@ -85,8 +87,10 @@ Done
 backendSystemDeps="
 BEGIN Dynacoe ANY END
 BEGIN ShaderGL_X11 X11 END
+BEGIN GLES_X11 X11 END
 BEGIN ShaderGL_Win32 Win32 END
 BEGIN OpenGLFramebuffer_X11 X11 END
+BEGIN GLESFramebuffer_X11 X11 END
 BEGIN OpenGLFramebuffer_Win32 Win32 END
 BEGIN X11Input_X11 X11 END
 BEGIN GainputX11 X11 END
@@ -108,8 +112,10 @@ BEGIN Done ANY END
 Dependencies="
 BEGIN Dynacoe END
 BEGIN ShaderGL_X11    -lGLEW -lGL  END
+BEGIN GLES_X11    -lGLESv2  END
 BEGIN ShaderGL_Win32  -lglew-dc -lOpenGL32 END
 BEGIN OpenGLFramebuffer_X11    -lGLEW -lGL  END
+BEGIN GLESFramebuffer_X11    -lEGL -lGLESv2  END
 BEGIN OpenGLFramebuffer_Win32  -lglew-dc -lOpenGL32  END
 BEGIN X11Input_X11 END
 BEGIN GainputX11   -lgainputstatic END
@@ -122,7 +128,7 @@ BEGIN NoRender END
 BEGIN NoDisplay END
 BEGIN NoAudio END
 BEGIN Win32 -lmingw32 -lole32 -lwinmm -lWsock32 -lgdi32 -lm -lpng-dc -lz-dc -lfreetype-dc -lvorbisfile-dc -lvorbis-dc -logg-dc  END
-BEGIN X11 -lX11 -lm -lpng -lz -lfreetype -lvorbisfile -lvorbis -logg  END
+BEGIN X11 -lpthread -lX11 -lm -lpng -lz -lfreetype -lvorbisfile -lvorbis -logg  END
 BEGIN Alsa -lasound END
 BEGIN DirectSound -ldsound END
 BEGIN ExtraDecoders -lassimp END
@@ -177,8 +183,10 @@ BEGIN UnknownOS END
 defines="
 BEGIN Dynacoe END
 BEGIN ShaderGL_X11                -DDC_BACKENDS_SHADERGL_X11 END
+BEGIN GLES_X11                -DDC_BACKENDS_GLES_X11 END
 BEGIN ShaderGL_Win32              -DDC_BACKENDS_SHADERGL_WIN32 END
 BEGIN OpenGLFramebuffer_X11     -DDC_BACKENDS_OPENGLFRAMEBUFFER_X11 END
+BEGIN GLESFramebuffer_X11     -DDC_BACKENDS_GLESFRAMEBUFFER_X11 END
 BEGIN OpenGLFramebuffer_Win32   -DDC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 END
 BEGIN X11Input_X11               -DDC_BACKENDS_X11INPUT_X11 END
 BEGIN GainputX11                 -DDC_BACKENDS_GAINPUTX11 END

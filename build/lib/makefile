@@ -8,7 +8,7 @@ BACKENDS			= $(shell cat lib_defines)
 #--------------------
 
 
-CC = g++  -fmax-errors=5
+CC = g++  -fmax-errors=5 -fsanitize=address -fsanitize=undefined
 
 # Define Dynacoe assets
 
@@ -41,6 +41,7 @@ DYNACOE_SRCS := $(filter %.cpp %.c, $(shell echo $(DYNACOE_ROOT)/DynacoeSrc/Dyna
                           $(DYNACOE_SRC_ROOT)/Backends/Renderer/* \
                           $(DYNACOE_SRC_ROOT)/Backends/Renderer/LegacyGL/* \
                           $(DYNACOE_SRC_ROOT)/Backends/Renderer/ShaderGL/* \
+			  $(DYNACOE_SRC_ROOT)/Backends/Renderer/RendererES/* \
                           $(DYNACOE_SRC_ROOT)/Backends/Renderer/SoftRender/* \
                           $(DYNACOE_SRC_ROOT)/Backends/AudioManager/* \
                           $(DYNACOE_SRC_ROOT)/Backends/AudioManager/RtAudio/* \

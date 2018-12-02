@@ -88,7 +88,7 @@ void Settings::AddReadOnly(const std::string & name, GetCallback getter, const s
 }
 
 
-void Settings::Set(const std::string & name, const std::string & value) {
+void Settings::Set(const std::string & name, const Chain & value) {
     auto iter = X->settings.find(name);
     if (iter == X->settings.end()) return;
 
@@ -97,7 +97,7 @@ void Settings::Set(const std::string & name, const std::string & value) {
     val.setter(name, value);
 }
 
-std::string Settings::Get(const std::string & name) const {
+Chain Settings::Get(const std::string & name) const {
     auto iter = X->settings.find(name);
     if (iter == X->settings.end()) return "";
 
