@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <GLES2/gl2.h>
 #include <Dynacoe/Backends/Renderer/Renderer.h>
-#include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer.h>
+#include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer_ES.h>
 
 namespace Dynacoe {
 class Texture_ESImplementation;
@@ -76,18 +76,21 @@ class Texture_ES {
 
 
     // converts local texture coordinates to global texture coordinates.
-    float MapTexCoordsToRealCoordsX(float texX, int tex);
-    float MapTexCoordsToRealCoordsY(float texY, int tex);
+    void TranslateCoords(float * texX, float * texY, int tex) const;
 
-    // The active texture slot in opengl ES that the atlas should occupy. THis does not change.
-    static int GetActiveTextureSlot();
 
-    // Gets the texture id of the texture atlas
-    GLuint GetAtlasTextureID();
+    // Gets all occipied active texture slots and IDs utilized
+    // by this texture manager by populating given arrays. This is guaranteed to be no 
+    // more than 128. These slots can be used to directly 
+    // populate a glUniform vector.
+    int GetActiveTextureSlots(int * slots, int * ids);
 
-    // Gets the dimensions of the atlas
-    int GetAtlasTextureW();
-    int GetAtlasTextureH();
+    // Gets the slot index for the texture given. This slot should be used 
+    // in GLSL to get the correct sampler.
+    int GetSlotForTexture(int texture);
+
+
+
 
     // Gets the raw data of the given texture. It assumes that data can 
     // support w*h*4 bytes for that texture
@@ -97,20 +100,15 @@ class Texture_ES {
     int GetLastNewID();
     
 
-    // Fills a set of render buffers based on given texture pairs.
-    // THe texture pairs follow from the pair speicified in StaticState.
-    // The 2 buffers:
-    //
-    // 1) textureCoords
-    //
-    // This buffer holds the atlas texture coordinates for each converted 
-    // texture pair. These are normalized UVs in this order:
-    // x0, y0, x1, y1
-    void ComputeTextureBindingData(
-        const std::vector<std::pair<int, int>> & textures, 
-        RenderBuffer * textureCoords, 
-        RenderBuffer * enableList
-    );
+
+    using OnRebaseTextures = void (*)(void* data);
+
+    // Adds a callback to called when global coordinates for 
+    // local texture changes and need an update. This is usually 
+    // relevant for when adding a texutre causes the size of the atlas to change 
+    // or the layout to get rearranged for garbage collection
+    void AddRebaseCallback(OnRebaseTextures, void * data);
+    void RemoveRebaseCallback(OnRebaseTextures, void * data);
 
   private:  
   

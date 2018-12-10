@@ -179,6 +179,8 @@ class OpenGLFBDisplay : public Dynacoe::Display {
             EGLSurface glSurface;
             EGLDisplay glDisplay;
             EGLConfig  glConfig;
+
+            int VBO_positionLoc;
         #else 
             GLXContext              glc;
         #endif

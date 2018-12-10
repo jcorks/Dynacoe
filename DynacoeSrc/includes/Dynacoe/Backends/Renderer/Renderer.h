@@ -216,15 +216,20 @@ class Renderer : public Backend {
     // approach is less favorable as that would lead to more frequent draws.
     // Render2DVertices, using user-maintained global vertices, is a more 
     // performant option for drawing specifically 2D vertices.
+
+
     virtual void Queue2DVertices(
         const uint32_t * indices,
         uint32_t count
     ) = 0;
     
+    // Adds a new 2D object and returns its ID.
     virtual uint32_t Add2DObject() = 0;
     
+    // Removes a 2D object of the given ID
     virtual void Remove2DObject(uint32_t) = 0;
     
+    // Adds a new vertex 
     virtual uint32_t Add2DVertex() = 0;
     
     virtual void Remove2DVertex(uint32_t object) = 0;

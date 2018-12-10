@@ -36,8 +36,11 @@ DEALINGS IN THE SOFTWARE.
 
 #if (defined DC_BACKENDS_GLES_X11)
 
-#define GL_UNIFORM_BUFFER 1
+#include <GLES2/gl2.h>
 
+
+
+#define GL_UNIFORM_BUFFER 1
 namespace Dynacoe {
 class RenderBuffer {
   public:

@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #if (defined DC_BACKENDS_GLES_X11)
 
 #include <GLES2/gl2.h>
-#include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer.h>
+#include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer_ES.h>
 #include <cstring>
 #include <iostream>
 #include <Dynacoe/Util/Chain.h>
@@ -73,7 +73,7 @@ void RenderBuffer::Define(const float * dataSrc, int numElts) {
     size = numElts * sizeof(float);
     if (type == GL_ARRAY_BUFFER) {
         glBindBuffer(type, glID);
-        glBufferData(type, sizeof(float)*numElts, dataSrc, GL_STATIC_DRAW);
+        glBufferData(type, sizeof(float)*numElts, dataSrc, GL_DYNAMIC_DRAW);
         glBindBuffer(type, 0);
     }    
     
@@ -100,13 +100,17 @@ void RenderBuffer::UpdateData(const float * dataSrc, int offset, int numElts) {
     // Better, but still slow.
     if (type == GL_ARRAY_BUFFER) {
         glBindBuffer(type, glID); 
+        glBufferData(type, size, data, GL_DYNAMIC_DRAW);
 
+        /*
         glBufferSubData(
             type, 
             offset*sizeof(float), 
             numElts*sizeof(float),
             dataSrc
         );
+        */
+
 
         glBindBuffer(type, 0);
     }

@@ -147,22 +147,37 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
 
 #include <cassert>
 void GLRenderTarget_FBO::GetRawData(uint8_t * data) {
-    /*
-    GLint old;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &old);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glBindTexture(GL_TEXTURE_2D, old);
-
-
-    uint32_t * data32 = (uint32_t*)data;
-    for(uint32_t y = 0; y < h/2; ++y) {
-        for(uint32_t x = 0; x < w; ++x) {
-            std::swap(data32[x+y*w], data32[x+w*(h-y-1)]);
+    #ifdef DC_BACKENDS_GLES_X11
+        GLint old;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING,  &old);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        uint32_t * data32 = (uint32_t*)data;
+        for(uint32_t y = 0; y < h/2; ++y) {
+            for(uint32_t x = 0; x < w; ++x) {
+                std::swap(data32[x+y*w], data32[x+w*(h-y-1)]);
+            }
         }
-    }
-    */
-    assert(!"Uh oh, not implemented yet");
+
+        glBindFramebuffer(GL_FRAMEBUFFER, old);
+
+    #else 
+        GLint old;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &old);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glBindTexture(GL_TEXTURE_2D, old);
+
+
+        uint32_t * data32 = (uint32_t*)data;
+        for(uint32_t y = 0; y < h/2; ++y) {
+            for(uint32_t x = 0; x < w; ++x) {
+                std::swap(data32[x+y*w], data32[x+w*(h-y-1)]);
+            }
+        }
+    #endif
+
+
 }
 
 

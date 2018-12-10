@@ -59,7 +59,7 @@ using namespace std;
 static void wrangleGL();
 static int xlibErrHandler(Display *, XErrorEvent *);
 
-
+static X11Display * mainDisplay = NULL;
 
 
 Dynacoe::OpenGLFBDisplay::~OpenGLFBDisplay() {
@@ -286,8 +286,12 @@ bool Dynacoe::OpenGLFBDisplay::realize() {
 bool Dynacoe::OpenGLFBDisplay::spawnWindow(const char * name, int _w, int _h) {
     // setup window
     {
-
-        dpy = XOpenDisplay(NULL);
+        if (mainDisplay) {
+            dpy = mainDisplay;
+        } else {
+            dpy = XOpenDisplay(NULL);
+            mainDisplay = dpy;
+        }
         XSetErrorHandler(xlibErrHandler);
 
         root = DefaultRootWindow(dpy);
@@ -427,19 +431,15 @@ void Dynacoe::OpenGLFBDisplay::drawFrame(int w, int h) {
 
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(11);
-    glEnableVertexAttribArray(12);
+    glVertexAttribPointer(VBO_positionLoc, 4, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)0);
+    glEnableVertexAttribArray(VBO_positionLoc);
 
     glUseProgram(programHandle);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(11);
-    glDisableVertexAttribArray(12);
 
+    glDisableVertexAttribArray(VBO_positionLoc);
+    
 
 
     glUseProgram(0);
@@ -577,8 +577,10 @@ void Dynacoe::OpenGLFBDisplay::setupDisplayProgram() {
         }
 
         // Binding is always applied fo rth next link
-        glBindAttribLocation(programHandle, 11, "inputDataPos");
         glLinkProgram(programHandle);
+
+        VBO_positionLoc = glGetAttribLocation(programHandle, "inputDataPos");
+
 
         glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
         if (success != GL_TRUE) {
@@ -595,10 +597,7 @@ void Dynacoe::OpenGLFBDisplay::setupDisplayProgram() {
         // now set up vbo
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-
         glBufferData(GL_ARRAY_BUFFER, sizeof(float)*6*4, programDefaultVBOdata, GL_DYNAMIC_DRAW);
-        glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)0);
 
 
 

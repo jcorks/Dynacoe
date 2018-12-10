@@ -55,24 +55,24 @@ struct GLES2 : public Dynacoe::Renderer {
     void Queue2DVertices(
         const uint32_t * indices,
         uint32_t count
-    ){}
+    );
     
-    uint32_t Add2DObject(){return 0;}
-    void Remove2DObject(uint32_t){}
-    uint32_t Add2DVertex(){return 0;}
-    void Remove2DVertex(uint32_t object){}
-    void Set2DVertex(uint32_t vertex, Vertex2D){}
-    Vertex2D Get2DVertex(uint32_t vertex){return Vertex2D();}
-    void Set2DObjectParameters(uint32_t object, Render2DObjectParameters){}
-    void Render2DVertices(const Render2DStaticParameters &){}
-    void Clear2DQueue(){}
+    uint32_t Add2DObject();
+    void Remove2DObject(uint32_t);
+    uint32_t Add2DVertex();
+    void Remove2DVertex(uint32_t object);
+    void Set2DVertex(uint32_t vertex, Vertex2D);
+    Vertex2D Get2DVertex(uint32_t vertex);
+    void Set2DObjectParameters(uint32_t object, Render2DObjectParameters);
+    void Render2DVertices(const Render2DStaticParameters &);
+    void Clear2DQueue();
     // 2D
 
     
 
     // static render - TODO
     void RenderStatic(StaticState *){}
-    void ClearRenderedData(){}
+    void ClearRenderedData();
     RenderBufferID GetStaticViewingMatrixID(){return RenderBufferID();}
     RenderBufferID GetStaticProjectionMatrixID(){return RenderBufferID();}
     std::string ProgramGetLanguage(){return "GLSL";}
@@ -82,7 +82,7 @@ struct GLES2 : public Dynacoe::Renderer {
 
 
 
-    // texture - TODO
+    // texture
     int AddTexture(int, int, const uint8_t *);
     void UpdateTexture(int, const uint8_t *);
     void RemoveTexture(int tex);
