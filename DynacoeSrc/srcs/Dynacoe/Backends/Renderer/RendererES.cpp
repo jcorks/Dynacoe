@@ -50,7 +50,12 @@ struct Dynacoe::GLES2Implementation {
     Dynacoe::Texture_ES * texture;   
     Dynacoe::Renderer2D * render2d;
 
-    GLenum polygon;
+
+    Renderer::Polygon curPolygon;
+    Renderer::Dimension curDimension;
+    Renderer::AlphaRule curAlphaRule;
+
+    GLenum drawMode;
     
 
     GLES2Implementation() {
@@ -69,7 +74,7 @@ struct Dynacoe::GLES2Implementation {
         render2d = new Renderer2D(texture);
 
 
-        polygon = GL_TRIANGLES;
+        drawMode = GL_TRIANGLES;
     }
 
 };
@@ -165,7 +170,7 @@ void GLES2::Set2DObjectParameters(uint32_t object, Render2DObjectParameters data
 void GLES2::Render2DVertices(const Render2DStaticParameters & data) {
     if (!ES->target) return;
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
-    ES->render2d->Render2DVertices(ES->polygon, data);
+    ES->render2d->Render2DVertices(ES->drawMode, data);
     (*(GLRenderTarget**)ES->target->GetHandle())->Invalidate();
 
 }
@@ -270,6 +275,71 @@ void GLES2::RemoveBuffer(RenderBufferID id) {
 
 
 
+
+
+
+/////////// drawing engine options
+void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::Dimension d, Renderer::AlphaRule a) {
+
+    
+    switch(p) {
+        case Renderer::Polygon::Triangle: 
+            ES->drawMode = GL_TRIANGLES; ES->curPolygon = p; break;
+        case Renderer::Polygon::Line: 
+            ES->drawMode = GL_LINES;  ES->curPolygon = p; break;
+        default:;
+
+
+    }
+
+
+
+    switch(d) {
+        case Renderer::Dimension::D_2D: glDisable(GL_DEPTH_TEST); ES->curDimension = d; break;
+        case Renderer::Dimension::D_3D: glEnable(GL_DEPTH_TEST); ES->curDimension = d; break;
+        default:;
+    }
+
+    switch(a) {
+        case Renderer::AlphaRule::Allow:
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            ES->curAlphaRule = a;
+            break;
+
+        case Renderer::AlphaRule::PassThrough:
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ZERO);
+            ES->curAlphaRule = a;
+            break;
+
+        case Renderer::AlphaRule::Opaque:
+            glDisable(GL_BLEND);
+            ES->curAlphaRule = a;
+            break;
+
+
+        case Renderer::AlphaRule::Translucent:
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            ES->curAlphaRule = a;
+            break;
+
+
+
+        default:;
+
+    }
+}
+
+
+void GLES2::GetDrawingMode(Polygon * p, Dimension * d, AlphaRule * a) {
+    *p = ES->curPolygon;
+    *d = ES->curDimension;
+    *a = ES->curAlphaRule;
+}
+
+////////////// drawing engine options
 
 
 #endif

@@ -96,6 +96,8 @@ static void PRINT_BYTE_BLOCK(const uint8_t * src, int xT, int yT, int w, int h, 
         
 }
 
+
+
 class TextureAtlas  {
   public:
     TextureAtlas() {
@@ -272,6 +274,18 @@ class TextureAtlas  {
 };
 
 
+
+void PRINT_BYTE_BLOCK_UVS(TextureAtlas * atlas, float xm, float ym, float x2m, float y2m) {
+    PRINT_BYTE_BLOCK(
+        atlas->GetRawData(),
+        xm*atlas->Width(),
+        ym*atlas->Height(),
+        (x2m-xm)*atlas->Width(),
+        (y2m-ym)*atlas->Height(),
+        atlas->Width()
+    );
+    
+}
 
 
 

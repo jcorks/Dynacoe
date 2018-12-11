@@ -466,14 +466,16 @@ Renderer::Vertex2D Renderer2D::Get2DVertex(uint32_t vertex) {
 
 
 void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
-    if (data->queuedAllocated <= count) {
+    if (data->queuedAllocated <= data->queuedSize+count) {
+        uint32_t newSize = data->queuedSize+count;
+        uint32_t * newData = (uint32_t*)malloc(newSize*sizeof(uint32_t));
+        memcpy(newData, data->queued, count*sizeof(uint32_t));
         free(data->queued);
-        data->queued = (uint32_t*)malloc(count*sizeof(uint32_t));
-        data->queuedAllocated = count;
+        data->queuedAllocated = newSize;
+        data->queued = newData;
     }
-
-    data->queuedSize = count;
-    memcpy(data->queued, indices, count*sizeof(uint32_t));
+    memcpy(data->queued+data->queuedSize, indices, count*sizeof(uint32_t));
+    data->queuedSize += count;
 }
 
 static int ACTIVE_SLOTS[128];
@@ -556,9 +558,10 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
         GL_UNSIGNED_INT,
         data->queued
     );
-    
 
     
+
+    printf("RENDER%d\n", data->queuedSize);
  
 
     
