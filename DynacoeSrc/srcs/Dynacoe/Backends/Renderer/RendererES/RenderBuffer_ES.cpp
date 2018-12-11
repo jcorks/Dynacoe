@@ -50,14 +50,12 @@ RenderBuffer::RenderBuffer() {
     glGenBuffers(1, &glID); 
     size = 0;
     
-    type = GL_ARRAY_BUFFER;
     data = nullptr;
     //cout << "[RenderBuffer]: Instantiating buffer" << endl;
 }
 
 RenderBuffer::~RenderBuffer() {
-    if (type == GL_ARRAY_BUFFER) 
-        glDeleteBuffers(1, &glID);
+    glDeleteBuffers(1, &glID);
     //cout << "[RenderBuffer]: Deleting buffer" << endl;
     if (data) delete[] data;
 }
@@ -71,11 +69,9 @@ int RenderBuffer::Size() {
 void RenderBuffer::Define(const float * dataSrc, int numElts) {
     assert(glGetError() == GL_NO_ERROR);
     size = numElts * sizeof(float);
-    if (type == GL_ARRAY_BUFFER) {
-        glBindBuffer(type, glID);
-        glBufferData(type, sizeof(float)*numElts, dataSrc, GL_DYNAMIC_DRAW);
-        glBindBuffer(type, 0);
-    }    
+    glBindBuffer(GL_ARRAY_BUFFER, glID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*numElts, dataSrc, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
 
     assert(glGetError() == GL_NO_ERROR);
@@ -98,22 +94,20 @@ void RenderBuffer::UpdateData(const float * dataSrc, int offset, int numElts) {
   
 
     // Better, but still slow.
-    if (type == GL_ARRAY_BUFFER) {
-        glBindBuffer(type, glID); 
-        glBufferData(type, size, data, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, glID); 
+    //glBufferData(type, size, data, GL_DYNAMIC_DRAW);
 
-        /*
-        glBufferSubData(
-            type, 
-            offset*sizeof(float), 
-            numElts*sizeof(float),
-            dataSrc
-        );
-        */
+    
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 
+        offset*sizeof(float), 
+        numElts*sizeof(float),
+        dataSrc
+    );
+    
 
 
-        glBindBuffer(type, 0);
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     
 
     assert(glGetError() == GL_NO_ERROR);
@@ -130,16 +124,7 @@ float * RenderBuffer::GetData() {
 }
 
 void RenderBuffer::SetType(GLenum e) {
-    if (e != type) {
-        type = e;
-        if (e == GL_ARRAY_BUFFER) {
-            glGenBuffers(1, &glID);
-            Define(data, size); 
-        } else if (e == GL_UNIFORM_BUFFER) {
-            glDeleteBuffers(1, &glID);
-            glID = 0;
-        }
-    }
+
 }
 
 GLuint RenderBuffer::GenerateBufferID() {

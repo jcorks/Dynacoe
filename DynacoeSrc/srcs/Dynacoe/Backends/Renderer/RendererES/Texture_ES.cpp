@@ -259,7 +259,17 @@ class TextureAtlas  {
     GLint Height()const {return h;}
     GLint MaxLength(){return maxLength;}
 
-    GLuint ID() {return glID;}
+    GLuint ID() {
+        /*
+        int tex;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &tex);
+        glBindTexture(GL_TEXTURE_2D, glID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, realData);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        */
+        return glID;
+
+    }
 
 
 

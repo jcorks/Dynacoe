@@ -93,7 +93,8 @@ void Spatial::ReplaceTransform(Transform * t) {
 
 void Spatial::SetAsParent(Spatial * newParent) {
     if (parent) {
-        for(uint32_t i = 0; i < parent->children.size(); ++i) {
+        int64_t ct = parent->children.size();
+        for(uint64_t i = 0; i < ct; ++i) {
             if (parent->children[i] == this) {
                 parent->children.erase(parent->children.begin() + i);
                 break;
@@ -113,9 +114,6 @@ void Spatial::SetAsParent(Spatial * newParent) {
     //look for parent 
     Spatial * p = parent->parent;
     while(p) {
-        for(uint32_t i = 0; i < p->children.size(); ++i) {
-            assert(p->children[i] != this);
-        }
         p = p->parent;
     }
 }
@@ -145,7 +143,8 @@ void Spatial::SendUpdateSignal() {
         current = stack.top();
         stack.pop();
         current->needsUpdate = true;
-        for(uint32_t i = 0; i < current->children.size(); ++i) {
+        uint32_t ct = current->children.size();
+        for(uint32_t i = 0; i < ct; ++i) {
             stack.push(current->children[i]);
         }    
     }

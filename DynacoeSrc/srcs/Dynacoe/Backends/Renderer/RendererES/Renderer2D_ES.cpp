@@ -113,7 +113,6 @@ static const char * vertShader_2D =
 "   gl_Position.w = 1.0;\n"
 
 "   fragColor     = color;\n"
-"   fragColor.r  += objectC.w*.0000001;\n"
 "   fragTexCoord3 = uvs;\n"
 
 

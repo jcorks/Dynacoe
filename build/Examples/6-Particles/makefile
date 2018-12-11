@@ -21,7 +21,7 @@ LIBS =
 #--------------------
 
 
-CC = g++ -fsanitize=address -fsanitize=undefined
+CC = g++
 LD = -std=c++11
 
 
