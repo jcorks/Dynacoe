@@ -434,6 +434,8 @@ void Renderer2D::Set2DVertex(uint32_t vertex, Renderer::Vertex2D params) {
             vData.uvs+1,
             refVertex->localTexture
         );
+    } else {
+        vData.uvs[2] = (float)-1;
     }
 
     memcpy(vData.objectP, ref.params.data, sizeof(float)*16);
@@ -455,9 +457,9 @@ Renderer::Vertex2D Renderer2D::Get2DVertex(uint32_t vertex) {
     params.g = vData.color[1];
     params.b = vData.color[2];
     params.a = vData.color[3];
-    params.texX = vData.uvs[0];
-    params.texY = vData.uvs[1];
-    params.useTex = vData.uvs[2];
+    params.texX = refVertex->localUVx;
+    params.texY = refVertex->localUVy;
+    params.useTex = (float)refVertex->localTexture;
     params.object = (float)refVertex->object;
     return params;
 }
@@ -465,13 +467,15 @@ Renderer::Vertex2D Renderer2D::Get2DVertex(uint32_t vertex) {
 
 
 void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
-    if (data->queuedAllocated <= data->queuedSize+count) {
-        uint32_t newSize = data->queuedSize+count;
+    while (data->queuedAllocated <= data->queuedSize+count) {
+        uint32_t newSize = data->queuedSize*1.4;
         uint32_t * newData = (uint32_t*)malloc(newSize*sizeof(uint32_t));
-        memcpy(newData, data->queued, count*sizeof(uint32_t));
+        printf("Resized from %d to %d\n", data->queuedAllocated, newSize);
+        memcpy(newData, data->queued, data->queuedAllocated*sizeof(uint32_t));
         free(data->queued);
         data->queuedAllocated = newSize;
         data->queued = newData;
+
     }
     memcpy(data->queued+data->queuedSize, indices, count*sizeof(uint32_t));
     data->queuedSize += count;
@@ -558,9 +562,10 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
         data->queued
     );
 
+
+
     
 
-    printf("RENDER%d\n", data->queuedSize);
  
 
     
