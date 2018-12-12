@@ -51,7 +51,7 @@ struct GLES2 : public Dynacoe::Renderer {
 
 
 
-    // 2D - TODO
+    // 2D
     void Queue2DVertices(
         const uint32_t * indices,
         uint32_t count
@@ -70,14 +70,13 @@ struct GLES2 : public Dynacoe::Renderer {
 
     
 
-    // static render - TODO
-    void RenderStatic(StaticState *){}
-    void ClearRenderedData();
-    RenderBufferID GetStaticViewingMatrixID(){return RenderBufferID();}
-    RenderBufferID GetStaticProjectionMatrixID(){return RenderBufferID();}
-    std::string ProgramGetLanguage(){return "GLSL";}
-    ProgramID ProgramGetBuiltIn(BuiltInShaderMode){return ProgramID();}
-    ProgramID ProgramAdd(const std::string&, const std::string &, std::string &) {return ProgramID();}
+    // static render
+    void RenderStatic(StaticState *);
+    RenderBufferID GetStaticViewingMatrixID();
+    RenderBufferID GetStaticProjectionMatrixID();
+    std::string ProgramGetLanguage(){return "GLSL ES 1.0";}
+    ProgramID ProgramGetBuiltIn(BuiltInShaderMode);
+    ProgramID ProgramAdd(const std::string&, const std::string &, std::string &);
     // static render
 
 
@@ -119,7 +118,7 @@ struct GLES2 : public Dynacoe::Renderer {
     void GetDrawingMode(Polygon *, Dimension *, AlphaRule *);
     // drawing engine options
 
-    
+    void ClearRenderedData();
     bool IsSupported(Capability){return true;}
     void AttachTarget(Dynacoe::Framebuffer *);
     Dynacoe::Framebuffer * GetTarget();

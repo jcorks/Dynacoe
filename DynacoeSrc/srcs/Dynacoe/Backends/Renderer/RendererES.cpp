@@ -37,6 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/Renderer/RendererES/Texture_ES.h>
 #include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer_ES.h>
 #include <Dynacoe/Backends/Renderer/RendererES/Renderer2D_ES.h>
+#include <Dynacoe/Backends/Renderer/RendererES/StaticRenderer.h>
+
 #include <Dynacoe/Util/Table.h>
 #include <Dynacoe/Backends/Framebuffer/Framebuffer.h>
 #include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget.h>
@@ -49,7 +51,7 @@ struct Dynacoe::GLES2Implementation {
     Dynacoe::Framebuffer * target;
     Dynacoe::Texture_ES * texture;   
     Dynacoe::Renderer2D * render2d;
-
+    Dynacoe::StaticRenderer * renderStatic;
 
     Renderer::Polygon curPolygon;
     Renderer::Dimension curDimension;
@@ -72,6 +74,7 @@ struct Dynacoe::GLES2Implementation {
         target = nullptr;
         texture = new Texture_ES();
         render2d = new Renderer2D(texture);
+        renderStatic = new StaticRenderer(texture);
 
 
         drawMode = GL_TRIANGLES;
@@ -115,6 +118,40 @@ void GLES2::ClearRenderedData() {
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
+
+
+
+
+
+
+
+
+///////////////////// static render
+void GLES2::RenderStatic(StaticState * st) {
+    ES->renderStatic->Render(st);
+}
+RenderBufferID GLES2::GetStaticViewingMatrixID() {
+    return ES->renderStatic->GetViewingMatrixID();
+}
+
+RenderBufferID GLES2::GetStaticProjectionMatrixID() {
+    return ES->renderStatic->GetProjectionMatrixID();
+}
+
+
+ProgramID GLES2::ProgramGetBuiltIn(BuiltInShaderMode s) {
+    return ES->renderStatic->ProgramGetBuiltIn(s);
+}
+
+ProgramID GLES2::ProgramAdd(const std::string & v, const std::string & f, std::string & log) {
+    return ES->renderStatic->ProgramAdd(v, f, log);
+}
+
+///////////////////// static render
+
+
+
+
 
 
 
