@@ -67,7 +67,8 @@ enum StaticProgramLocations {
 
 // Every incoming shader has this inserted at the beginning of the shader
 static const char * DynacoeProgramHeader =
-"#define Dynacoe_MaterialShininess Dynacoe_MaterialShininess_SRC.x\n"
+"#define Dynacoe_MaterialShininess _impl_Dynacoe_MaterialAmbient.w\n"
+"#define Dynacoe_MaterialAmbient   _impl_Dynacoe_MaterialAmbient.xyz\n"
 "#define Dynacoe_Position (vec3(_impl_Dynacoe_Input[0].x, _impl_Dynacoe_Input[0].y, _impl_Dynacoe_Input[0].z))\n"
 "#define Dynacoe_Normal   (vec3(_impl_Dynacoe_Input[0].w, _impl_Dynacoe_Input[1].x, _impl_Dynacoe_Input[1].y))\n"
 "#define Dynacoe_UV       (vec2(_impl_Dynacoe_Input[1].z, _impl_Dynacoe_Input[1].w))\n"
@@ -83,10 +84,9 @@ static const char * DynacoeProgramHeader =
 "};\n"
 
 "uniform _binding_DynacoeMaterial {\n"
-"   vec4    Dynacoe_MaterialAmbient;\n"
+"   vec4    _impl_Dynacoe_MaterialAmbient;\n"
 "   vec4    _impl_Dynacoe_MaterialDiffuse;\n" // xyz - pos, w - amount
 "   vec4    _impl_Dynacoe_MaterialSpecular;\n"
-"   vec4    Dynacoe_MaterialShininess_SRC;\n" // needs to be a vec4 for alignment purposes.  
 "   vec4[8] Dynacoe_MaterialData;\n"
 "};\n"
 

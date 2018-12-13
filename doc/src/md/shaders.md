@@ -105,9 +105,9 @@ Sampling
 --------
 
 Dynacoe does not provide any means to connect to `sampler`s. Instead, Dynacoe allows you to sample 
-all the textures you've specified in the meshing interface. Each time you AddTexture() to an AspectMesh,
+all the textures you've specified in the meshing interface. Each time you AddTexture() to an Material,
 a unique index refers to that texture. Starting at 0, each new texture gets the subsequent index
-within the AspectMesh. 
+within the Material. 
 ```{.c}
 
 // Samples the given texture index at the given texture coordinates.
@@ -115,7 +115,7 @@ within the AspectMesh.
 // color is undefined.
 vec4 Dynacoe_SampleColor(in int textureIndex, in vec2 uv);
 
-// Samples shininess information from the given texture.
+// Samples shininess information from the given texture. The shiny componeny is the first
 float Dynacoe_SampleShininess(in int textureIndex, in vec2 uv);
 
 // Returns whether the texture index has a texture binding associated with it.
@@ -128,9 +128,10 @@ vec3 Dynacoe_SampleNormal(in int textureIndex, in vec2 uv);
 ```
 
 Because you specify the index as a generic index, the actual number of reachable textures  
-quite high. The minimum is 64, but if running opengl 3.0 or higher, its 
+quite high. The minimum is 32, but if running opengl 3.0 or higher, its 
 somewhere on the order of 1024 simulateous texture bindings. This makes it possible to 
-render complex scenes in very few draws. 
+render complex scenes in very few draws, or use the texture interface to access 
+and utilize custom data.
 
 Along with regular texture sampling, you can also sample from previously drawn scenes
 via the last drawn visual in the Camera passed to AspectMesh::SetFramebufferSource().

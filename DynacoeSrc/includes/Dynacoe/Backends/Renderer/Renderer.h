@@ -67,8 +67,8 @@ using DynamicTransformID = int;
 
 class Renderer : public Backend {
   public:
-    static const int MINIMUM_LIGHT_COUNT = 128;
-    static const int MINIMUM_TEXTURE_BINDING_COUNT = 64;
+    static const int MINIMUM_LIGHT_COUNT = 32;
+    static const int MINIMUM_TEXTURE_BINDING_COUNT = 32;
 
     // Struct representing a dynamic vertex state.
     // Dynamic vertices do not support lighting.

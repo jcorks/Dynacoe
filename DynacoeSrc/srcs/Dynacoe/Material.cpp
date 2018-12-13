@@ -46,8 +46,6 @@ const float defaultState[] = {
     .5, .5, .5, 1.f,   //< diffuse
     .73, .8, .85, 1.f, //< specular
 
-    1.f, 0, 0, 0, // shininess,
-
     // user data
     0, 0, 0, 0,   0, 0, 0, 0,
     0, 0, 0, 0,   0, 0, 0, 0,
@@ -173,16 +171,16 @@ ProgramID Material::GetProgramID(CoreProgram s) {
 void Material::PopulateState(StaticState * st) {
 
     if (!buffer.Valid()) {
-        buffer = Graphics::GetRenderer()->AddBuffer((float*)defaultState, 48);
+        buffer = Graphics::GetRenderer()->AddBuffer((float*)defaultState, 44);
     }
     if (!(previousState == state)) {
-        float dataState[48];
+        float dataState[44];
 
         // ambient
         dataState[0] = state.ambient.r;
         dataState[1] = state.ambient.g;
         dataState[2] = state.ambient.b;
-        dataState[3] = 1.f;
+        dataState[3] = state.shininess;
 
         dataState[4] = state.diffuse.r;
         dataState[5] = state.diffuse.g;
@@ -194,14 +192,10 @@ void Material::PopulateState(StaticState * st) {
         dataState[10] = state.specular.b;
         dataState[11] = state.specularAmount;
 
-        dataState[12] = state.shininess;
-        dataState[13] = 0.f;
-        dataState[14] = 0.f;
-        dataState[15] = 0.f;
 
-        memcpy(dataState+16, state.userData, sizeof(float)*32);
+        memcpy(dataState+12, state.userData, sizeof(float)*32);
 
-        Graphics::GetRenderer()->UpdateBuffer(buffer, dataState, 0, 48);
+        Graphics::GetRenderer()->UpdateBuffer(buffer, dataState, 0, 44);
         previousState = state;
     }
 
@@ -216,13 +210,13 @@ void Material::PopulateState(StaticState * st) {
 }
 
 std::string Material::Info() {
-    float data[48];
-    Graphics::GetRenderer()->ReadBuffer(buffer, data, 0, 48);
+    float data[44];
+    Graphics::GetRenderer()->ReadBuffer(buffer, data, 0, 44);
     Chain info = Chain()
-     << "Ambient  Color: " << data[0] << " " << data[1] << " " << data[2]  << " amt: " << data[3] << "\n"
+     << "Ambient  Color: " << data[0] << " " << data[1] << " " << data[2] << "\n"
      << "Diffuse  Color: " << data[4] << " " << data[5] << " " << data[6]  << " amt: " << data[7] << "\n"
      << "Specular Color: " << data[8] << " " << data[9] << " " << data[10] << " amt: " << data[11] << "\n"
-     << "Shininess: " << data[12] << "\n";
+     << "Shininess: " << data[3] << "\n";
     if (type == Graphics::GetRenderer() ->ProgramGetBuiltIn(Renderer::BuiltInShaderMode::BasicShader)) {
         info << "Program: Basic (Flat)";
     } else if (type == Graphics::GetRenderer() ->ProgramGetBuiltIn(Renderer::BuiltInShaderMode::LightMaterial)) {

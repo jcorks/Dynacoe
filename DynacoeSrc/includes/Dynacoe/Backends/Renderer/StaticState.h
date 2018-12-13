@@ -55,8 +55,9 @@ struct StaticState {
     // Specifies how to render the vertices
     ProgramID program;
 
-    // material matrix , 48-components containing
+    // material matrix , 44-components containing
     // lighting material and arbitrary data setup.
+    // The layout is as follows:
     RenderBufferID materialData;  
 
     // local transform matrix (scale + rotation), 32-component
