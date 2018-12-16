@@ -36,15 +36,32 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Util/Chain.h>
 #include <Dynacoe/Backends/Renderer/RendererES/StaticRenderer.h>
+#include <Dynacoe/Backends/Renderer/StaticState.h>
+
 #include <GLES2/gl2.h>
 #include <cassert>
 #include "static_es.glsl"
 
 using namespace Dynacoe;
 
+struct MAT4_DEBUG {
+    float f[16];
+};
 
+struct VEC4_DEBUG {
+    float v[4];
+};
 
+struct VTEX_DEBUG {
+    float pos[3];
+    float normal[3];
+    float vecs[2];
+    float userData[4];
+};
 
+static MAT4_DEBUG mat4_reg;
+static VEC4_DEBUG vec4_reg;
+static VTEX_DEBUG vtex_reg;
 
 
 // A discrete program object to interface directly with OpenGLES
@@ -138,6 +155,8 @@ class ProgramES {
             return;
         }
 
+        glUseProgram(handle);
+
         attribLocation_pos      = glGetAttribLocation(handle, "Dynacoe_Position");
         attribLocation_normal   = glGetAttribLocation(handle, "Dynacoe_Normal");
         attribLocation_uvs      = glGetAttribLocation(handle, "Dynacoe_UV");
@@ -153,12 +172,13 @@ class ProgramES {
         
         uniformLocation_MaterialData = glGetUniformLocation(handle, "Dynacoe_MaterialData");
         uniformLocation_ModelTransform = glGetUniformLocation(handle, "Dynacoe_ModelTransform");
+        uniformLocation_ModelNormalTransform = glGetUniformLocation(handle, "Dynacoe_ModelNormalTransform");
 
         uniformLocation_fragTex_slots = glGetUniformLocation(handle, "fragTex_slots");
         uniformLocation_TexInfo_coords = glGetUniformLocation(handle, "_impl_Dynacoe_TexInfo_coords");
         uniformLocation_TexInfo_handle = glGetUniformLocation(handle, "_impl_Dynacoe_TexInfo_handle");
 
-        uniformLocation_LightData1 = glGetUniformLocation(handle, "_impl_Dynacoe_LightData1");
+        uniformLocation_LightData1 = glGetUniformLocation(handle, "_impl_Dynacoe_LightData");
         uniformLocation_LightData2 = glGetUniformLocation(handle, "_impl_Dynacoe_LightData2");
 
 
@@ -170,25 +190,26 @@ class ProgramES {
         if (attribLocation_userData < 0) log << "User data attribute was opmtimized out.\n";
 
 
-        if (uniformLocation_ViewTransform) log << "ViewTransform optimized out.\n";
-        if (uniformLocation_ViewNormalTransform) log << "ViewNormalTransform optimized out.\n";
-        if (uniformLocation_ProjectionTransform) log << "ProjectionTransform optimized out.\n";
-        if (uniformLocation_MaterialAmbient) log << "MaterialAmbient optimized out.\n";
-        if (uniformLocation_MaterialDiffuse) log << "MaterialDiffuse optimized out.\n";
-        if (uniformLocation_MaterialSpecular) log << "MaterialSpecular optimized out.\n";
+        if (uniformLocation_ViewTransform < 0) log << "ViewTransform optimized out.\n";
+        if (uniformLocation_ViewNormalTransform < 0) log << "ViewNormalTransform optimized out.\n";
+        if (uniformLocation_ProjectionTransform < 0) log << "ProjectionTransform optimized out.\n";
+        if (uniformLocation_MaterialAmbient < 0) log << "MaterialAmbient optimized out.\n";
+        if (uniformLocation_MaterialDiffuse < 0) log << "MaterialDiffuse optimized out.\n";
+        if (uniformLocation_MaterialSpecular < 0) log << "MaterialSpecular optimized out.\n";
 
-        if (uniformLocation_MaterialData) log << "MaterialData optimized out.\n";
-        if (uniformLocation_ModelTransform) log << "ModelTransform optimized out.\n";
+        if (uniformLocation_MaterialData < 0) log << "MaterialData optimized out.\n";
+        if (uniformLocation_ModelTransform < 0) log << "ModelTransform optimized out.\n";
+        if (uniformLocation_ModelNormalTransform < 0) log << "ModelNormalTransform optimized out.\n";
 
-        if (uniformLocation_fragTex_slots) log << "Texturing info (FTS) optimized out.\n";
-        if (uniformLocation_TexInfo_coords) log << "Texturing info (TIC) optimized out.\n";
-        if (uniformLocation_TexInfo_handle) log << "Texturing info (TIH) optimized out.\n";
+        if (uniformLocation_fragTex_slots < 0) log << "Texturing info (FTS) optimized out.\n";
+        if (uniformLocation_TexInfo_coords < 0) log << "Texturing info (TIC) optimized out.\n";
+        if (uniformLocation_TexInfo_handle < 0) log << "Texturing info (TIH) optimized out.\n";
 
-        if (uniformLocation_LightData1) log << "Lighting info (LD1) optimized out.\n";
-        if (uniformLocation_LightData2) log << "Lighting info (LD2) optimized out.\n";
+        if (uniformLocation_LightData1 < 0) log << "Lighting info (LD1) optimized out.\n";
+        if (uniformLocation_LightData2 < 0) log << "Lighting info (LD2) optimized out.\n";
 
-        if (uniformLocation_FBtexture) log << "Framebuffer texture slot optimized out.\n";
-        if (uniformLocation_hasFBtexture) log << "Framebuffer texture condition optimized out.\n";
+        if (uniformLocation_FBtexture < 0) log << "Framebuffer texture slot optimized out.\n";
+        if (uniformLocation_hasFBtexture < 0) log << "Framebuffer texture condition optimized out.\n";
 
 
 
@@ -212,7 +233,112 @@ class ProgramES {
 
     
     // prepares the program for use.
-    void UseProgram(StaticState * state) {
+    void Run(const float * viewingMatrix, // 2 matrices: view and viewNormal
+             const float * projectionMatrix,
+             const float * formattedLightData,
+             StaticState * state,
+             Dynacoe::Table<RenderBuffer*> * buffers,
+             Texture_ES * textureState) {
+
+        assert(glGetError() == 0);
+
+        RenderBuffer * vertices     = buffers->Find(state->vertices);
+        RenderBuffer * materialData = buffers->Find(state->materialData);
+        RenderBuffer * modelData    = buffers->Find(state->modelData);
+        float * textures = GenerateTextureData(state, textureState);
+
+
+        if (!vertices || !modelData || !materialData) {
+            return;
+        }
+
+        glUseProgram(handle);
+
+        // force these buffers to only have conventional memory references
+        materialData->SetOffline();
+        modelData   ->SetOffline();
+        
+
+        // vertex state
+        GLuint vbo = vertices->GenerateBufferID();
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        if (attribLocation_pos      >= 0) glVertexAttribPointer(attribLocation_pos,      3, GL_FLOAT, GL_FALSE, sizeof(float)*12, (void*)(0));
+        if (attribLocation_normal   >= 0) glVertexAttribPointer(attribLocation_normal,   3, GL_FLOAT, GL_FALSE, sizeof(float)*12, (void*)(sizeof(float)*3));
+        if (attribLocation_uvs      >= 0) glVertexAttribPointer(attribLocation_uvs,      2, GL_FLOAT, GL_FALSE, sizeof(float)*12, (void*)(sizeof(float)*6));
+        if (attribLocation_userData >= 0) glVertexAttribPointer(attribLocation_userData, 4, GL_FLOAT, GL_FALSE, sizeof(float)*12, (void*)(sizeof(float)*8));
+
+        
+        // bind uniforms
+
+        // global view matrices
+        if (uniformLocation_ViewTransform >= 0)       glUniformMatrix4fv(uniformLocation_ViewTransform,       1, false, viewingMatrix);
+        if (uniformLocation_ViewNormalTransform >= 0) glUniformMatrix4fv(uniformLocation_ViewNormalTransform, 1, false, viewingMatrix+16);
+        if (uniformLocation_ProjectionTransform >= 0) glUniformMatrix4fv(uniformLocation_ProjectionTransform, 1, false, projectionMatrix);
+
+
+
+        // material       
+        if (uniformLocation_MaterialAmbient >= 0)  glUniform4fv(uniformLocation_MaterialAmbient,  1, materialData->GetData());
+        if (uniformLocation_MaterialDiffuse >= 0)  glUniform4fv(uniformLocation_MaterialDiffuse,  1, materialData->GetData()+4);
+        if (uniformLocation_MaterialSpecular >= 0) glUniform4fv(uniformLocation_MaterialSpecular, 1, materialData->GetData()+8);
+        if (uniformLocation_MaterialData >= 0)     glUniform4fv(uniformLocation_MaterialData,     8, materialData->GetData()+12);
+
+        
+        // model transform
+        if (uniformLocation_ModelTransform >= 0)       glUniformMatrix4fv(uniformLocation_ModelTransform,       1, false, modelData->GetData()+0);
+        if (uniformLocation_ModelNormalTransform >= 0) glUniformMatrix4fv(uniformLocation_ModelNormalTransform, 1, false, modelData->GetData()+16);
+
+
+        // texture 
+        static int ACTIVE_SLOTS[128];
+        static int ACTIVE_IDS  [128];
+        int slots = textureState->GetActiveTextureSlots(ACTIVE_SLOTS, ACTIVE_IDS);
+        for(uint32_t i = 0; i < slots; ++i) {
+            glActiveTexture(ACTIVE_SLOTS[i]);
+            glBindTexture(GL_TEXTURE_2D, ACTIVE_IDS[i]);
+            ACTIVE_SLOTS[i] -= GL_TEXTURE0;
+        }
+        glUniform1iv(uniformLocation_fragTex_slots, slots, ACTIVE_SLOTS);
+        
+
+        // active texture slot lookup data
+        if (uniformLocation_TexInfo_coords >= 0) glUniform4fv(uniformLocation_TexInfo_coords, 32, textures);
+        if (uniformLocation_TexInfo_handle >= 0) glUniform1fv(uniformLocation_TexInfo_handle, 32, textures+32*4);
+                        
+
+        // active light data
+        if (uniformLocation_LightData1 >= 0) glUniform4fv(uniformLocation_LightData1, 32, formattedLightData);
+        if (uniformLocation_LightData2 >= 0) glUniform4fv(uniformLocation_LightData2, 32, formattedLightData+32*4);
+    
+
+
+
+
+
+
+
+
+
+        if (attribLocation_pos      >= 0) glEnableVertexAttribArray(attribLocation_pos);
+        if (attribLocation_uvs      >= 0) glEnableVertexAttribArray(attribLocation_uvs);      
+        if (attribLocation_normal   >= 0) glEnableVertexAttribArray(attribLocation_normal);
+        if (attribLocation_userData >= 0) glEnableVertexAttribArray(attribLocation_userData);
+
+
+        glDrawElements(
+            GL_TRIANGLES, 
+            state->indices->size(), 
+            GL_UNSIGNED_INT, 
+            &((*state->indices)[0])
+        );
+
+        if (attribLocation_pos      >= 0) glDisableVertexAttribArray(attribLocation_pos);
+        if (attribLocation_uvs      >= 0) glDisableVertexAttribArray(attribLocation_uvs);      
+        if (attribLocation_normal   >= 0) glDisableVertexAttribArray(attribLocation_normal);
+        if (attribLocation_userData >= 0) glDisableVertexAttribArray(attribLocation_userData);
+        assert(glGetError() == 0);
+
             
     }
   private:
@@ -254,6 +380,48 @@ class ProgramES {
     GLint uniformLocation_FBtexture; // sampler2D
     GLint uniformLocation_hasFBtexture; // float
 
+
+    float * GenerateTextureData(StaticState * state, Texture_ES * textureState) {
+        static float rawData[32*4 + 32];
+        
+        // clear out old data.
+        float * iterClear = &rawData[32*4];
+        for(int i = 0; i < 32; ++i) {
+            iterClear[i] = -1.f;
+        }
+
+
+        // for each texture, replace the data with that slot. 
+        // the texture coordinates follow the layout specified in the static_es.glsl shader base.
+        uint32_t num = state->textures->size();
+        float * iterCoords;
+        float * iterHandles;        
+        for(uint32_t i = 0; i < num; ++i) {
+            auto slot = (*state->textures)[0];
+            iterCoords = &rawData[slot.first*4];
+            iterHandles = &rawData[32*4 + slot.first];
+
+            iterCoords[0] = 0.f; 
+            iterCoords[1] = 0.f;
+            iterCoords[2] = 1.f;
+            iterCoords[3] = 1.f;
+
+            textureState->TranslateCoords(iterCoords+0, iterCoords+1, slot.second);
+            textureState->TranslateCoords(iterCoords+2, iterCoords+3, slot.second);
+           
+            // itercoords 2 and 3 need to be the "width" of the texture in atlas UVs
+            iterCoords[2] -= iterCoords[0];
+            iterCoords[3] -= iterCoords[1];
+
+
+            *iterHandles = (float) textureState->GetSlotForTexture(slot.second);
+    
+
+        }
+
+        return &rawData[0];
+    }
+
     
 };
 
@@ -273,8 +441,11 @@ class ProgramES {
 
 class Dynacoe::StaticRenderer_Data {
   public:
-    StaticRenderer_Data(Texture_ES * es) {
+    StaticRenderer_Data(Texture_ES * es, Dynacoe::Table<RenderBuffer*> * buffers_, Light_ES * lighting_) {
         texture = es;
+        buffers = buffers_;
+        lighting = lighting_;
+        lightingBuffer = new float[32*4*2];
 
 
         // flat shading!
@@ -282,14 +453,12 @@ class Dynacoe::StaticRenderer_Data {
 
             ////// VERTEX SHADER //////
             "varying highp   vec2 UV;\n"
-            "varying mediump vec3 normals;\n"
 
 
 
             "void main(void) {\n"
             "   gl_Position = Dynacoe_ProjectionTransform * (Dynacoe_ViewTransform  * (Dynacoe_ModelTransform * vec4(Dynacoe_Position, 1.0)));\n"
             "   UV = Dynacoe_UV;\n"
-            "   normals = Dynacoe_Normal;\n"
             "}\n",
 
 
@@ -297,18 +466,17 @@ class Dynacoe::StaticRenderer_Data {
             ////// FRAGMENT SHADER //////
 
             "varying highp   vec2 UV;\n"
-            "varying mediump vec3 normals;\n"
 
 
             "void main(void) {\n"
-            "   lowp vec4 color;\n"
+            "   lowp vec4 color= vec4(1, 1, 1, 1);\n"
             "   if (Dynacoe_SlotHasTexture(0))\n"
             "       color = Dynacoe_SampleColor(0, UV);\n"
             "   else\n"
             "       color = vec4(Dynacoe_MaterialDiffuse, 1.0);\n"
             "   if (Dynacoe_CanSampleFramebuffer())\n"
-            "       color = .5*color+.5*Dynacoe_SampleFramebuffer(UV);\n"
-            "   gl_FragColor = color;\n"
+            "       color = color*Dynacoe_SampleFramebuffer(UV);\n"
+            "   gl_FragColor = color; \n"
             "}\n"
 
         ); 
@@ -385,16 +553,33 @@ class Dynacoe::StaticRenderer_Data {
         builtIn_lighting = programs.Insert(builtIn_light_ref);
         printf("%s\n", builtIn_light_ref->GetLog().c_str());
 
+        viewingMatrix = new RenderBuffer();
+        viewingMatrix->SetOffline();
+        viewingMatrix->Define(nullptr, 32);
+        viewingMatrixID = buffers->Insert(viewingMatrix);
 
 
+        projectionMatrix = new RenderBuffer();
+        projectionMatrix->SetOffline();
+        projectionMatrix->Define(nullptr, 16);
+        projectionMatrixID = buffers->Insert(projectionMatrix);
+        
     }
 
     Dynacoe::LookupID builtIn_flat;
     Dynacoe::LookupID builtIn_lighting;
     Dynacoe::Table<ProgramES*> programs;
-
-  private:  
+    Dynacoe::Table<RenderBuffer*> * buffers;
     Texture_ES * texture;   
+    Light_ES * lighting;
+
+
+    RenderBuffer * viewingMatrix;
+    RenderBuffer * projectionMatrix;
+    RenderBufferID viewingMatrixID;
+    RenderBufferID projectionMatrixID;
+    float * lightingBuffer;
+
 
 
 };
@@ -406,8 +591,8 @@ class Dynacoe::StaticRenderer_Data {
 
 
 
-StaticRenderer::StaticRenderer(Texture_ES * t) {
-    ES = new StaticRenderer_Data(t);
+StaticRenderer::StaticRenderer(Texture_ES * t, Dynacoe::Table<RenderBuffer*> * buffers, Light_ES * light) {
+    ES = new StaticRenderer_Data(t, buffers, light);
 }
 
 
@@ -429,17 +614,27 @@ ProgramID StaticRenderer::ProgramAdd(
 
 
 void StaticRenderer::Render(StaticState * st) {
-
+    if (!ES->programs.Query(st->program)) return;
+    ProgramES * program = ES->programs.Find(st->program);
+    ES->lighting->SyncLightBuffer(ES->lightingBuffer);
+    program->Run(
+        ES->viewingMatrix->GetData(),
+        ES->projectionMatrix->GetData(),
+        ES->lightingBuffer, // TODO: lighting,
+        st,
+        ES->buffers,
+        ES->texture
+    );
 }
 
 
 RenderBufferID StaticRenderer::GetViewingMatrixID() {
-    return RenderBufferID();
+    return ES->viewingMatrixID;
 }
 
 
 RenderBufferID StaticRenderer::GetProjectionMatrixID() {
-    return RenderBufferID();
+    return ES->projectionMatrixID;
 }
 
 ProgramID StaticRenderer::ProgramGetBuiltIn(Renderer::BuiltInShaderMode mode) {

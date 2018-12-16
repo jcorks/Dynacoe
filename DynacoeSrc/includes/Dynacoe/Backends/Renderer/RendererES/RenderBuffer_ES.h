@@ -74,10 +74,11 @@ class RenderBuffer {
     // ReclaimIDs() is valled
     GLuint GenerateBufferID() ;
 
-    // Invalidates all IDs given from GenerateBufferID() calls.
-    // this is not guaranteed to free any client/server memory
-    // but most of the time will.
-    virtual void ReclaimIDs() ;
+    // Once called, the buffer will only refer to a memory location 
+    // on conventional memory and will no longer track a GPU-side copy.
+    // This is for features that use RenderBuffers, but cannot readily 
+    // use its data for rendering operations.
+    void SetOffline();
   private:
     GLuint glID;
     int size;

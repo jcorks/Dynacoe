@@ -32,51 +32,36 @@ DEALINGS IN THE SOFTWARE.
 
 #if (DC_BACKENDS_GLES_X11)
 
-#ifndef H_DC_BACKENDS_STATICRENDERER
-#define H_DC_BACKENDS_STATICRENDERER
+#ifndef H_DC_BACKENDS_LIGHTDATA
+#define H_DC_BACKENDS_LIGHTDATA
 
 #include <GLES2/gl2.h>
 #include <Dynacoe/Backends/Renderer/Renderer.h>
-#include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer_ES.h>
-#include <Dynacoe/Backends/Renderer/RendererES/Texture_ES.h>
-#include <Dynacoe/Backends/Renderer/RendererES/Light_ES.h>
 
 namespace Dynacoe {
-class StaticRenderer_Data;
-class StaticRenderer {
+class Light_ESData;
+class Light_ES {
   public:
-    StaticRenderer(Texture_ES *, Dynacoe::Table<RenderBuffer*> *, Light_ES *);
+    Light_ES();
+    ~Light_ES();
 
-    // adds a new usable graphics program.
-    ProgramID ProgramAdd(
-        const std::string & vert, 
-        const std::string & frag, 
-        std::string & log
-    );
+    LightID AddLight(Renderer::LightType);
 
+    void UpdateLightAttributes(LightID, float *);
 
-    // Renders the given static state.
-    // The static state represents a dynamic set of attributes that should 
-    // define the drawing action in and of itself.
-    void Render(StaticState *);
+    void EnableLight(LightID, bool doIt);
 
-    // Returns the view matrix used for static rendering operations
-    RenderBufferID GetViewingMatrixID();
+    void RemoveLight(LightID);
 
-    // Returns the projection matrix used for static rendering.
-    RenderBufferID GetProjectionMatrixID();
+    int MaxEnabledLights();
+
+    int NumLights();
 
 
-    // Gets the built-in program asked for. These are typically basic
-    ProgramID ProgramGetBuiltIn(Renderer::BuiltInShaderMode);
-
-    
-
+    void SyncLightBuffer(float * formattedDataBuffer);
 
   private:
-    StaticRenderer_Data * ES;
-
-
+    Light_ESData * ES;
 };
 }
 

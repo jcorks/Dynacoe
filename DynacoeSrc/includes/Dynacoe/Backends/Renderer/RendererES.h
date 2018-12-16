@@ -103,13 +103,13 @@ struct GLES2 : public Dynacoe::Renderer {
     // render buffer    
 
 
-    // lighting - TODO
-    LightID AddLight(LightType) {return LightID();}
-    void UpdateLightAttributes(LightID, float *) {}
-    void EnableLight(LightID, bool doIt){}
-    void RemoveLight(LightID){}
-    int MaxEnabledLights(){return 0;}
-    int NumLights(){return 0;}
+    // lighting
+    LightID AddLight(LightType);
+    void UpdateLightAttributes(LightID, float *);
+    void EnableLight(LightID, bool doIt);
+    void RemoveLight(LightID);
+    int MaxEnabledLights();
+    int NumLights();
     // lighting
 
 

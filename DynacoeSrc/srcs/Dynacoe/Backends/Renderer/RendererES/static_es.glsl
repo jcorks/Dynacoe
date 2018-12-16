@@ -63,8 +63,8 @@ uniform sampler2D fragTex_slots[32];
         
 
 */
-uniform highp vec4 _impl_Dynacoe_TexInfo_coords[32];
-uniform highp vec4 _impl_Dynacoe_TexInfo_handle[32];
+uniform highp vec4  _impl_Dynacoe_TexInfo_coords[32];
+uniform highp float _impl_Dynacoe_TexInfo_handle[32];
 
 // vec ct: 127/256
 
@@ -81,7 +81,7 @@ uniform highp vec4 _impl_Dynacoe_TexInfo_handle[32];
     float lightIntensity-   light strength multiplier.
 
 */
-highp vec4 _impl_Dynacoe_LightData[32]; //512
+uniform highp vec4 _impl_Dynacoe_LightData[32]; //512
 
 
 
@@ -98,7 +98,7 @@ highp vec4 _impl_Dynacoe_LightData[32]; //512
     
 
 */
-highp vec4 _impl_Dynacoe_LightData2[32]; //512
+uniform highp vec4 _impl_Dynacoe_LightData2[32]; //512
 
 
 // vec ct: 255/256
@@ -165,7 +165,7 @@ lowp vec4 Dynacoe_SampleColor(in int textureSlot, in highp vec2 localUV) {
 
     texIn.x = (localUV.x * coordBase.z) + coordBase.x;
     texIn.y = (localUV.y * coordBase.w) + coordBase.y;
-    texIn.z = _impl_Dynacoe_TexInfo_handle[textureSlot].x;
+    texIn.z = _impl_Dynacoe_TexInfo_handle[textureSlot];
     return texture2D3(texIn);
 }
 
@@ -175,7 +175,7 @@ lowp vec4 Dynacoe_SampleColor(in int textureSlot, in highp vec2 localUV) {
 
 // returns whether the given texture slot has valid data
 bool Dynacoe_SlotHasTexture(in int slot) {
-   return (_impl_Dynacoe_TexInfo_handle[slot].x >= 0.0);
+   return (_impl_Dynacoe_TexInfo_handle[slot] >= 0.0);
 }
 
 
@@ -250,6 +250,8 @@ vec3 Dynacoe_PointLight(in highp vec3 pos, in highp vec3 normal, in lowp vec3 li
     highp float distance = max(length(pos - lightDir), 1.0);
     distance = distance*distance;
     
+
+
     return _impl_Dynacoe_BFLight(pos, normal, normalize(lightDir), diffuseAmount, diffuseColor, specularAmount, specularColor, distance, shininess);
 }
 
@@ -276,33 +278,34 @@ vec3 Dynacoe_PointLight(in highp vec3 pos, in highp vec3 normal, in lowp vec3 li
 // normal 
 vec3 Dynacoe_CalculateLightFragment(in highp vec3 position, in highp vec3 normal, in highp float diffuseAmount, in lowp vec3 diffuseMaterial, in highp float specularAmount, in lowp vec3 specularMaterial, in highp float shininess) {
 
-   int index = 0;
-   highp vec3 srcLightPos;
-   lowp vec3 lcolor;
-   lowp vec3  color = vec3(0, 0, 0);
-   highp float type = -1.0;
-   highp float intensity;
-// L -> Light position
-// E -> Emission direciton
-// R -> Reflectance direction
+    int index = 0;
+    highp vec3 srcLightPos;
+    lowp vec3 lcolor;
+    lowp vec3  color = vec3(0, 0, 0);
+    highp float type = -1.0;
+    highp float intensity;
+    // L -> Light position
+    // E -> Emission direciton
+    // R -> Reflectance direction
 
-   type = _BSI_Dynacoe_Light_type(index);
-   while((int(type) > 0) && (int(index) < 128)) {   
+    type = _BSI_Dynacoe_Light_type(index);
 
+    while((type >= 0.0) && (int(index) < 32)) {   
 // if directional light, do not mult by transform.
-       intensity   = _BSI_Dynacoe_Light_intensity(index);
-       lcolor      = _BSI_Dynacoe_Light_color(index);
-       if (type >= 0.0 && type <= .1) { // point light
-           srcLightPos = (Dynacoe_ViewTransform * vec4(_BSI_Dynacoe_Light_pos(index), 1.0)).xyz;
-           color += intensity*lcolor*Dynacoe_PointLight(position, normal, srcLightPos, diffuseAmount, diffuseMaterial, specularAmount, specularMaterial, shininess);
-       } else if (type >= .1 && type <= .2) { // directional
-           color += intensity*lcolor*Dynacoe_DirectionalLight(position, normal, _BSI_Dynacoe_Light_pos(index), diffuseAmount, diffuseMaterial, specularAmount, specularMaterial, shininess);
-       }
+        intensity   = _BSI_Dynacoe_Light_intensity(index);
+        lcolor      = _BSI_Dynacoe_Light_color(index);
 
-       index++;
-       type = _BSI_Dynacoe_Light_type(index);
-   }
-   return color;
+
+        if (type >= 0.0 && type <= .1) { // point light
+            srcLightPos = (Dynacoe_ViewTransform * vec4(_BSI_Dynacoe_Light_pos(index), 1.0)).xyz;
+            color += intensity*lcolor*Dynacoe_PointLight(position, normal, srcLightPos, diffuseAmount, diffuseMaterial, specularAmount, specularMaterial, shininess);
+        } else if (type >= .1 && type <= .2) { // directional
+            color += intensity*lcolor*Dynacoe_DirectionalLight(position, normal, _BSI_Dynacoe_Light_pos(index), diffuseAmount, diffuseMaterial, specularAmount, specularMaterial, shininess);
+        } 
+        index++;
+        type = _BSI_Dynacoe_Light_type(index);
+    }
+    return color;
 }
 #line 1 1
 )";

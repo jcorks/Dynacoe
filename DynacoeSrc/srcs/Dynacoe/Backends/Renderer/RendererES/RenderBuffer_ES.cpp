@@ -51,11 +51,13 @@ RenderBuffer::RenderBuffer() {
     size = 0;
     
     data = nullptr;
+    type = GL_ARRAY_BUFFER;
     //cout << "[RenderBuffer]: Instantiating buffer" << endl;
 }
 
 RenderBuffer::~RenderBuffer() {
-    glDeleteBuffers(1, &glID);
+    if (type == GL_ARRAY_BUFFER)
+        glDeleteBuffers(1, &glID);
     //cout << "[RenderBuffer]: Deleting buffer" << endl;
     if (data) delete[] data;
 }
@@ -69,10 +71,11 @@ int RenderBuffer::Size() {
 void RenderBuffer::Define(const float * dataSrc, int numElts) {
     assert(glGetError() == GL_NO_ERROR);
     size = numElts * sizeof(float);
-    glBindBuffer(GL_ARRAY_BUFFER, glID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*numElts, dataSrc, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
+    if (type == GL_ARRAY_BUFFER) {
+        glBindBuffer(GL_ARRAY_BUFFER, glID);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*numElts, dataSrc, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }    
 
     assert(glGetError() == GL_NO_ERROR);
     //if (data == dataSrc && data != nullptr) return;
@@ -93,22 +96,23 @@ void RenderBuffer::UpdateData(const float * dataSrc, int offset, int numElts) {
     memcpy(data+(offset), dataSrc, numElts*sizeof(float));
   
 
-    // Better, but still slow.
-    glBindBuffer(GL_ARRAY_BUFFER, glID); 
-    //glBufferData(type, size, data, GL_DYNAMIC_DRAW);
+    if (type == GL_ARRAY_BUFFER) {
+        // Better, but still slow.
+        glBindBuffer(GL_ARRAY_BUFFER, glID); 
+        //glBufferData(type, size, data, GL_DYNAMIC_DRAW);
 
-    
-    glBufferSubData(
-        GL_ARRAY_BUFFER, 
-        offset*sizeof(float), 
-        numElts*sizeof(float),
-        dataSrc
-    );
-    
+        
+        glBufferSubData(
+            GL_ARRAY_BUFFER, 
+            offset*sizeof(float), 
+            numElts*sizeof(float),
+            dataSrc
+        );
+        
 
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }    
 
     assert(glGetError() == GL_NO_ERROR);
 
@@ -131,9 +135,12 @@ GLuint RenderBuffer::GenerateBufferID() {
     return glID;
 }
 
-void RenderBuffer::ReclaimIDs() {
-    
-}
 
+void RenderBuffer::SetOffline() {
+    if (type == GL_ARRAY_BUFFER) {
+        glDeleteBuffers(1, &glID);
+        type = 0;
+    }
+}
 #endif
 
