@@ -304,6 +304,7 @@ class Dynacoe::Texture_ESImplementation {
   public:
     Texture_ESImplementation() {
         texImageBounds = new GLint[NUM_FLOATS_PER_TEX * DBUFFER_DEFAULT_INIT_TCB_SIZE];
+        textureState = new uint8_t[DBUFFER_DEFAULT_INIT_TCB_SIZE];
         numTexPhys = DBUFFER_DEFAULT_INIT_TCB_SIZE;
         numTexUsed = 0;
         cursorX = 0;
@@ -334,7 +335,7 @@ class Dynacoe::Texture_ESImplementation {
                 strip of textures for a row
 
         */
-        GarbageCollectBang();
+
 
 
         if (w > master->MaxLength() ||
@@ -452,7 +453,8 @@ class Dynacoe::Texture_ESImplementation {
     int cursorHeight;
     int getNewTex();    
 
-    std::set<int> garbageBag;
+    uint8_t * textureState; // one slot for each texture, 1 marks inuse, 0 marks dead. IDs are not reused.
+    int hasDeleted;
     int * texImageBounds;
 
     int numTexPhys;
@@ -495,7 +497,8 @@ int Texture_ES::NewTexture(int w, int h, const uint8_t * data, int nt) {
 
 void Texture_ES::DeleteTexture(int tex) {
     if (tex >= 0 && tex < ES->numTexUsed) {
-        ES->garbageBag.insert(tex);
+        ES->textureState[tex] = 0;
+        ES->hasDeleted = true;
     }
 }
 
@@ -557,17 +560,14 @@ int * Texture_ES::GetSubTextureBounds(int id) {
 
 
 void Texture_ESImplementation::GarbageCollectBang() {
-    if (garbageBag.empty()) return;
+    if (!hasDeleted) return;
 
-    std::set<int> garbageBagCopy = garbageBag;
-    garbageBag.clear();
+    hasDeleted = false;
 
     int active;
     glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
     glActiveTexture(DBUFFER_GUT_TEX_ACTIVE);
 
-
-    //std::cout << "Attempting to remove " << garbageBag.size() << std::endl;
 
     // Copy old info
     int oldW = master->Width();
@@ -586,21 +586,27 @@ void Texture_ESImplementation::GarbageCollectBang() {
     cursorY = 0;
     cursorHeight = 0;
 
+    master = atlases[0];    
+    currentAtlasIndex = 0;
 
 
     // re-insert old textures.
     int * oldSubBounds;
     int oldTexture;
     int oldNumTexUsed = numTexUsed;
-    numTexUsed = 0;
+    int * oldSubBounds_Base = new int[4*oldNumTexUsed];
+    memcpy(oldSubBounds_Base, texImageBounds, 4*oldNumTexUsed*sizeof(int));
+    textureLimitToAtlas.clear();
+    textureLimitToAtlas.push_back(0);
+
     for(int i = 0; i < oldNumTexUsed; ++i) {
         // skip over deleted texture / empty slots
-        if (garbageBagCopy.find(i)  != garbageBagCopy.end()) {
+        if (!textureState[i]) {
             //std::cout << "Skipping over tex i" << std::endl;
             continue;
         }
 
-        oldSubBounds = GetSubTextureBounds(i);
+        oldSubBounds = oldSubBounds_Base+i*4;
 
         std::cout << i << " -> "
             << oldSubBounds[0] << ", "
@@ -634,6 +640,7 @@ void Texture_ESImplementation::GarbageCollectBang() {
     //std::cout << "Reduced from " << oldW << "x" << oldH << " -> " << master->Width() << "x" << master->Height() << std::endl;
 
     delete[] subCopy;
+    delete[] oldSubBounds_Base;
     rebaseCB = copyRebase;
 
     glActiveTexture(active);
@@ -682,6 +689,7 @@ void Texture_ES::GetTextureData(int tex, uint8_t * data) {
 }
 
 int Texture_ESImplementation::getNewTex() {
+        GarbageCollectBang();
         // Store the texture coordinates cooresponding to this texture.
         if (numTexUsed >= numTexPhys) {
 
@@ -690,12 +698,19 @@ int Texture_ESImplementation::getNewTex() {
             GLint * copy = new GLint[newSize * NUM_FLOATS_PER_TEX];
             memcpy(copy, texImageBounds, numTexPhys * NUM_FLOATS_PER_TEX * sizeof(GLuint));
             delete[] texImageBounds;
+            
+            uint8_t * copyState = new uint8_t[newSize];
+            memcpy(copyState, textureState, numTexPhys);
+            delete[] textureState;
+
 
             numTexPhys = newSize;
             texImageBounds = copy;
+            textureState = copyState;
         }
 
         textureLimitToAtlas[currentAtlasIndex]=numTexUsed;
+        textureState[numTexUsed] = 1;
 
         //cout << "Returning new tex id: " << numTexUsed << endl;
         return numTexUsed++;

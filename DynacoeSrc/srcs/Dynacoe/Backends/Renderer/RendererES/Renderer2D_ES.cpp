@@ -281,13 +281,13 @@ class Renderer2DData {
 
                 vData->uvs[2] = ES->texture->GetSlotForTexture(vtx->localTexture);
 
-                printf(
+                /*printf(
                     "%d -> %d %d\n",
                 
                     vtx->localTexture,
                     ES->texture->GetSubTextureBounds(vtx->localTexture)[2],
                     ES->texture->GetSubTextureBounds(vtx->localTexture)[3]
-                );
+                );*/
 
             }
    
@@ -468,7 +468,7 @@ Renderer::Vertex2D Renderer2D::Get2DVertex(uint32_t vertex) {
 
 void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
     while (data->queuedAllocated <= data->queuedSize+count) {
-        uint32_t newSize = data->queuedSize*1.4;
+        uint32_t newSize = (data->queuedSize+count)*1.4;
         uint32_t * newData = (uint32_t*)malloc(newSize*sizeof(uint32_t));
         printf("Resized from %d to %d\n", data->queuedAllocated, newSize);
         memcpy(newData, data->queued, data->queuedAllocated*sizeof(uint32_t));

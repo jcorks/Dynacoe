@@ -74,6 +74,10 @@ bool Render2D::GetAbsolute() const {
 
 Render2D::~Render2D() {
     Graphics::GetRenderer()->Remove2DObject(objectID);
+    for(uint32_t i = 0; i < vertexSrc.size(); ++i) {
+        uint32_t t = vertexSrc[i];
+        Graphics::GetRenderer()->Remove2DVertex(t);
+    }
 }
 
 void Render2D::SetVertices(const std::vector<Renderer::Vertex2D> & v) {
