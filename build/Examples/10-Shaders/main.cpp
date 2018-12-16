@@ -73,11 +73,20 @@ class ShaderExample : public Dynacoe::Entity {
         // We're going to just draw some rectangles
         renderer->AddMesh(Dynacoe::Mesh::Basic_Cube());        
 
+
+        Dynacoe::InputBuffer vertexSrc;
+        Dynacoe::InputBuffer fragmentSrc;        
         // We are going to read the vertex and fragment shaders into 
         // InputBuffers. (Open them in text files to see notes on their implementation)
-        Dynacoe::InputBuffer vertexSrc;   vertexSrc.Open  ("vertex.glsl");
-        Dynacoe::InputBuffer fragmentSrc; fragmentSrc.Open("fragment.glsl");
-
+        // We choose the shaders based on the programming language
+        if (Graphics::GetRenderer()->ProgramGetLanguage() == "GLSL ES 1.0") {
+            vertexSrc.Open  ("vertex_ES.glsl");
+            fragmentSrc.Open("fragment_ES.glsl");
+        
+        } else { // desktop glsl
+            vertexSrc.Open  ("vertex.glsl");
+            fragmentSrc.Open("fragment.glsl");
+        }
         // How we assemble the shader. The shader consists of 2 stages:
         // the vertex processing stage and the fragment stage
         program.AddStage(

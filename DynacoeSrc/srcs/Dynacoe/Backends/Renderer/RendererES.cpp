@@ -158,6 +158,7 @@ ProgramID GLES2::ProgramGetBuiltIn(BuiltInShaderMode s) {
 ProgramID GLES2::ProgramAdd(const std::string & v, const std::string & f, std::string & log) {
     auto out = ES->renderStatic->ProgramAdd(v, f, log);
     assert(glGetError() == 0);
+    return out;
 
 }
 

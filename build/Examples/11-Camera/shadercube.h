@@ -51,8 +51,18 @@ class ShaderCube : public Dynacoe::Entity {
 
         // We are going to read the vertex and fragment shaders into 
         // InputBuffers. (Open them in text files to see notes on their implementation)
-        Dynacoe::InputBuffer vertexSrc;   vertexSrc.Open  ("shaders/cube_vertex.glsl");
-        Dynacoe::InputBuffer fragmentSrc; fragmentSrc.Open("shaders/cube_fragment.glsl");
+        Dynacoe::InputBuffer vertexSrc;
+        Dynacoe::InputBuffer fragmentSrc; 
+
+        if (Dynacoe::Graphics::GetRenderer()->ProgramGetLanguage() == "GLSL ES 1.0") {
+            vertexSrc.Open  ("shaders/cube_es_vertex.glsl");
+            fragmentSrc.Open("shaders/cube_es_fragment.glsl");
+        
+        } else { // desktop glsl
+            vertexSrc.Open  ("shaders/cube_vertex.glsl");
+            fragmentSrc.Open("shaders/cube_fragment.glsl");
+        }
+
 
         // How we assemble the shader. The shader consists of 2 stages:
         // the vertex processing stage and the fragment stage

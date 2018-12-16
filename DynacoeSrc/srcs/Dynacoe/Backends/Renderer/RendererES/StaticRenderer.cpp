@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Util/Chain.h>
 #include <Dynacoe/Backends/Renderer/RendererES/StaticRenderer.h>
 #include <Dynacoe/Backends/Renderer/StaticState.h>
-
+#include <Dynacoe/Backends/Framebuffer/OpenGLFB/GLRenderTarget.h>
 #include <GLES2/gl2.h>
 #include <cassert>
 #include "static_es.glsl"
@@ -181,6 +181,8 @@ class ProgramES {
         uniformLocation_LightData1 = glGetUniformLocation(handle, "_impl_Dynacoe_LightData");
         uniformLocation_LightData2 = glGetUniformLocation(handle, "_impl_Dynacoe_LightData2");
 
+        uniformLocation_hasFBtexture = glGetUniformLocation(handle, "_BSI_Dynacoe_hasFBtexture");
+        uniformLocation_FBtexture = glGetUniformLocation(handle, "_BSI_Dynacoe_FBtexture");
 
 
 
@@ -312,11 +314,23 @@ class ProgramES {
         if (uniformLocation_LightData2 >= 0) glUniform4fv(uniformLocation_LightData2, 32, formattedLightData+32*4);
     
 
+        int hasFB = state->samplebuffer!= nullptr;
+        float hasFBflt = hasFB;
+        if (uniformLocation_hasFBtexture >= 0) glUniform1f(uniformLocation_hasFBtexture, hasFBflt);
+
+        if (hasFB) {
+            int slot = ACTIVE_SLOTS[slots-1]+1+GL_TEXTURE0;
+            glActiveTexture(slot);
+
+            GLRenderTarget * t = *(GLRenderTarget **)state->samplebuffer->GetHandle();
+            t->Sync();
+            GLint texture = t->GetTexture();
 
 
-
-
-
+            glBindTexture(GL_TEXTURE_2D, texture);
+            slot -= GL_TEXTURE0;
+            if (uniformLocation_FBtexture >= 0) glUniform1i(uniformLocation_FBtexture, slot);   
+        }
 
 
 
