@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
     #ifdef _MBCS 
         #include <GL/glew.h>    
     #else
-        #include <glew.h>
+        #include <GLES2/gl2.h>
     #endif
 #endif
 #include <stdint.h>

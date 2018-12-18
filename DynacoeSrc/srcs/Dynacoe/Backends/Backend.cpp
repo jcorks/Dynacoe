@@ -112,7 +112,9 @@ Backend * Backend::CreateDefaultInputManager() {
 
 Backend * Backend::CreateDefaultDisplay() {
     #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
+    #ifndef ANDROID
     return new OpenGLFBDisplay();
+    #endif
     #endif
     return new NoDisplay();
 }

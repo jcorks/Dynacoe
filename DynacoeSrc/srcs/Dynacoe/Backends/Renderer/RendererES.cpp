@@ -65,8 +65,9 @@ struct Dynacoe::GLES2Implementation {
 
     GLES2Implementation() {
         #ifdef DC_BACKENDS_GLESFRAMEBUFFER_X11
+        #ifndef ANDROID
             (new Dynacoe::OpenGLFBDisplay)->Hide(true);
-            
+        #endif
         #else 
             // assume the environment already initialized the
             // opengl es 

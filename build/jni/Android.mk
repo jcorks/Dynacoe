@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 
-LOCAL_CFLAGS :=
+LOCAL_CFLAGS := -DDC_BACKENDS_GLES_X11 -DDC_BACKENDS_GLESFRAMEBUFFER_X11 -DDC_BACKENDS_NOINPUT -DDC_BACKENDS_NOAUDIO -DDC_BACKENDS_NODISPLAY
 
 DYNACOE_ROOT_SRC         = ../../DynacoeSrc/srcs/Dynacoe/
 DYNACOE_ROOT_INC         = $(NDK_APP_PROJECT_PATH)/../DynacoeSrc/includes/
@@ -78,6 +78,21 @@ LOCAL_SRC_FILES := \
     $(DYNACOE_ROOT_SRC)/Modules/Input.cpp \
     $(DYNACOE_ROOT_SRC)/Modules/Sound.cpp \
     $(DYNACOE_ROOT_SRC)/Modules/ViewManager.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Backend.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/AudioManager/NoAudio_Multi.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Display/NoDisplay_Multi.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/InputManager/NoInput_Multi.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/InputManager/InputDevice.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES/Light_ES.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES/RenderBuffer_ES.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES/Renderer2D_ES.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES/StaticRenderer.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Renderer/RendererES/Texture_ES.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Framebuffer/GLRenderTarget.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Framebuffer/GLRenderTarget_FBO.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Framebuffer/GLRenderTarget_Legacy.cpp \
+    $(DYNACOE_ROOT_SRC)/Backends/Framebuffer/OpenGLFB.cpp 
 
 
 

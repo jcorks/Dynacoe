@@ -236,7 +236,7 @@ class Renderer2DData {
 
     
 
-    InterleavedRenderer2DVertex * GetSystemVertex(uint32_t index, InterleavedRenderer2DVertex * target) {
+    void GetSystemVertex(uint32_t index, InterleavedRenderer2DVertex * target) {
         mainVBO->GetData(
             (float*)target,
             index*25,

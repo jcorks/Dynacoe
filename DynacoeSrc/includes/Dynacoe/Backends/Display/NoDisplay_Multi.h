@@ -51,7 +51,7 @@ class NoDisplay : public Display {
     void SetPosition(int, int);
     void Fullscreen(bool);
     void Hide(bool);
-    bool HasInputFocus();
+    bool HasInputFocus(){return true;}
     void LockClientResize(bool);
     void LockClientPosition(bool);
     void SetViewPolicy(ViewPolicy);

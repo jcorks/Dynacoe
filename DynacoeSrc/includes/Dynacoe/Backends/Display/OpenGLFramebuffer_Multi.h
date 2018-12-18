@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
+#ifndef ANDROID
 #ifndef H_DC_DISPLAY_GLFRAME
 #define H_DC_DISPLAY_GLFRAME
 
@@ -218,4 +219,4 @@ struct DisplayVertex {
 
 #endif
 #endif
-
+#endif
