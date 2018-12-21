@@ -73,13 +73,15 @@ bool Component::EmitEvent(const std::string & ev, Entity::ID source, const std::
 
     EventSet fns = eventHandlers->second;
     bool retval = true;
-    for(int64_t i = fns.handlers.size()-1; i >= 0; --i) {
-        if (!fns.handlers[i].first(fns.handlers[i].second, this, GetHostID(), source, args)) {
-            retval = false;
-            break;
+    int size = fns.handlers.size();
+    if (size) { 
+        for(int i = size-1; i >= 0; --i) {
+            if (!fns.handlers[i].first(fns.handlers[i].second, this, GetHostID(), source, args)) {
+                retval = false;
+                break;
+            }
         }
     }
-
     for(size_t i = 0; i < fns.hooks.size(); ++i) {
        fns.hooks[i].first(fns.hooks[i].second, this, GetHostID(), source, args);
     }

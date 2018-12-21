@@ -26,10 +26,10 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
 
-
+ 
 
 */
-
+ 
 
 #if (defined DC_BACKENDS_GLES_X11)
 
@@ -46,7 +46,7 @@ using namespace Dynacoe;
 
 struct MAT4_DEBUG {
     float f[16];
-};
+}; 
 
 struct VEC4_DEBUG {
     float v[4];
@@ -149,6 +149,14 @@ class ProgramES {
             int logLength;
             glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
             char * logData = (char*)malloc(logLength+1);
+            glGetProgramInfoLog(handle, logLength, &logLength, logData);
+            log << logData << "\n";
+            free(logData);
+
+            log << "\n\nHere's some additional information:\n";
+            glValidateProgram(handle);
+            glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
+            logData = (char*)malloc(logLength+1);
             glGetProgramInfoLog(handle, logLength, &logLength, logData);
             log << logData << "\n";
             free(logData);
@@ -310,8 +318,8 @@ class ProgramES {
                         
 
         // active light data
-        if (uniformLocation_LightData1 >= 0) glUniform4fv(uniformLocation_LightData1, 32, formattedLightData);
-        if (uniformLocation_LightData2 >= 0) glUniform4fv(uniformLocation_LightData2, 32, formattedLightData+32*4);
+        if (uniformLocation_LightData1 >= 0) glUniform4fv(uniformLocation_LightData1, 16, formattedLightData);
+        if (uniformLocation_LightData2 >= 0) glUniform4fv(uniformLocation_LightData2, 16, formattedLightData+32*4);
     
 
         int hasFB = state->samplebuffer!= nullptr;

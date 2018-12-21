@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
     #include <windows.h>
 #endif
 
-#ifdef DC_OS_LINUX
+#if (DC_OS_LINUX or ANDROID)
     #include <unistd.h>
     #include <time.h>
 #endif
@@ -50,7 +50,7 @@ void Dynacoe::Time::SleepMS(size_t ms) {
     #endif
 
 
-    #ifdef DC_OS_LINUX
+    #if (DC_OS_LINUX or ANDROID)
         usleep(ms * 1000);
     #endif
 
@@ -80,7 +80,7 @@ double Dynacoe::Time::MsSinceStartup() {
     #endif
         
 
-    #ifdef DC_OS_LINUX
+    #if (DC_OS_LINUX or ANDROID)
 
         static timespec time;
         static size_t beginTicks;

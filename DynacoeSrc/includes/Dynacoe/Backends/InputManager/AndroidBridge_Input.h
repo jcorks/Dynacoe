@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#ifdef ANDROID 
 #ifndef H_DC_INPUT_ANDROID_BRIDGE
 #define H_DC_INPUT_ANDROID_BRIDGE
 
@@ -60,8 +61,8 @@ class AndroidBridge_Input : public InputManager {
     // Returns a reference to the internally maintained input device.
     // Do not free or modify the contents of the device. The first few slots 
     // up to DefaultDeviceSlots::NumDefaultDevices will match the device expected
-    void InputDevice * QueryDevice(int ID);
-    void InputDevice * QueryDevice(DefaultDeviceSlots);
+    InputDevice * QueryDevice(int ID);
+    InputDevice * QueryDevice(DefaultDeviceSlots);
    
     // Returns the number of additional devices available.
     // up to MaxDevices(). Typically, any overflow devices that weren't able to 
@@ -87,6 +88,14 @@ class AndroidBridge_Input : public InputManager {
 
     // Returns the current focus. The default is nullptr;
     Display * GetFocus();
+    
+    
+    
+    // Versioning
+    std::string Name() {return "AndroidBridge: Input";}
+    std::string Version() {return "1.0";}
+    bool Valid(){return true;}
+    
 
 
   private:
@@ -96,4 +105,5 @@ class AndroidBridge_Input : public InputManager {
 
 }
 
+#endif
 #endif

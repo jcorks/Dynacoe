@@ -3,7 +3,7 @@ const char * static_es_glsl = R"(//GLSL BEGIN
 #version 100
 #pragma optimize(off)
 #pragma debug(on)
-#line 7 0
+#line 7
 
 
 
@@ -42,7 +42,7 @@ uniform highp mat4 Dynacoe_ModelNormalTransform;
 // vec ct: 31/256
 
 // raw texture references
-uniform sampler2D fragTex_slots[32];
+uniform sampler2D fragTex_slots[15];
 // vec ct: 63/256
 
 
@@ -81,7 +81,7 @@ uniform highp float _impl_Dynacoe_TexInfo_handle[32];
     float lightIntensity-   light strength multiplier.
 
 */
-uniform highp vec4 _impl_Dynacoe_LightData[32]; //512
+uniform highp vec4 _impl_Dynacoe_LightData[16]; //512
 
 
 
@@ -98,7 +98,7 @@ uniform highp vec4 _impl_Dynacoe_LightData[32]; //512
     
 
 */
-uniform highp vec4 _impl_Dynacoe_LightData2[32]; //512
+uniform highp vec4 _impl_Dynacoe_LightData2[16]; //512
 
 
 // vec ct: 255/256
@@ -129,7 +129,6 @@ lowp vec4 texture2D3(highp vec3 tex) {
    if (index == 12) return texture2D(fragTex_slots[12], tex.xy);
    if (index == 13) return texture2D(fragTex_slots[13], tex.xy);
    if (index == 14) return texture2D(fragTex_slots[14], tex.xy);
-   if (index == 15) return texture2D(fragTex_slots[15], tex.xy);
 }
 
 

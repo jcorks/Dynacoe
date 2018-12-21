@@ -29,11 +29,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#define ANDROID
+#ifdef ANDROID
 #ifndef H_DC_DISPLAY_AndroidBridge_Display
 #define H_DC_DISPLAY_AndroidBridge_Display
 
-#include <Dynacoe/Backend/Display/Display.h>
+#include <Dynacoe/Backends/Display/Display.h>
 
 
 namespace Dynacoe {
@@ -62,7 +62,7 @@ class AndroidBridge_Display : public Display {
     /// \brief Set the display into a fullscreen context. If fullscreen is not supported,
     /// no action is taken.
     ///
-    void Fullscreen(bool);
+    void Fullscreen(bool){}
 
     /// \brief Attempts to hide the display. If hiding is not supported, no action is taken.
     ///
@@ -71,18 +71,18 @@ class AndroidBridge_Display : public Display {
     /// \brief Returns whether the display has user input focus. On display implementations
     /// where this doesnt apply, i.e. where there is only one logical display available,,
     /// this will always return true. 
-    bool HasInputFocus();
+    bool HasInputFocus(){return true;}
 
     /// \brief Attempts to prevent resizing on the user's side. 
     ///
     /// For example,
     /// in a desktop environment, this would disable the feature of resizing
     /// the window.
-    void LockClientResize(bool);
+    void LockClientResize(bool){}
 
     /// \brief Attempts to prevent moving on the user's side. 
     /// 
-    void LockClientPosition(bool);
+    void LockClientPosition(bool){}
 
     /// \brief Controls how the Renderer's information is displayed. The default policy is "MatchSize"
     /// See ViewPolicy for more information. 
@@ -114,11 +114,11 @@ class AndroidBridge_Display : public Display {
     /// \brief Adds an additional callback function to be be called after
     /// the occurance of a resize event.Callbacks are run in the order that they
     /// were added in.
-    void AddResizeCallback(ResizeCallback *);
+    void AddResizeCallback(ResizeCallback *){}
 
     /// \brief Removes the callback of the same instance as one given via
     /// AddResizeCallback.
-    void RemoveResizeCallback(ResizeCallback *);
+    void RemoveResizeCallback(ResizeCallback *){}
 
     /// \brief Adds an additional callback function to be be called after
     /// the occurance of a closing event.
@@ -127,22 +127,22 @@ class AndroidBridge_Display : public Display {
     /// this is triggered by pressing the close button on the window
     /// associated with the Display. Callbacks are run in the order that they
     /// were added in.
-    void AddCloseCallback(CloseCallback *);
+    void AddCloseCallback(CloseCallback *){}
     /// \brief Removes the callback of the same instance as one given via
     /// AddCloseCallback.
-    void RemoveCloseCallback(CloseCallback *);
+    void RemoveCloseCallback(CloseCallback *){}
 
 
 
     /// \brief Returns whether or not the Display is able to 
     /// perform the requested capability.
-    bool IsCapable(Capability capability); {
+    bool IsCapable(Capability capability) {
         switch(capability) {
-          case Dynacoe::Capability::CanResize:     return false;
-          case Dynacoe::Capability::CanMove:       return false;
-          case Dynacoe::Capability::CanFullscreen: return true;
-          case Dynacoe::Capability::CanHide:       return false;
-          case Dynacoe::Capability::CanLockSize:   return false;
+          case Display::Capability::CanResize:     return false;
+          case Display::Capability::CanMove:       return false;
+          case Display::Capability::CanFullscreen: return true;
+          case Display::Capability::CanHide:       return false;
+          case Display::Capability::CanLockSize:   return false;
         }
     }
 
@@ -167,8 +167,8 @@ class AndroidBridge_Display : public Display {
     /// GetSystemHandle. Meant for internal use, but can be handy when
     /// doing weird things.
     DisplayHandleType GetSystemHandleType() {
-        return {Dynacoe::Display::DisplayHandleType::Unknown};
-    }
+        return Dynacoe::Display::DisplayHandleType::Unknown;
+    } 
 
     /// \brief Returns an implementation-specific handle that represents this
     /// Display or this Display's properties. Meant for internal use, but can 
@@ -184,6 +184,12 @@ class AndroidBridge_Display : public Display {
     /// last processed event generated form the display. It is guaranteed to be updated
     /// after Update() has been called and is valid until the next Update() call.
     void * GetLastSystemEvent() {return nullptr;}
+
+
+    // Versioning
+    std::string Name() {return "AndroidBridge: Display";}
+    std::string Version() {return "1.0";}
+    bool Valid(){return true;}
     
   private:
     AndroidBridge_Display_Data * ABD;
@@ -194,6 +200,5 @@ class AndroidBridge_Display : public Display {
 }
 
 
-#endif
 #endif
 #endif

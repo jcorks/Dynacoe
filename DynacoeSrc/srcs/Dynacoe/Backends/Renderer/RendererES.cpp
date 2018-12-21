@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #if (defined DC_BACKENDS_GLES_X11)
 
 #include <GLES2/gl2.h>
+#include <EGL/egl.h>
 #include <Dynacoe/Backends/Renderer/RendererES.h>
 #include <Dynacoe/Backends/Renderer/RendererES/Texture_ES.h>
 #include <Dynacoe/Backends/Renderer/RendererES/RenderBuffer_ES.h>
@@ -67,7 +68,10 @@ struct Dynacoe::GLES2Implementation {
         #ifdef DC_BACKENDS_GLESFRAMEBUFFER_X11
         #ifndef ANDROID
             (new Dynacoe::OpenGLFBDisplay)->Hide(true);
+        #else 
+            assert(eglGetCurrentContext());
         #endif
+        
         #else 
             // assume the environment already initialized the
             // opengl es 

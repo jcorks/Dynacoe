@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Backends/Display/NoDisplay_Multi.h>
 #include <Dynacoe/Backends/Display/OpenGLFramebuffer_Multi.h>
-#include <Dynacoe/Backends/Display/AndroidBridge_Display.h>
+#include <Dynacoe/Backends/Display/AndroidBridge_Multi.h>
 
 #include <Dynacoe/Backends/InputManager/Gainput_Multi.h>
 #include <Dynacoe/Backends/InputManager/AndroidBridge_Input.h>
@@ -118,12 +118,14 @@ Backend * Backend::CreateDefaultInputManager() {
 
 Backend * Backend::CreateDefaultDisplay() {
     #ifdef ANDROID
-    return new AndroidBridge_Display();
+        return new AndroidBridge_Display();
+    #else
+        #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
+        return new OpenGLFBDisplay();
+        #endif
+        return new NoDisplay();
     #endif
-    #if(defined DC_BACKENDS_OPENGLFRAMEBUFFER_X11 || defined DC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 || defined DC_BACKENDS_GLESFRAMEBUFFER_X11)
-    return new OpenGLFBDisplay();
-    #endif
-    return new NoDisplay();
+
 }
 
 

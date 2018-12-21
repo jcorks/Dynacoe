@@ -130,7 +130,7 @@ static const char * fragShader_2D =
 
 
 
-"uniform sampler2D fragTex_slots[32];\n"
+"uniform sampler2D fragTex_slots[16];\n"
 "lowp vec4 texture2D3(highp vec3 tex) {\n"
 "   int index = int(tex.z);\n"
 "   if (index == 0) return texture2D(fragTex_slots[0], tex.xy);\n"
