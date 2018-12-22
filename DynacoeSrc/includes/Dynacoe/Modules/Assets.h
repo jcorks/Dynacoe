@@ -109,6 +109,19 @@ namespace Assets {
     };
 
 
+    /// \brief Sets the path that Dynacoe::Assets should use as the recursive search root.
+    ///
+    /// When loading assets with the "nameOnly" option, this path will be used for subsequent 
+    /// search requests. By default, it is the same directory as the initial CWD, which is 
+    /// usully the directory of the running binary. Passing path as the empty string will 
+    /// reset the search path back to the initial CWD.
+    void SetSearchPath(const std::string & path);
+
+    /// \brief Returns the path that Dynacoe::Assets uses as the recursive search root.
+    ///
+    /// See SetSearchPath()
+    const std::string & GetSearchPath();
+
 
 
     /// \brief Loads the specifed asset into memory

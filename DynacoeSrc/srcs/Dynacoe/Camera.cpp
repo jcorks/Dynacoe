@@ -225,8 +225,8 @@ TransformMatrix Camera::GetProjectionTransform() {
 
 
 void Camera::SetRenderResolution(int w, int h) {
-    GetFramebuffer()->Resize(w, h);
-
+    fb->Resize(w, h);
+    fbAux->Resize(w, h);
 }
 
 int Camera::Width() {

@@ -60,6 +60,9 @@ OpenGLFB::~OpenGLFB() {
 
 
 bool OpenGLFB::OnResize(void * source, int newW, int newH) {
+    if (newW < 16) newW = 16;
+    if (newH < 16) newH = 16;
+
     rt->Resize(newW, newH);
     return true;
 }

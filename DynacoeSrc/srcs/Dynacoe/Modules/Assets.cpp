@@ -72,7 +72,7 @@ static std::vector<Asset *> assetList[AssetID::NUMTYPES];
 static std::stack<int> deadList[AssetID::NUMTYPES];
 static std::unordered_map<std::string, AssetID> assetMap[AssetID::NUMTYPES];
 static void storeSystemImages();
-
+static std::string search_path = "";
 
     
 
@@ -169,7 +169,18 @@ void Assets::Init() {
 
 
 
+void Assets::SetSearchPath(const std::string & newPath) {
+    search_path = newPath;
+}
 
+const std::string & Assets::GetSearchPath() {
+    if (search_path == "") {
+        static std::string noPath;
+        if (noPath == "") noPath = Engine::GetBaseDirectory(); 
+        return noPath;
+    }
+    return search_path;
+}
 
 
 
@@ -500,7 +511,7 @@ Asset * Assets::GetGenericAsset(Assets::Type type) {
 string fSearch(const string & file) {
     Filesys fs;
     string cd = fs.GetCWD();
-    fs.ChangeDir(Engine::GetBaseDirectory());
+    fs.ChangeDir(search_path == "" ? Engine::GetBaseDirectory() : search_path);
     string fullPath = fs.FindFile(file);
     fs.ChangeDir(cd);
     return fullPath;

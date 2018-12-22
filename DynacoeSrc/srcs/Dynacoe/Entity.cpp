@@ -59,7 +59,7 @@ class EntityIDTable {
         (*entityIDtableRef)[this] = true;
         char selfstr[32];
         selfstr[0] = 0;
-        snprintf(selfstr, 32, "%llx", this);
+        snprintf(selfstr, 32, "%p", this);
         idStr = selfstr;
     }
     ~EntityIDTable() {
@@ -91,11 +91,11 @@ class EntityIDTable {
 
     static EntityIDTable * FromString(const std::string & str) {
         void * out = nullptr;
-        sscanf(str.c_str(), "%llx", &out);
-        return FromAddress((uint64_t)out);
+        sscanf(str.c_str(), "%p", &out);
+        return FromAddress(out);
     }
 
-    static EntityIDTable * FromAddress(uint64_t id) {
+    static EntityIDTable * FromAddress(void * id) {
         if (entityIDtableRef->find((void*)id) == entityIDtableRef->end()) {
             return nullptr;
         }
@@ -493,13 +493,16 @@ Entity::ID::ID(const std::string & str) {
 }
 
 Entity::ID::ID(uint64_t data) {
-    id = EntityIDTable::FromAddress(data);
+    id = EntityIDTable::FromAddress((void*)data);
     EntityIDTable * table = (EntityIDTable*)id;
     if (id) table->Add();
 }
 
 const std::string & Entity::ID::String() const {
-    if (!id) return "";
+    if (!id) {
+        static std::string err;
+        return err;
+    }
     EntityIDTable * table = (EntityIDTable*)id;
     return table->ToString();
 }
