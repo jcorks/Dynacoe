@@ -56,7 +56,6 @@ const int display_default_h_c       =   480;
 
 using namespace std;
 
-static void wrangleGL();
 static int xlibErrHandler(Display *, XErrorEvent *);
 
 static X11Display * mainDisplay = NULL;
@@ -367,15 +366,9 @@ bool Dynacoe::OpenGLFBDisplay::createContext() {
     glSurface = eglCreateWindowSurface(glDisplay, glConfig, win, NULL);
     assert(glSurface != EGL_NO_SURFACE);
 
-    if (eglSwapInterval) {
-        eglSwapInterval(glDisplay, 0);
-    } else {
-        // going to be some issues
-        std::cout << "No swap interval EXT found. Expect VSYNC\n";
-    }
+    eglSwapInterval(glDisplay, 0);
 
 
-    short init = false;
     if (eglGetCurrentContext()) {
         glc = eglGetCurrentContext();
     } else {
@@ -385,7 +378,6 @@ bool Dynacoe::OpenGLFBDisplay::createContext() {
         };
         glc = eglCreateContext(glDisplay, glConfig, EGL_NO_CONTEXT, contextAttribs);
         assert(glc);
-        init = true;
     }
     eglMakeCurrent(glDisplay, glSurface, glSurface, glc);
 

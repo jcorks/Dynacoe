@@ -58,7 +58,7 @@ void OutputBuffer::resize() {
 
     uint32_t newSize = (size+1)*2;
     uint8_t * newBuffer = new uint8_t[newSize];
-    memset(newBuffer, size, 0);
+    memset(newBuffer, 0, size);
     memcpy(newBuffer, buffer, size);
 
     size = newSize;

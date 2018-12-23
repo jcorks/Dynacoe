@@ -349,7 +349,7 @@ void Renderer2D::Remove2DObject(uint32_t id) {
         vtx = &data->vertices[ref.vertices[i]];
         vtx->object = UINT32_MAX;        
     }
-    
+    ref.vertices.clear();
 }
 
 void Renderer2D::Set2DObjectParameters(uint32_t object, Renderer::Render2DObjectParameters params) {

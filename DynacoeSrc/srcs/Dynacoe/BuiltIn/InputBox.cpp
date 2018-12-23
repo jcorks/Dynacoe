@@ -111,7 +111,7 @@ void InputBox::OnStep() {
 
     if (gui->IsFocused()) {
         char last = 0;
-        if (last = Input::GetLastUnicode()) {
+        if ((last = Input::GetLastUnicode())) {
             if (last == '\n') {
                 Activate(false);
                 return;

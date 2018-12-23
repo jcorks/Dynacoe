@@ -328,7 +328,6 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
 
         // update keyboard        
         devices[0]->buttons[(int)symMapping[key]] = event.type == KeyPress;
-        printf("%04x\n", key);
       } break;
 
 

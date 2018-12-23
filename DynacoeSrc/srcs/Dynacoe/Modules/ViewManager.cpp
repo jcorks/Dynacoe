@@ -71,7 +71,6 @@ static ViewID currentDisplay;
 
 
 
-static std::string getToken(std::string & i);
 static std::set<LookupID> ids;
 #ifdef _WIN32
     #include <direct.h>

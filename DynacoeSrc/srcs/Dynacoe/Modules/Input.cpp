@@ -502,7 +502,7 @@ void ButtonList::addButton(Keyboard k) {
     bool added = false;
     for(Keyboard key : keys) {
         if (k == key) {
-            added == true;
+            added = true;
             break;
         }
     }
@@ -514,7 +514,7 @@ void ButtonList::addButton(MouseButtons k) {
     bool added = false;
     for(MouseButtons key : mouseButtons) {
         if (k == key) {
-            added == true;
+            added = true;
             break;
         }
     }
@@ -531,7 +531,7 @@ void ButtonList::addButton(PadID id, PadButtons k) {
             vec = &p.second;
             for(PadButtons key : *vec) {
                 if (k == key) {
-                    added == true;
+                    added = true;
                     break;
                 }
             }

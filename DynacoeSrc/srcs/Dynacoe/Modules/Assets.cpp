@@ -71,7 +71,6 @@ static std::vector<Asset *> assetList[AssetID::NUMTYPES];
 // zombie buckets of indices
 static std::stack<int> deadList[AssetID::NUMTYPES];
 static std::unordered_map<std::string, AssetID> assetMap[AssetID::NUMTYPES];
-static void storeSystemImages();
 static std::string search_path = "";
 
     
@@ -136,7 +135,6 @@ static size_t assetCounter;
 // Private Methods
 
 
-static void initBase();
 /* Image storage */
 
 
@@ -417,7 +415,7 @@ string typeToString(Assets::Type type) {
         case Assets::Type::Model:    return "Model";
         case Assets::Type::Particle: return "Particle";
         case Assets::Type::RawData:  return "RawData";
-
+        default:;
     }
     return "RawData";
 }

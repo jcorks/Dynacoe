@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 #include <cfloat>
 #include <iostream>
-
+#include <cinttypes>
 
 const int chain_default_float_precision_c = 2;
 const int chain_working_cstr_length_bytes = 256;
@@ -110,7 +110,7 @@ Chain::Chain(uint32_t i) : Chain() {
 
 Chain::Chain(uint64_t i) : Chain() {
     working_buffer[0] = 0;
-    snprintf(working_buffer, chain_working_cstr_length_bytes, "%llu", i);
+    snprintf(working_buffer, chain_working_cstr_length_bytes, "%" PRIu64 "", i);
     *this = Chain(working_buffer);
 }
 
@@ -154,8 +154,8 @@ Chain & Chain::operator<<(const Chain & other) {
 std::string Chain::TranslateFromAlBhed() const{
     std::string newData;
     for (int i =0; i < data.size(); ++i) {
-        if (fromAlBhedTable[data[i]])
-            newData+= fromAlBhedTable[data[i]];
+        if (fromAlBhedTable[(uint8_t)data[i]])
+            newData+= fromAlBhedTable[(uint8_t)data[i]];
         else
             newData+= data[i];
         
@@ -168,8 +168,8 @@ std::string Chain::TranslateToAlBhed() const{
 // ypltavkrezgmshubxncdijfqow
     std::string newData;
     for (int i =0; i < data.size(); ++i) {
-        if (toAlBhedTable[data[i]])
-            newData[i] += toAlBhedTable[data[i]];
+        if (toAlBhedTable[(uint8_t)data[i]])
+            newData[i] += toAlBhedTable[(uint8_t)data[i]];
         else
             newData[i] += data[i];
     }
@@ -290,7 +290,7 @@ uint32_t Chain::AsUInt32() {
 
 uint64_t Chain::AsUInt64() {
     uint64_t out = 0;
-    sscanf(data.c_str(), "%llu", &out);
+    sscanf(data.c_str(), "%" PRIu64, &out);
     return out;
 }
 

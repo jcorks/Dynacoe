@@ -145,7 +145,7 @@ static float quadTex[] {
 */
 
 
-static std::string fSearch(const std::string &);
+
 static void storeFont();
 static void setDisplayMode(Renderer::Polygon p, Renderer::Dimension, Renderer::AlphaRule a);
 
@@ -584,14 +584,6 @@ static AssetID storePixels(std::vector<uint32_t*> & pixels, std::string ID, int 
     return id;
 }
 
-string fSearch(const string & file) {
-    Filesys fs;
-    string cd = fs.GetCWD();
-    fs.ChangeDir(Engine::GetBaseDirectory());
-    string fullPath = fs.FindFile(file);
-    fs.ChangeDir(cd);
-    return fullPath;
-}
 
 
 #include <Dynacoe/SystemImages>

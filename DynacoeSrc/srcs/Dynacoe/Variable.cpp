@@ -178,6 +178,7 @@ static bool SetFromBool  (const std::string & str, void * dest, Variable::Type t
 
       case Variable::Type::String:
         *((std::string*) dest) = valSrc;
+      default:;
     }
     return false;
 }
@@ -203,6 +204,8 @@ static bool SetFromInt (const std::string & str, void * dest, Variable::Type typ
       case Variable::Type::String:
         *((std::string*)dest) = Chain() << *(std::string*)dest << val;
         return true;
+      default:;
+
     }
     return false;
 }
@@ -228,6 +231,8 @@ static bool SetFromFloat(const std::string & str, void * dest, Variable::Type ty
       case Variable::Type::String:
         *((std::string*) dest) = Chain() << *(std::string*)dest << val;
         return true;
+      default:;
+
     }
     return false;
 }
@@ -240,6 +245,8 @@ static bool SetFromString(const std::string & str, void * dest, Variable::Type t
       case Variable::Type::String:
         *((std::string*)dest) = str;
         return true;
+      default:;
+
 
     }
     return false;
@@ -254,6 +261,7 @@ static bool SetFromVector(const std::string & str, void * dest, Variable::Type t
       case Variable::Type::Vector:
         *((Vector*)dest) = var;
         return true;
+      default:;
 
     }
     return false;

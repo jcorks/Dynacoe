@@ -97,6 +97,8 @@ class Transform {
 
     class OnTransformUpdate {
       public:
+        virtual ~OnTransformUpdate(){}
+
         virtual void operator()(Transform * source) = 0;
         
         // If returns true, the Transform that contains thsi 

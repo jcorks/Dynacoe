@@ -90,7 +90,7 @@ Color::Color(const std::string & src) {
         str[i] = toupper(str[i]);
     }
     a = 255;
-    if (str[0] == '#' && str.size() == 9 || str.size() == 7) {
+    if ((str[0] == '#' && str.size() == 9) || str.size() == 7) {
         str = str.substr(1, str.length());
         uint8_t cl = 0;
         uint8_t val = 0;

@@ -346,9 +346,6 @@ class Dynacoe::TextState {
         int xIter = 0;
         int yIter = 0;
 
-        static Renderer::Vertex2D empty = Renderer::Vertex2D(
-            0, 0, 0, 0, 0, 0, 0, 0, 0
-        );
 
         int colorIndex = 0;
         const Color * curColor = nullptr;
@@ -587,7 +584,7 @@ class Dynacoe::TextState {
 
         int status;
         // problem, set glyph as bad char
-        if (status = FT_Load_Char((*fontFace), c, FT_LOAD_RENDER)) {
+        if ((status = FT_Load_Char((*fontFace), c, FT_LOAD_RENDER))) {
             // failed to load the glyph. Mark it with the bad char.
             charMap[c] = bad_glyph_slot;
             return charMap[c];

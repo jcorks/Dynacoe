@@ -73,7 +73,7 @@ static void png_memory_read_data(
 
     // no more data, just give nuthin'
     if (fetchSize + src->position >= src->size) {
-        memset(fetchData, fetchSize, 0);
+        memset(fetchData, 0, fetchSize);
         return;
     }
 

@@ -54,8 +54,6 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
-static void initBase(); 
-
 struct LineModel;
 struct LineView;
 static Shape2D * base;

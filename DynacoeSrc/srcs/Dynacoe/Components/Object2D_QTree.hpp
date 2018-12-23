@@ -122,7 +122,7 @@ class QTree {
         int left  = box.x > bounds.x + bounds.width/2.f;
         int top   = box.y > bounds.y + bounds.height/2.f ? 2 : 0;
 
-        int which = top & 0b10 | left & 0b01;
+        int which = (top & 0b10) | (left & 0b01);
         QTree * quadrants[] = {
             Q4,
             Q3,

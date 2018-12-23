@@ -1383,7 +1383,7 @@ class DebuggerBase : public Entity {
             }
             auto it = times.begin();
 
-            for(int i = 0; i < slowestCount, it != times.end(); ++it, i++) {
+            for(int i = 0; i < slowestCount && it != times.end(); ++it, i++) {
                 table->AddRow();
                 overviewIDs.push_back(it->second);
                 slowestTimes.push_back(it->first);

@@ -264,7 +264,7 @@ std::vector<Entity::ID> Entity::FindChildByName(const std::string & str) {
             out.push_back(id);
 
         // recursively look.
-        if (w = dynamic_cast<Entity*>(ent)) {
+        if ((w = dynamic_cast<Entity*>(ent))) {
             iter = w->FindChildByName(str);
             for(int n = 0; n < iter.size(); ++n) {
                 out.push_back(iter[n]);

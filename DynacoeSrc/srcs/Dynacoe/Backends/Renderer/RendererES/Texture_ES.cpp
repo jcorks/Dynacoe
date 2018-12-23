@@ -314,7 +314,7 @@ class Dynacoe::Texture_ESImplementation {
         atlases.push_back(master);
         textureLimitToAtlas.push_back(0);
 
-
+        hasDeleted = false;
         currentAtlasIndex = 0;  
     }
 

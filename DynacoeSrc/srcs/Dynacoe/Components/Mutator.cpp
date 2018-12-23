@@ -109,9 +109,10 @@ void Mutator::Bind(void * v, int t, BindFunction fnChoice) {
     BindFunctionBase fn;
     switch(fnChoice) {
       case BindFunction::Set: fn = bind_fn_set; break;
-      case BindFunction::Add: fn = bind_fn_set; break;
-      case BindFunction::Multiply: fn = bind_fn_set; break;
-      case BindFunction::Divide: fn = bind_fn_set; break;
+      case BindFunction::Add: fn = bind_fn_add; break;
+      case BindFunction::Multiply: fn = bind_fn_multiply; break;
+      case BindFunction::Divide: fn = bind_fn_divide; break;
+      case BindFunction::Subtract: fn = bind_fn_subtract; break;
     }
     bindVectors[t].push_back(std::pair<void*, BindFunctionBase>(v, fn));
     hasBinds = true;
@@ -127,7 +128,7 @@ void Mutator::Unbind(uint64_t & f) {Unbind(&f, MTBind_UInt64);}
     
 void Mutator::Unbind(void * v, int t) {
     std::vector<std::pair<void *, BindFunctionBase>> & b = bindVectors[t];
-    for(uint32_t i = 0; i < b.size(); +i) {
+    for(uint32_t i = 0; i < b.size(); ++i) {
         if (b[i].first == v) {
             b.erase(b.begin()+i);
             return;
@@ -343,6 +344,7 @@ float Mutator::compute(float first, float end, Function func, float progress){
                         Random::Spread(0, end - first) :
                         Random::Spread(end - first, 0)
             ));
+        case Function::SquareRoot:        return first + (end - first)* sqrt(progress);
         case Function::Logarithmic:       return first + (end - first)*((log2(1+(progress*63))) / (6.0));
     }
     return 0;
