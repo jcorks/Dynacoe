@@ -125,6 +125,7 @@ void Object2D::AddVelocityTowards(float factor, const Dynacoe::Vector & p, float
     AddVelocity(factor, delta.RotationZ() + directionOffset);    
 }
 
+
 void Object2D::SetVelocity(float factor, float direction) {
     speedX = factor * (cos((Math::Pi() / 180.f) * direction));
     speedY = factor * (sin((Math::Pi() / 180.f) * direction));
@@ -138,6 +139,8 @@ void Object2D::SetVelocityTowards(float factor, const Dynacoe::Vector & p, float
     SetVelocity(factor, delta.RotationZ()+directionOffset); 
 
 }
+
+
 void Object2D::SetFrictionX(float amt) {
     frictionX = amt;
 }
@@ -157,8 +160,11 @@ void Object2D::Halt() {
 
 
 
-float Object2D::GetVelocityX() { return speedX; }
-float Object2D::GetVelocityY() { return speedY; }
+float Object2D::GetVelocityX() const { return speedX; }
+float Object2D::GetVelocityY() const { return speedY; }
+
+void Object2D::SetVelocityX(float x) { speedX = x; }
+void Object2D::SetVelocityY(float y) { speedY = y; }
 
 float Object2D::GetSpeed() { return Vector(speedX, speedY).Length(); }
 void Object2D::SetSpeed(float speed) {
@@ -183,7 +189,9 @@ Vector Object2D::GetNextPosition() {
     return newPos;
 }
 
-
+const Vector & Object2D::GetLastPosition() const {
+    return last;
+}
 
 
 std::string Object2D::GetInfo() {

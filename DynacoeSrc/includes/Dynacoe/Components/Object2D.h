@@ -111,13 +111,13 @@ class Object2D : public Component {
         void AddVelocity(float factor, float direction);
         void AddVelocityTowards(float factor, const Dynacoe::Vector &, float directionOffset = 0.f);
 
-
         /// \brief Sets the velocity vector of an object.
         /// 
         /// @param factor The velocity to set.
         /// @param direction The direction to set the velocity in degrees.
         void SetVelocity(float factor, float direction);
         void SetVelocityTowards(float factor, const Dynacoe::Vector &, float directionOffset = 0.f);
+
 
         /// \brief Sets the amount of resistance to speed measured as a percentile.
         /// 
@@ -140,11 +140,20 @@ class Object2D : public Component {
 
         /// \brief Returns the horizontal component of the current velocity.
         ///
-        float GetVelocityX();
+        float GetVelocityX() const;
 
         /// \brief Returns the vertical component of the current velocity.
         ///
-        float GetVelocityY();
+        float GetVelocityY() const;
+
+        /// \brief Sets the vertical velocity for the component.
+        ///
+        void SetVelocityX(float);
+
+        /// \brief Sets the vertical velocity for the component.
+        ///
+        void SetVelocityY(float);
+
 
 
         /// \brief Returns the speed of the object.
@@ -160,6 +169,8 @@ class Object2D : public Component {
         /// 
         Dynacoe::Vector GetNextPosition();
 
+        /// \brief Returns the previous position of the entity
+        const Dynacoe::Vector & GetLastPosition() const;
 
 
         Collider collider;
