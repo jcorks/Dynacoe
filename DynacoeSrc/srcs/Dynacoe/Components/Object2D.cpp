@@ -72,8 +72,20 @@ Object2D::Object2D() : Component() {
     InstallEvent("on-collide");
     InstallEvent("on-moved");
 
-    SetGroup(Group::ID_A);
+    static bool inited = false;
+    if (!inited) {
+        // default: all groups collide with each other
+        memset(
+            groupInteract, 
+            1, 
+            (((int)Object2D::Group::ID_Z)+1)*(((int)Object2D::Group::ID_Z)+1)
+        );
+        inited = true;
+    }
 
+
+    group = nullptr;
+    SetGroup(Group::ID_A);
 }
 
 Object2D::~Object2D() {
@@ -200,21 +212,12 @@ const Vector & Object2D::GetLastPosition() const {
 
 
 void Object2D::SetGroup(Group id) {
+
     if (!groups[(int)id]) {
-        static bool inited = false;
-        if (!inited) {
-            // default: all groups collide with each other
-            memset(
-                groupInteract, 
-                1, 
-                (((int)Object2D::Group::ID_Z)+1)*(((int)Object2D::Group::ID_Z)+1)
-            );
-            inited = true;
-        }
         groups[(int)id] = new CollisionGroup((int)id);
     
     }
-
+    
     if (group) group->Unregister(this);
     group = groups[(int)id];
     group->Register(this);

@@ -70,7 +70,6 @@ class Object2D : public Component {
             Collider(){};
             Collider(const std::vector<Dynacoe::Vector> &);
             Collider(float radius, uint32_t numPts=8);
-            Collider(const std::vector<Collider> &);
             
             bool WillContainPoint(const Dynacoe::Vector & other) const;
             

@@ -1,9 +1,16 @@
 #include <algorithm>
 #include <cfloat>
 
-#define UNIT_LENGTH 512
-#define RAW_X_TO_INDEX_X(__X__) (int)(((__X__-globalX)/globalW)*UNIT_LENGTH)
-#define RAW_Y_TO_INDEX_Y(__Y__) (int)(((__Y__-globalY)/globalH)*UNIT_LENGTH*UNIT_LENGTH)
+static int UNIT_LENGTH = 10;
+#define RAW_X_TO_INDEX_X(__X__) (int)(((__X__-globalX)/globalW)*(UNIT_LENGTH-1))
+#define RAW_Y_TO_INDEX_Y(__Y__) (int)(((__Y__-globalY)/globalH)*(UNIT_LENGTH-1))
+
+static void set_unit_length_from_object_count(int objectCount) {
+    UNIT_LENGTH = objectCount*2;
+    if (UNIT_LENGTH<8) UNIT_LENGTH = 8;
+    if (UNIT_LENGTH>1024) UNIT_LENGTH = 1024;
+}
+
 
 class CollisionGroupMap {
   public:
@@ -11,16 +18,16 @@ class CollisionGroupMap {
         xSearch.Reset();
         ySearch.Reset();
     }
-    void Add(int x, int y, int w, int h, Object2D * data) {
-        xSearch.Insert(x, x+w, data);
-        ySearch.Insert(y, y+h, data);
+    void Add(int x1, int y1, int x2, int y2, Object2D * data) {
+        xSearch.Insert(x1, x2, data);
+        ySearch.Insert(y1, y2, data);
     }
 
-    std::vector<Object2D*> & Query(int x, int y, int w, int h) {
+    std::vector<Object2D*> & Query(int x1, int y1, int x2, int y2) {
         // The result we care about is just an intersection of X and Y
         // given that each datum is unique
-        auto xResult = xSearch.Query(x, x+w);
-        auto yResult = ySearch.Query(y, y+h);
+        auto xResult = xSearch.Query(x1, x2);
+        auto yResult = ySearch.Query(y1, y2);
         outputQuery.resize(xResult.size() + yResult.size());
 
         auto end = set_intersection(
@@ -80,6 +87,7 @@ class Dynacoe::CollisionGroup {
   public:
     CollisionGroup(int id_) {
         id = id_;
+        objectCount  = 0;
     }
 
     void ReEvaluate(float globalX_, float globalY_, float globalW_, float globalH_) {
@@ -114,8 +122,8 @@ class Dynacoe::CollisionGroup {
 
             if (bounds.x < minX) minX = bounds.x;
             if (bounds.y < minY) minY = bounds.y;
-            if (bounds.x+bounds.width  > minX) minX = bounds.x+bounds.width;
-            if (bounds.y+bounds.height > minY) minY = bounds.y+bounds.height;
+            if (bounds.x+bounds.width  > maxX) maxX = bounds.x+bounds.width;
+            if (bounds.y+bounds.height > maxY) maxY = bounds.y+bounds.height;
         }
 
         spanX = maxX-minX;
@@ -131,10 +139,11 @@ class Dynacoe::CollisionGroup {
         // if the bounding box of the collision group doesnt intersect with ours
         // then dont bother
         if (!(
-                otherObj.minX >= minX &&
-                otherObj.maxX <= maxX &&
-                otherObj.minY >= minY &&
-                otherObj.maxY <= maxY
+                minX < otherObj.maxX &&
+                maxX > otherObj.minX &&
+                maxY > otherObj.minY &&
+                minY < otherObj.maxY
+
             )) {
 
             return; // process no collisions
@@ -168,7 +177,9 @@ class Dynacoe::CollisionGroup {
 
                 if (current->collider.CollidesWith(other->collider)) {               
                     current->EmitEvent("on-collide", other  ->GetHostID(), {});
+                      other->EmitEvent("on-collide", current->GetHostID(), {});
                     current->collider.lastCollided = other  ->GetHostID();
+                      other->collider.lastCollided = current->GetHostID();
                 }
             }
         }
@@ -210,7 +221,6 @@ class Dynacoe::CollisionGroup {
     float globalH;
 
     std::vector<Object2D *> objects;
-    uint8_t * collided;
     uint32_t objectCount;
     CollisionGroupMap spaceMap;
 };

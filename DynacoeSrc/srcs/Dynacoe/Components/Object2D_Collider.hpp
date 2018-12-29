@@ -88,7 +88,7 @@ Object2D::Collider::Collider(float radius, uint32_t numPts) {
 }
 
 
-Object2D::Collider::Collider(const std::vector<Object2D::Collider> & colliders) {
+/*Object2D::Collider::Collider(const std::vector<Object2D::Collider> & colliders) {
     std::vector<Dynacoe::Vector> pts;    
     for(uint32_t i = 0; i < colliders.size(); ++i) {
         uint32_t localSize = colliders[i].staticPoints.size();
@@ -101,7 +101,7 @@ Object2D::Collider::Collider(const std::vector<Object2D::Collider> & colliders) 
     }
     
     SetFromPoints(pts);
-}
+}*/
 
 
 void Object2D::Collider::SetFromPoints(const std::vector<Dynacoe::Vector> & pts) {

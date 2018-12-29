@@ -76,20 +76,23 @@ class CollisionManager : public Dynacoe::Entity {
         float spaceW = spaceX2 - spaceX;
         float spaceH = spaceY2 - spaceY;
 
-
+        set_unit_length_from_object_count((int)numObj);
 
 
 
         for(uint32_t x = 0; x < (int)(Object2D::Group::ID_Z)+1; ++x) {
             current = groups[x];
-            current->ReEvaluate(spaceX, spaceY, spaceW, spaceH);
+            if (current) current->ReEvaluate(spaceX, spaceY, spaceW, spaceH);
         }
 
 
         for(uint32_t x = 0; x < (int)(Object2D::Group::ID_Z)+1; ++x) {
             current = groups[x];
+            if (!current) continue;
             for(uint32_t y = x; y < (int)(Object2D::Group::ID_Z)+1; ++y) {
                 other = groups[y];
+                if (!other) continue;
+
                 if (!groupInteract[x+y*((int)(Object2D::Group::ID_Z)+1)]) continue;
                 
                 current->CollideWith(*other);
