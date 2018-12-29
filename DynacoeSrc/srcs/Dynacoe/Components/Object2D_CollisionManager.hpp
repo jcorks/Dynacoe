@@ -59,6 +59,7 @@ class CollisionManager : public Dynacoe::Entity {
         // grouping static spatial indexing
         ////////////////////////////////
 
+        /*
         CollisionGroup * current;
         CollisionGroup * other;
 
@@ -98,11 +99,11 @@ class CollisionManager : public Dynacoe::Entity {
                 current->CollideWith(*other);
             }
         }
+        */
 
 
 
-
-        /*
+        
         ////////////////////////////////
         // uniform spatial indexing method
         ////////////////////////////////
@@ -188,158 +189,63 @@ class CollisionManager : public Dynacoe::Entity {
         }
         memset(shortlist, 0, numObj);
 
-        for(uint32_t i = 0; i < numObj; ++i) {
-            // if we didnt use it last iter, dont bother clearing it out!
-            if (setObjs.size()) {
-                memset(shortlist, 0, numObj);
-                setObjs.clear();
-            }
-            
-            // get all collisions
-            map->QueryFast(objects[i]->collider.GetMomentBounds(), shortlist, setObjs);            
-            current = objects[i];
-            
 
-            // process each detected collision
-            for(uint32_t n = 0; n != setObjs.size(); ++n) {                
-                other = objects[setObjs[n]];
+        CollisionGroup * currentGroup;
+
+        for(uint32_t x = 0; x < (int)(Object2D::Group::ID_Z)+1; ++x) {
+            currentGroup = groups[x];
+            if (!currentGroup) continue;
+  
+            auto objectsGroup = currentGroup->GetObjects(); 
+            uint32_t countGroup = objectsGroup.size(); 
+            for(uint32_t i = 0; i < countGroup; ++i) {
+
+                // if we didnt use it last iter, dont bother clearing it out!
+                if (setObjs.size()) {
+                    memset(shortlist, 0, numObj);
+                    setObjs.clear();
+                }
                 
-                if (other == current) {
-                    continue;
-                }
+                // get all collisions
+                map->QueryFast(objectsGroup[i]->collider.GetMomentBounds(), shortlist, setObjs);            
+                current = objectsGroup[i];
+                
 
-                // no repeats! If we're already collided, skip very overlap check
-                if (collided[i*numObj + setObjs[n]]) continue;
-                collided[i*numObj + setObjs[n]] = true;                
-
-
-                if (!current->collider.GetMomentBounds().Overlaps(other->collider.GetMomentBounds())) {
-                    continue;
-                }
-
-                if (current->collider.CollidesWith(other->collider)) {               
-                    current->EmitEvent("on-collide", other  ->GetHostID(), {});
-                      other->EmitEvent("on-collide", current->GetHostID(), {});
-                    current->collider.lastCollided = other  ->GetHostID();
-                      other->collider.lastCollided = current->GetHostID();
-                } else {
-                    countFalse++;
-                }
-                count++;
-
-            }
-        }
-        */
-
-        /*
-        ////////////////////////////////
-        // QTree method
-        ////////////////////////////////
-        // first, get working bounds
-        float spaceX  =  FLT_MAX, spaceY  =  FLT_MAX,
-              spaceX2 = -FLT_MAX, spaceY2 = -FLT_MAX;
-        float x, y, w, h;
-        for(uint32_t i = 0; i < objects.size(); ++i) {
-            objects[i]->collider.GetMomentBounds(
-                x, y, w, h
-            );
-
-            if (x < spaceX) spaceX = x;
-            if (y < spaceY) spaceY = y;
-            if (x+w > spaceX2) spaceX2 = x+w;
-            if (y+h > spaceY2) spaceY2 = y+h;
-        }
-
-          
-        
-        // remove existing tree and replace it with the new bounding space
-        if (tree) delete tree;
-        tree = new QTree(
-            QTree::QTreeBox(
-                spaceX,
-                spaceY,
-                spaceX2 - spaceX,
-                spaceY2 - spaceY
-            )
-        );
-        
-        
-        // insert all objects into the tree
-
-        for(uint32_t i = 0; i < objects.size(); ++i) {
-            objects[i]->collider.GetMomentBounds(
-                x, y, w, h
-            );
-            tree->Insert(
-                {
-                    objects[i], 
-                    {
-                        x, y, w, h
+                // process each detected collision
+                for(uint32_t n = 0; n != setObjs.size(); ++n) {                
+                    other = objects[setObjs[n]];
+                    
+                    if (other == current) {
+                        continue;
                     }
-                }
-            );
-        }
+
+                    if (!groupInteract[x+((int)other->GetGroup())*((int)(Object2D::Group::ID_Z)+1)]) continue;
+                
+
+                    // no repeats! If we're already collided, skip very overlap check
+                    if (collided[i*numObj + setObjs[n]]) continue;
+                    collided[i*numObj + setObjs[n]] = true;                
 
 
-        // retrieve all possible-intersecting obejcts for each obejct
-        Object2D * current;
-        Object2D * other;
-        std::vector<Object2D *> hits;
-        uint32_t count = 0;
-        for(uint32_t i = 0; i < objects.size(); ++i) {
-            objects[i]->collider.GetMomentBounds(
-                x, y, w, h
-            );
-            tree->QueryBound(
-                {
-                    x, y, w, h
-                },
-                hits
-            );
-            
-            for(uint32_t n = 0; n < hits.size(); ++n) {
-                if (hits[n] == objects[i]) {
-                    count--;
-                    continue;
-                }
-                other = hits[n];
-                current = objects[i];
-                if (current->collider.CollidesWith(other->collider)) {               
-                    current->EmitEvent("on-collide", other  ->GetHostID(), {});
-                      other->EmitEvent("on-collide", current->GetHostID(), {});
-                    current->collider.lastCollided = other  ->GetHostID();
-                      other->collider.lastCollided = current->GetHostID();
-                }
-            }
-            count += hits.size();
-            hits.clear();
-        }
-        std::cout << count / (float)(objects.size()*objects.size()) << "\n";
-        */
-        
-        
-        
-        /*  
-        //////////////////////////////////////
-        // basic n^2
-        //////////////////////////////////////
-        std::vector<Object2D*> space = objects;
-        Object2D * current;
-        Object2D * other;
-        for(uint32_t n = 0; n < space.size(); ++n) {
-            current = space[n];
-            for(uint32_t i = n+1; i < space.size(); ++i) {
-                other = space[i];
- 
-                if (current->collider.CollidesWith(other->collider)) {               
-                    current->EmitEvent("on-collide", other  ->GetHostID(), {});
-                      other->EmitEvent("on-collide", current->GetHostID(), {});
-                    current->collider.lastCollided = other  ->GetHostID();
-                      other->collider.lastCollided = current->GetHostID();
+                    if (!current->collider.GetMomentBounds().Overlaps(other->collider.GetMomentBounds())) {
+                        continue;
+                    }
+
+                    if (current->collider.CollidesWith(other->collider)) {               
+                        current->EmitEvent("on-collide", other  ->GetHostID(), {});
+                          other->EmitEvent("on-collide", current->GetHostID(), {});
+                        current->collider.lastCollided = other  ->GetHostID();
+                          other->collider.lastCollided = current->GetHostID();
+                    } else {
+                        countFalse++;
+                    }
+                    count++;
+
                 }
             }
         }
-        */
+
+
         
         // apply new positions
         for(uint32_t i = 0; i < numObj; ++i) {

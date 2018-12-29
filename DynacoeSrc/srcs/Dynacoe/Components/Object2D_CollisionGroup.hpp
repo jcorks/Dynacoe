@@ -6,7 +6,7 @@ static int UNIT_LENGTH = 10;
 #define RAW_Y_TO_INDEX_Y(__Y__) (int)(((__Y__-globalY)/globalH)*(UNIT_LENGTH-1))
 
 static void set_unit_length_from_object_count(int objectCount) {
-    UNIT_LENGTH = objectCount*2;
+    UNIT_LENGTH = objectCount/2;
     if (UNIT_LENGTH<8) UNIT_LENGTH = 8;
     if (UNIT_LENGTH>1024) UNIT_LENGTH = 1024;
 }
@@ -56,7 +56,7 @@ class CollisionGroupMap {
 
         // assumes less
         // TODO: extrememly redundant data, potential for opt
-        std::set<Object2D*> Query(int x1, int x2)  {
+        const std::set<Object2D*> & Query(int x1, int x2)  {
             outputQuery.clear();
             uint32_t count;
             Object2D ** iter;
@@ -204,6 +204,9 @@ class Dynacoe::CollisionGroup {
 
     int GetID() const {return id;}
 
+    const std::vector<Object2D*> & GetObjects() {
+        return objects;
+    }
     
 
   private:
