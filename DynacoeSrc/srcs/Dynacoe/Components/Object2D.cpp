@@ -54,9 +54,10 @@ using namespace std;
 #include "Object2D_CollisionManager.hpp"
 #include "Object2D_Collider.hpp"
 
-
 static Entity::ID manager;
    
+
+
 
 
 Object2D::Object2D() : Component() {
@@ -71,10 +72,14 @@ Object2D::Object2D() : Component() {
     InstallEvent("on-collide");
     InstallEvent("on-moved");
 
+    SetGroup(Group::ID_A);
+
 }
 
 Object2D::~Object2D() {
     manager.IdentifyAs<CollisionManager>()->UnregisterObject2D(this);
+    group->Unregister(this);
+    
 }
 
 void Object2D::OnAttach() {
@@ -192,6 +197,44 @@ Vector Object2D::GetNextPosition() {
 const Vector & Object2D::GetLastPosition() const {
     return last;
 }
+
+
+void Object2D::SetGroup(Group id) {
+    if (!groups[(int)id]) {
+        static bool inited = false;
+        if (!inited) {
+            // default: all groups collide with each other
+            memset(
+                groupInteract, 
+                1, 
+                (((int)Object2D::Group::ID_Z)+1)*(((int)Object2D::Group::ID_Z)+1)
+            );
+            inited = true;
+        }
+        groups[(int)id] = new CollisionGroup((int)id);
+    
+    }
+
+    if (group) group->Unregister(this);
+    group = groups[(int)id];
+    group->Register(this);
+}
+
+Object2D::Group Object2D::GetGroup() const {
+    return (Object2D::Group)group->GetID();
+}
+
+void Object2D::EnableGroupInteraction(Object2D::Group a, Object2D::Group b) {
+    groupInteract[((int)a) + (((int)b)*(((int)Object2D::Group::ID_Z)+1))] = true;
+    groupInteract[((int)b) + (((int)a)*(((int)Object2D::Group::ID_Z)+1))] = true;
+}
+
+void Object2D::DisableGroupInteraction(Object2D::Group a, Object2D::Group b) {
+    groupInteract[((int)a) + (((int)b)*(((int)Object2D::Group::ID_Z)+1))] = false;
+    groupInteract[((int)b) + (((int)a)*(((int)Object2D::Group::ID_Z)+1))] = false;
+}
+
+
 
 
 std::string Object2D::GetInfo() {

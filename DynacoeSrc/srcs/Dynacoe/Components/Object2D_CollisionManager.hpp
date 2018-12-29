@@ -1,5 +1,7 @@
 #include "Object2D_QTree.hpp"
 #include "Object2D_SpatialMap.hpp"
+#include "Object2D_CollisionGroup.hpp"
+
 #include <cfloat>
 #include <cassert>
 #include <cstring>
@@ -53,9 +55,51 @@ class CollisionManager : public Dynacoe::Entity {
         }
         
 
+        ////////////////////////////////
+        // grouping static spatial indexing
+        ////////////////////////////////
+
+        CollisionGroup * current;
+        CollisionGroup * other;
+
+        float spaceX  =  FLT_MAX, spaceX2  = -FLT_MAX,
+              spaceY  =  FLT_MAX, spaceY2  = -FLT_MAX;
+        float x, y, w, h;
+        for(uint32_t i = 0; i < numObj; ++i) {
+            auto b = objects[i]->collider.GetMomentBounds();
+
+            if (b.x < spaceX) spaceX = b.x;
+            if (b.y < spaceY) spaceY = b.y;
+            if (b.x+b.width > spaceX2) spaceX2 = b.x+b.width;
+            if (b.y+b.height > spaceY2) spaceY2 = b.y+b.height;
+        }
+        float spaceW = spaceX2 - spaceX;
+        float spaceH = spaceY2 - spaceY;
 
 
 
+
+
+        for(uint32_t x = 0; x < (int)(Object2D::Group::ID_Z)+1; ++x) {
+            current = groups[x];
+            current->ReEvaluate(spaceX, spaceY, spaceW, spaceH);
+        }
+
+
+        for(uint32_t x = 0; x < (int)(Object2D::Group::ID_Z)+1; ++x) {
+            current = groups[x];
+            for(uint32_t y = x; y < (int)(Object2D::Group::ID_Z)+1; ++y) {
+                other = groups[y];
+                if (!groupInteract[x+y*((int)(Object2D::Group::ID_Z)+1)]) continue;
+                
+                current->CollideWith(*other);
+            }
+        }
+
+
+
+
+        /*
         ////////////////////////////////
         // uniform spatial indexing method
         ////////////////////////////////
@@ -182,7 +226,7 @@ class CollisionManager : public Dynacoe::Entity {
 
             }
         }
-
+        */
 
         /*
         ////////////////////////////////

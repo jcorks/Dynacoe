@@ -51,11 +51,11 @@ namespace Dynacoe {
 /// Known events:
 /// "on-move" - called BEFORE applying the new position of the Entity.
 /// "on-collide" - source will always be what caused the collision
-
+class CollisionGroup;
 class Object2D : public Component {
     public:
         
- 
+        
  
         class Collider {
           public:
@@ -79,6 +79,7 @@ class Object2D : public Component {
             bool CollidesWith(const Collider & otherd) const;
 
 
+ 
 
             Entity::ID lastCollided;
             
@@ -175,8 +176,42 @@ class Object2D : public Component {
 
         Collider collider;
 
+       enum class Group {
+            ID_A,
+            ID_B,
+            ID_C,
+            ID_D,
+            ID_E,
+            ID_F,
+            ID_G,
+            ID_H,
+            ID_I,
+            ID_J,
+            ID_K,
+            ID_L,
+            ID_M,
+            ID_N,
+            ID_O,
+            ID_P,
+            ID_Q,
+            ID_R,
+            ID_S,
+            ID_T,
+            ID_U,
+            ID_V,
+            ID_W,
+            ID_X,
+            ID_Y,
+            ID_Z
 
-        static void DrawColliders(const Color & c);
+        };
+        void SetGroup(Group);
+        Group GetGroup() const;
+
+        static void EnableGroupInteraction(Group a, Group b);
+        static void DisableGroupInteraction(Group a, Group b);
+
+
 
         std::string GetInfo();
 
@@ -188,6 +223,7 @@ class Object2D : public Component {
         float frictionX;
         float frictionY;
         Dynacoe::Vector last;
+        CollisionGroup * group;
 
 };
 /// \}
