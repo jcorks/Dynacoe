@@ -282,9 +282,10 @@ class Renderer2DData {
                 vData->uvs[2] = ES->texture->GetSlotForTexture(vtx->localTexture);
 
                 /*printf(
-                    "%d -> %d %d\n",
+                    "%d (on %f) -> %d %d\n",
                 
                     vtx->localTexture,
+                    vData->uvs[2],
                     ES->texture->GetSubTextureBounds(vtx->localTexture)[2],
                     ES->texture->GetSubTextureBounds(vtx->localTexture)[3]
                 );*/

@@ -71,7 +71,7 @@ class Texture_ES {
     // Y (from topleft in texels)
     // width (in texels)
     // height (in texels)
-    int * GetSubTextureBounds(int id);
+    int * GetSubTextureBounds(int id) const;
 
 
 
@@ -87,7 +87,7 @@ class Texture_ES {
 
     // Gets the slot index for the texture given. This slot should be used 
     // in GLSL to get the correct sampler.
-    int GetSlotForTexture(int texture);
+    int GetSlotForTexture(int texture) const;
 
 
 

@@ -61,6 +61,7 @@ const GLenum USER_TEX_ACTIVE = GL_TEXTURE2;
 const int DBUFFER_ERROR_INVALID_DIMENSIONS    =   -1;
 const int DBUFFER_ERROR_NO_MORE_TEXTURES      =   -2;
 const int DBUFFER_ERROR_NO_MORE_MEMORY        =   -3;
+const int DBUFFER_RESIZED                     =   -4;
 const int DBUFFER_DEFAULT_INIT_DEPTH          = 64;
 const int DBUFFER_DEFAULT_TESSATE_LENGTH      = 64;
 
@@ -104,9 +105,13 @@ class TextureAtlas  {
         w = -1;
         h = -1;
         Reset();
+
+
     }
 
+
     void Reset() {
+        hasDeleted = false;
 
         if (w < 0 || h < 0) {
             glGenTextures(1, &glID); 
@@ -137,10 +142,14 @@ class TextureAtlas  {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                      w, h,
                      0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
+        textures.clear();
+        cursorX = 0;
+        cursorY = 0;
+        cursorHeight = 0;
 
         realData = new uint8_t[w*h*4];
     }
+
 
     ~TextureAtlas() {
         glDeleteTextures(1, &glID);
@@ -272,6 +281,156 @@ class TextureAtlas  {
     }
 
 
+    int NewSubTexture(int w, int h, const uint8_t * data, int * resized) {
+
+        /*
+            Layout:
+    
+            -   Cursor X/Y determines where the topleft of the next image is 
+            -   cursorHeight is the highest height span of the current 
+                strip of textures for a row
+
+        */
+
+
+        if (w > MaxLength() ||
+            h > MaxLength() ||
+            w < 0 || h < 0) return DBUFFER_ERROR_INVALID_DIMENSIONS;
+
+
+        // If adding the current texture would exceed the max length in the 
+        // horizontal direction, then we move the cursor left back to 0 and move
+        // it down.
+        if (w +  cursorX >= MaxLength()) { 
+            cursorY  = cursorHeight+1;
+            cursorX  = 0;
+            printf("%d %d exceeds max length of %d\n",
+                w,
+                cursorX,
+                MaxLength()
+            ); 
+        }
+
+        // if at any time a cursor + local width/height exhausts the space alloted in the 
+        // atlas, we need to expand it.
+        if (w + cursorX > Width() ||
+            h + cursorY > Height()) {
+
+
+            printf(
+                "%dx%d needs to resize to accomodate %dx%d @ (%d,%d)...",
+                Width(),
+                Height(),
+                w,
+                h,
+                cursorX,
+                cursorY 
+            );
+
+
+            // Here, resize should be able to accomodate the incoming 
+            // texture. If a width or height is specified that is smaller 
+            // than the current w/h
+            Resize(w + cursorX, h + cursorY);
+
+
+            printf(
+                "resized to %dx%d\n",
+                Width(),
+                Height()
+              
+            );
+
+
+            *resized = true;
+        }
+
+
+
+
+        // if this check fails, resizing was not fully effective
+        // and the texture was not able to be added
+        if ((w + cursorX > Width() ||
+             h + cursorY > Height())) {
+            return DBUFFER_ERROR_NO_MORE_TEXTURES;
+        }
+
+
+        // Place the texture as a sub texture of the GUT
+        Emplace(cursorX, cursorY, w, h, data);
+
+        // update row ceiling (AKA record height)
+        if (cursorHeight < cursorY + h) cursorHeight = cursorY + h;
+
+
+
+        textures.push_back({cursorX, cursorY, w, h});
+        cursorX += w+1;
+
+
+        return textures.size()-1;
+    }
+
+
+
+    void DeleteSubTexture(int i) {
+        if (i < 0) {
+            return;
+        }
+
+        textures[i].inUse = false;
+        hasDeleted = true;
+    }
+
+
+    int * GetSubTextureBounds(int localID) {
+        return &textures[localID].x;
+    };
+
+    void CleanupDeleted() {
+        if (!hasDeleted) return;
+        hasDeleted = false;
+        uint8_t * dataCopy = new uint8_t[w * h * 4]; 
+        uint8_t * subTex = new uint8_t[w * h * 4];
+        uint8_t * dataCopy_root;
+        
+    
+        memcpy(dataCopy, realData, w*h*4);
+        std::vector<TextureInfo> textureInfoCopy = textures;
+        int oldW = w;
+        int oldH = h;
+
+        Reset();
+
+        for(uint32_t i = 0; i < textureInfoCopy.size(); ++i) {
+            TextureInfo & info = textureInfoCopy[i];
+            if (!info.inUse) {
+                textures.push_back({});
+                printf("%d was deleted and subsequently skipped\n", i);
+                continue;
+            }
+            dataCopy_root = dataCopy + (info.x + info.y*oldW)*4;
+            
+            for(uint32_t y = 0; y < info.h; ++y) {
+                memcpy(
+                    subTex+info.w*4*y,
+                    dataCopy_root,
+                    info.w*4
+                );
+                dataCopy_root+=oldW*4;
+            } 
+            int r;
+            NewSubTexture(info.w, info.h, subTex, &r);
+        }
+        delete[] subTex;
+        delete[] dataCopy;  
+        
+        
+
+    }
+
+
+
 
   private:
 
@@ -280,7 +439,49 @@ class TextureAtlas  {
     GLint w;
     GLint h;
 
+    int cursorX;
+    int cursorY;
+    int cursorHeight;
+    bool hasDeleted;
+
     uint8_t * realData;
+
+
+    struct TextureInfo {
+        TextureInfo() :
+            x(0),
+            y(0),
+            w(0),
+            h(0),
+            inUse(false)
+        {}
+
+        TextureInfo(int _x, int _y, int _w, int _h) :
+            x(_x),
+            y(_y),
+            w(_w),
+            h(_h),
+            inUse(true)
+        {}
+
+        void Set(int _x, int _y, int _w, int _h) {
+            x = _x;
+            y = _y;
+            w = _w;
+            h = _h;
+            inUse = true;
+        }
+        int x;
+        int y;
+        int w;
+        int h;
+        char inUse;
+    };
+
+
+    std::vector<TextureInfo> textures;
+
+
 };
 
 
@@ -298,175 +499,85 @@ void PRINT_BYTE_BLOCK_UVS(TextureAtlas * atlas, float xm, float ym, float x2m, f
 }
 
 
+struct LocalTextureHandle {
+    LocalTextureHandle() :
+        localID(0),
+        atlasIndex(0),
+        atlas(nullptr)
+    {}
+    int localID;
+    int atlasIndex;
+    TextureAtlas * atlas;
+};
+
 
 
 class Dynacoe::Texture_ESImplementation {
   public:
     Texture_ESImplementation() {
-        texImageBounds = new GLint[NUM_FLOATS_PER_TEX * DBUFFER_DEFAULT_INIT_TCB_SIZE];
-        textureState = new uint8_t[DBUFFER_DEFAULT_INIT_TCB_SIZE];
-        numTexPhys = DBUFFER_DEFAULT_INIT_TCB_SIZE;
-        numTexUsed = 0;
-        cursorX = 0;
-        cursorY = 0;
-        cursorHeight = 0;
-        master = new TextureAtlas();
-        atlases.push_back(master);
-        textureLimitToAtlas.push_back(0);
-
+        atlases.push_back(new TextureAtlas());
         hasDeleted = false;
-        currentAtlasIndex = 0;  
+        numTexUsed = 0;
     }
 
     void GarbageCollectBang();
 
-    int * GetSubTextureBounds(int id) {
-        return texImageBounds+id * 4;
-    };
-
-
     int NewTexture(int w, int h, const uint8_t * data, int newTexID) {
+        int resized = false;
+        int localID = -1;
 
-        /*
-            Layout:
-    
-            -   Cursor X/Y determines where the topleft of the next image is 
-            -   cursorHeight is the highest height span of the current 
-                strip of textures for a row
+        int index = 0;
+        TextureAtlas * master = atlases[0];
 
-        */
-
-
-
-        if (w > master->MaxLength() ||
-            h > master->MaxLength() ||
-            w < 0 || h < 0) return DBUFFER_ERROR_INVALID_DIMENSIONS;
-
-
-        // If adding the current texture would exceed the max length in the 
-        // horizontal direction, then we move the cursor left back to 0 and move
-        // it down.
-        if (w +  cursorX >= master->MaxLength()) { 
-            cursorY  = cursorHeight+1;
-            cursorX  = 0;
-            printf("%d %d exceeds max length of %d\n",
-                w,
-                cursorX,
-                master->MaxLength()
-            ); 
+        while(localID < 0) {
+            localID = master->NewSubTexture(w, h, data, &resized); 
+                
+            switch(localID) {
+              case DBUFFER_ERROR_INVALID_DIMENSIONS:
+              case DBUFFER_ERROR_NO_MORE_MEMORY:
+                return -1;
+              case DBUFFER_ERROR_NO_MORE_TEXTURES:
+                // time to switch main textures;
+                index++;            
+                if (index >= atlases.size()) {
+                    atlases.push_back(new TextureAtlas);
+                }
+                master = atlases[index];
+                
+                break;
+              default:;
+            }
         }
+        
+        while(newTexID >= masterIDtoLocalID.size()) {
+            masterIDtoLocalID.push_back({});
+        }
+        masterIDtoLocalID[newTexID].localID    = localID;
+        masterIDtoLocalID[newTexID].atlas      = atlases[index];
+        masterIDtoLocalID[newTexID].atlasIndex = index;
 
-        // if at any time a cursor + local width/height exhausts the space alloted in the 
-        // atlas, we need to expand it.
-        if (w + cursorX > master->Width() ||
-            h + cursorY > master->Height()) {
-
-
-            printf(
-                "%dx%d needs to resize to accomodate %dx%d @ (%d,%d)...",
-                master->Width(),
-                master->Height(),
-                w,
-                h,
-                cursorX,
-                cursorY 
-            );
+        
 
 
-            // Here, resize should be able to accomodate the incoming 
-            // texture. If a width or height is specified that is smaller 
-            // than the current w/h
-            master->Resize(w + cursorX, h + cursorY);
-
-
-            printf(
-                "resized to %dx%d\n",
-                master->Width(),
-                master->Height()
-              
-            );
-
-
+        if (resized) {
             for(uint32_t i = 0; i < rebaseCB.size(); ++i) {
                 rebaseCB[i].first(rebaseCB[i].second);
             }
         }
 
-
-
-
-        // if this check fails, resizing was not fully effective
-        // and the texture was not able to be added
-        if ((w + cursorX > master->Width() ||
-             h + cursorY > master->Height())) {
-            master = new TextureAtlas;
-            atlases.push_back(master);
-            textureLimitToAtlas.push_back(0);
-            currentAtlasIndex++;
-
-
-            cursorX = 0;
-            cursorY = 0;
-            cursorHeight = 0;
-            return DBUFFER_ERROR_NO_MORE_TEXTURES;
-        }
-
-
-        // Place the texture as a sub texture of the GUT
-        master->Emplace(cursorX, cursorY, w, h, data);
-
-        // update row ceiling (AKA record height)
-        if (cursorHeight < cursorY + h) cursorHeight = cursorY + h;
-
-
-
-
-
-
-        GLint * newCoordSet = &texImageBounds[NUM_FLOATS_PER_TEX * newTexID];
-        newCoordSet[0] = cursorX;
-        newCoordSet[1] = cursorY;
-        newCoordSet[2] = w;
-        newCoordSet[3] = h;
-
-
-
-
-        cursorX += w+1;
-
-
-
-
         return newTexID;
     }
     
 
-    TextureAtlas * master;
+
+
+    std::vector<LocalTextureHandle> masterIDtoLocalID;    
     std::vector<TextureAtlas*> atlases;
-    std::vector<int> textureLimitToAtlas;
-    int currentAtlasIndex;
-
-
-    
-    int cursorX;
-    int cursorY;
-    int cursorHeight;
-    int getNewTex();    
-
-    uint8_t * textureState; // one slot for each texture, 1 marks inuse, 0 marks dead. IDs are not reused.
-    int hasDeleted;
-    int * texImageBounds;
-
-    int numTexPhys;
-    int numTexUsed;
-    GLuint subTex;
-    int subTexW;
-    int subTexH;
-    std::vector<int> lastBindings;
-    int lastID;
-
     std::vector<std::pair<Texture_ES::OnRebaseTextures, void*>> rebaseCB;
     
+    int hasDeleted;
+    int numTexUsed;
+
 };
 
 
@@ -482,7 +593,8 @@ Texture_ES::Texture_ES() {
 }
 
 int Texture_ES::NewTexture(int w, int h, const uint8_t * data) {
-    return ES->NewTexture(w, h, data, ES->getNewTex());
+    ES->GarbageCollectBang();
+    return ES->NewTexture(w, h, data, ES->numTexUsed++);
 }
 
 int Texture_ES::NewTexture(int w, int h, const uint8_t * data, int nt) {
@@ -497,23 +609,26 @@ int Texture_ES::NewTexture(int w, int h, const uint8_t * data, int nt) {
 
 void Texture_ES::DeleteTexture(int tex) {
     if (tex >= 0 && tex < ES->numTexUsed) {
-        ES->textureState[tex] = 0;
         ES->hasDeleted = true;
+        LocalTextureHandle & handle = ES->masterIDtoLocalID[tex];
+        handle.atlas->DeleteSubTexture(handle.localID);
     }
+
+    
 }
 
 
 void Texture_ES::UpdateTexture(int tex, const uint8_t * data) {
-    int SCx = ES->texImageBounds[NUM_FLOATS_PER_TEX * tex];
-    int SCy = ES->texImageBounds[NUM_FLOATS_PER_TEX * tex + 1];
-    int SCw = ES->texImageBounds[NUM_FLOATS_PER_TEX * tex + 2];
-    int SCh = ES->texImageBounds[NUM_FLOATS_PER_TEX * tex + 3];
+    int * texBounds = GetSubTextureBounds(tex);
+    LocalTextureHandle & handle = ES->masterIDtoLocalID[tex];
 
-
-    //glBindTexture(GL_TEXTURE_2D, master->ID());
-    //glTexSubImage2D(GL_TEXTURE_2D, 0, SCx, SCy, SCw, SCh, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    //glBindTexture(GL_TEXTURE_2D, 0);
-    ES->master->Emplace(SCx, SCy, SCw, SCh, data);
+    handle.atlas->Emplace(
+        texBounds[0], 
+        texBounds[1], 
+        texBounds[2], 
+        texBounds[3], 
+        data
+    );
 }
 
 
@@ -525,17 +640,20 @@ void Texture_ES::SetFilter(Renderer::TexFilter f) {
 		case Renderer::TexFilter::NoFilter: e = GL_NEAREST; break;
 	}
 
-    int active;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
-    glActiveTexture(DBUFFER_GUT_TEX_ACTIVE);
+    for(uint32_t i = 0; i < ES->atlases.size(); ++i) {
+        TextureAtlas * atlas = ES->atlases[i];
+        int active;
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
+        glActiveTexture(DBUFFER_GUT_TEX_ACTIVE);
 
 
-    glBindTexture(GL_TEXTURE_2D, ES->master->ID());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, e);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, e);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, atlas->ID());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, e);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, e);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-    glActiveTexture(active);
+        glActiveTexture(active);
+    }
 }
 
 Renderer::TexFilter Texture_ES::GetFilter() {
@@ -544,117 +662,40 @@ Renderer::TexFilter Texture_ES::GetFilter() {
     glActiveTexture(DBUFFER_GUT_TEX_ACTIVE);
 
     GLint out;
-    glBindTexture(GL_TEXTURE_2D, ES->master->ID());
+    glBindTexture(GL_TEXTURE_2D, ES->atlases[0]->ID());
     glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &out);
     glBindTexture(GL_TEXTURE_2D, 0);
-    if (out == GL_NEAREST) return Renderer::TexFilter::NoFilter;
-
     glActiveTexture(active);
 
+    if (out == GL_NEAREST) return Renderer::TexFilter::NoFilter;
 	return Renderer::TexFilter::Linear;
 }
 
-int * Texture_ES::GetSubTextureBounds(int id) {
-    return ES->GetSubTextureBounds(id);
+int * Texture_ES::GetSubTextureBounds(int id) const {
+    LocalTextureHandle & handle = ES->masterIDtoLocalID[id];
+    return handle.atlas->GetSubTextureBounds(handle.localID);
 };
 
 
 void Texture_ESImplementation::GarbageCollectBang() {
     if (!hasDeleted) return;
 
-    hasDeleted = false;
-
-    int active;
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
-    glActiveTexture(DBUFFER_GUT_TEX_ACTIVE);
-
-
-    // Copy old info
-    int oldW = master->Width();
-    int oldH = master->Height();
-    GLubyte * subCopy = new GLubyte[oldW * oldH * 4];
-    uint8_t * copy = new GLubyte[oldW * oldH * 4];
-
-    memcpy(copy, master->GetRawData(), oldH * oldW * 4);
-
-    std::vector<std::pair<Texture_ES::OnRebaseTextures, void*>> copyRebase = rebaseCB;
-    rebaseCB.clear();
-
-    // reset texture.
-    master->Reset();
-    cursorX = 0;
-    cursorY = 0;
-    cursorHeight = 0;
-
-    master = atlases[0];    
-    currentAtlasIndex = 0;
-
-
-    // re-insert old textures.
-    int * oldSubBounds;
-    int oldTexture;
-    int oldNumTexUsed = numTexUsed;
-    int * oldSubBounds_Base = new int[4*oldNumTexUsed];
-    memcpy(oldSubBounds_Base, texImageBounds, 4*oldNumTexUsed*sizeof(int));
-    textureLimitToAtlas.clear();
-    textureLimitToAtlas.push_back(0);
-
-    for(int i = 0; i < oldNumTexUsed; ++i) {
-        // skip over deleted texture / empty slots
-        if (!textureState[i]) {
-            //std::cout << "Skipping over tex i" << std::endl;
-            continue;
-        }
-
-        oldSubBounds = oldSubBounds_Base+i*4;
-
-        std::cout << i << " -> "
-            << oldSubBounds[0] << ", "
-            << oldSubBounds[1] << ", "
-            << oldSubBounds[2] << ", "
-            << oldSubBounds[3] << ", " << std::endl; 
-
-        // copy old tex into subCopy
-        for(int n = 0; n < oldSubBounds[3]; ++n) {
-            memcpy(
-                subCopy + 4*(oldSubBounds[2]*n),
-                copy    + 4*(oldSubBounds[0] + (n+oldSubBounds[1])*oldW),
-                oldSubBounds[2]*4
-            );
-        }
-
-        // post image normally. Should overwrite bounds properly too.
-        NewTexture(oldSubBounds[2], oldSubBounds[3], subCopy, i);
-
-
-        oldSubBounds = GetSubTextureBounds(i);
-
-        std::cout << i << " -> "
-            << oldSubBounds[0] << ", "
-            << oldSubBounds[1] << ", "
-            << oldSubBounds[2] << ", "
-            << oldSubBounds[3] << ", " << std::endl; 
-
+    for(uint32_t i = 0; i < atlases.size(); ++i) {
+        atlases[i]->CleanupDeleted();
     }
-
-    //std::cout << "Reduced from " << oldW << "x" << oldH << " -> " << master->Width() << "x" << master->Height() << std::endl;
-
-    delete[] subCopy;
-    delete[] oldSubBounds_Base;
-    rebaseCB = copyRebase;
-
-    glActiveTexture(active);
+    hasDeleted = false;
     for(uint32_t i = 0; i < rebaseCB.size(); ++i) {
         rebaseCB[i].first(rebaseCB[i].second);
-    }
-
-
+    }    
+    
 }
 
 
 void Texture_ES::TranslateCoords(float * texX, float * texY, int tex) const {
-    *texX = (*texX*ES->texImageBounds[4*tex+2] + ES->texImageBounds[4*tex]  ) / ES->master->Width();
-    *texY = (*texY*ES->texImageBounds[4*tex+3] + ES->texImageBounds[4*tex+1]) / ES->master->Height();
+    LocalTextureHandle & handle = ES->masterIDtoLocalID[tex];
+    int * localC = GetSubTextureBounds(tex);
+    *texX = (*texX*localC[2] + localC[0]) / handle.atlas->Width();
+    *texY = (*texY*localC[3] + localC[1]) / handle.atlas->Height();
 
 }
 
@@ -669,14 +710,10 @@ int Texture_ES::GetActiveTextureSlots(int *slots, int * ids) {
     return out;    
 }
 
-int Texture_ES::GetSlotForTexture(int tex) {
-    int out = ES->atlases.size();
-    for(int i = 0; i < out; ++i) {
-        if (ES->textureLimitToAtlas[i] <= tex) {
-            return i;
-        }
-    }
-    return 0;
+int Texture_ES::GetSlotForTexture(int tex) const {    
+    if (tex < 0) return 0;
+    LocalTextureHandle & handle = ES->masterIDtoLocalID[tex];
+    return handle.atlasIndex;
 }
 
 
@@ -684,46 +721,13 @@ int Texture_ES::GetSlotForTexture(int tex) {
 
 void Texture_ES::GetTextureData(int tex, uint8_t * data) {
     int * texBounds = GetSubTextureBounds(tex);
+    LocalTextureHandle & handle = ES->masterIDtoLocalID[tex];
+    
 
-    ES->master->Read(texBounds[0], texBounds[1], texBounds[2], texBounds[3], data);
-}
-
-int Texture_ESImplementation::getNewTex() {
-        GarbageCollectBang();
-        // Store the texture coordinates cooresponding to this texture.
-        if (numTexUsed >= numTexPhys) {
-
-            //We need at least as many floats as one entry takes.
-            int newSize = numTexPhys *DBUFFER_DEFAULT_RESIZE_FACTOR;
-            GLint * copy = new GLint[newSize * NUM_FLOATS_PER_TEX];
-            memcpy(copy, texImageBounds, numTexPhys * NUM_FLOATS_PER_TEX * sizeof(GLuint));
-            delete[] texImageBounds;
-            
-            uint8_t * copyState = new uint8_t[newSize];
-            memcpy(copyState, textureState, numTexPhys);
-            delete[] textureState;
-
-
-            numTexPhys = newSize;
-            texImageBounds = copy;
-            textureState = copyState;
-        }
-
-        textureLimitToAtlas[currentAtlasIndex]=numTexUsed;
-        textureState[numTexUsed] = 1;
-
-        //cout << "Returning new tex id: " << numTexUsed << endl;
-        return numTexUsed++;
-
-
-
+    handle.atlas->Read(texBounds[0], texBounds[1], texBounds[2], texBounds[3], data);
 }
 
 
-
-
-
-int Texture_ES::GetLastNewID() { return ES->lastID; }
     
 void Texture_ES::AddRebaseCallback(Texture_ES::OnRebaseTextures rebase, void * data) {
     ES->rebaseCB.push_back({rebase, data});
