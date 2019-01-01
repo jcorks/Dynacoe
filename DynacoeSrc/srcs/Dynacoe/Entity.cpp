@@ -196,7 +196,7 @@ void Entity::Attach(Entity & ent) {
 void Entity::Detach(Entity::ID entID) {
     Entity * ent = entID.Identify();
     if (!ent) return;
-    if (!(ent->GetID()).Valid()) return;
+    if (!(ent->HasParent() && &ent->GetParent() == this)) return;
     ent->world = nullptr;
     ent->SetAsParent(nullptr);
 

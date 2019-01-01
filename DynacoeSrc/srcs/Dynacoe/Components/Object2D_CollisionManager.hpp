@@ -42,6 +42,7 @@ class CollisionManager : public Dynacoe::Entity {
         Entity * host;
         for(uint32_t i = 0; i < numObj; ++i) {
             host = objects[i]->GetHost();
+            
             if (!host) {
                 objects.erase(objects.begin()+i);
                 numObj--;
@@ -49,6 +50,8 @@ class CollisionManager : public Dynacoe::Entity {
                 continue;
             }
 
+            if (!host->step) continue;
+            
             objects[i]->collider.UpdateTransition(
                  objects[i]->GetNextPosition()
             );
@@ -149,6 +152,8 @@ class CollisionManager : public Dynacoe::Entity {
         // no viable collision detection can occur, so just update the objects and drop out.
         if (spaceW == 0.f || spaceH == 0.f) {
             for(uint32_t i = 0; i < numObj; ++i) {
+                if (!objects[i]->GetHost()->step) continue;
+
                 objects[i]->Update();
             }
             return;
@@ -164,6 +169,7 @@ class CollisionManager : public Dynacoe::Entity {
         
         
         for(uint32_t i = 0; i < numObj; ++i) {
+            if (!objects[i]->GetHost()->step) continue;
             map->Insert(objects[i]->collider.GetMomentBounds(), i);
         }
         
@@ -199,22 +205,25 @@ class CollisionManager : public Dynacoe::Entity {
             auto objectsGroup = currentGroup->GetObjects(); 
             uint32_t countGroup = objectsGroup.size(); 
             for(uint32_t i = 0; i < countGroup; ++i) {
+                current = objectsGroup[i];
+                if (!current->GetHost()->step) continue;
+
 
                 // if we didnt use it last iter, dont bother clearing it out!
                 if (setObjs.size()) {
                     memset(shortlist, 0, numObj);
                     setObjs.clear();
                 }
-                
+
+
                 // get all collisions
                 map->QueryFast(objectsGroup[i]->collider.GetMomentBounds(), shortlist, setObjs);            
-                current = objectsGroup[i];
                 
 
                 // process each detected collision
                 for(uint32_t n = 0; n != setObjs.size(); ++n) {                
                     other = objects[setObjs[n]];
-                    
+
                     if (other == current) {
                         continue;
                     }
@@ -249,6 +258,7 @@ class CollisionManager : public Dynacoe::Entity {
         
         // apply new positions
         for(uint32_t i = 0; i < numObj; ++i) {
+            if (!objects[i]->GetHost()->step) continue;
             objects[i]->Update();
         }
     }

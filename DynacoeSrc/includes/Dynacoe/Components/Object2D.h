@@ -138,6 +138,13 @@ class Object2D : public Component {
         ///
         void Halt();
 
+        /// \brief Resets the motion path of the Object2D collider.
+        ///
+        /// Normally, all collisions take into account the motion from previous position
+        /// to current. ResetMotion() eliminates this motion, allowing for discontinuous 
+        /// motion.
+        void ResetMotion();
+
         /// \brief Returns the horizontal component of the current velocity.
         ///
         float GetVelocityX() const;

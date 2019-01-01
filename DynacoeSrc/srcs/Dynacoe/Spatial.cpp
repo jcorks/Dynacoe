@@ -59,12 +59,16 @@ Spatial::Spatial() : node(new Transform) {
     transformOwned = node;
 	transformUpdate = new SpatialTransformUpdate(this);
     transformOwned->AddTransformCallback(transformUpdate);
-    needsUpdate = true;
+    //needsUpdate = true;
+    SendUpdateSignal();
+
     parent = nullptr;
 }
 
 void Spatial::Invalidate() {
-    needsUpdate = true;
+    //needsUpdate = true;
+    SendUpdateSignal();
+
 }
 
 Spatial::~Spatial() {
@@ -109,8 +113,9 @@ void Spatial::SetAsParent(Spatial * newParent) {
     parent = newParent;
     assert(newParent != this);
     newParent->children.push_back(this);
-    needsUpdate = true;
-    
+    //needsUpdate = true;
+    SendUpdateSignal();
+
     //look for parent 
     Spatial * p = parent->parent;
     while(p) {
@@ -151,6 +156,9 @@ void Spatial::SendUpdateSignal() {
 }
 
 void Spatial::CheckUpdate() {
+    if (parent) {
+        parent->CheckUpdate();
+    }
     if (node->NeedsUpdate()) needsUpdate = true;
     if (!needsUpdate) return;
     if (parent) {

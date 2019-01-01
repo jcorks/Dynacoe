@@ -175,6 +175,14 @@ void Object2D::Halt() {
     speedY = 0;
 }
 
+void Object2D::ResetMotion() {
+    GetHost()->CheckUpdate();
+    last = GetHost()->Node().GetPosition();
+    collider.UpdateTransition(last);
+    collider.UpdateTransition(last);
+    
+}
+
 
 
 float Object2D::GetVelocityX() const { return speedX; }
@@ -207,8 +215,8 @@ Vector Object2D::GetNextPosition() {
 }
 
 const Vector & Object2D::GetLastPosition() const {
-    return last;
-}
+    return last; 
+} 
 
 
 void Object2D::SetGroup(Group id) {
