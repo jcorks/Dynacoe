@@ -42,6 +42,11 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Dynacoe;
 
+static Spatial ** signalStack = nullptr;//[2048];
+static int        signalStackIndex = 0;
+static int        signalStackSize = 0;
+
+static uint32_t  spatialCount = 0;
 class Dynacoe::SpatialTransformUpdate : public Transform::OnTransformUpdate {
 public:
     Spatial * parent;
@@ -59,10 +64,20 @@ Spatial::Spatial() : node(new Transform) {
     transformOwned = node;
 	transformUpdate = new SpatialTransformUpdate(this);
     transformOwned->AddTransformCallback(transformUpdate);
+
+    spatialCount++;
+    parent = nullptr;
+
+    if (signalStackSize<=spatialCount) {
+        signalStackSize = spatialCount*1.3+10;
+        if (signalStack) delete[] signalStack;
+        signalStack = new Spatial*[signalStackSize];
+    }
+
+
     //needsUpdate = true;
     SendUpdateSignal();
 
-    parent = nullptr;
 }
 
 void Spatial::Invalidate() {
@@ -75,6 +90,8 @@ Spatial::~Spatial() {
     SetAsParent(nullptr);
     delete transformOwned;
 	delete transformUpdate;
+    spatialCount--;
+
 }
 
 TransformMatrix & Spatial::GetGlobalTransform() {
@@ -140,17 +157,18 @@ void Spatial::UpdateModelTransforms(RenderBufferID modelTransform) {
 
 
 void Spatial::SendUpdateSignal() {
-    std::stack<Spatial*> stack;
+    signalStackIndex = 0;
+
     
     Spatial * current;
-    stack.push(this);
-    while(!stack.empty()) {
-        current = stack.top();
-        stack.pop();
+    signalStack[signalStackIndex++] = this;
+    while(signalStackIndex != 0) {
+        current = signalStack[signalStackIndex-1]; 
+        signalStackIndex--;
         current->needsUpdate = true;
         uint32_t ct = current->children.size();
         for(uint32_t i = 0; i < ct; ++i) {
-            stack.push(current->children[i]);
+            signalStack[signalStackIndex++] = (current->children[i]);
         }    
     }
 }

@@ -91,7 +91,8 @@ static InputState thisState;
 static InputState prevState;
 
 
-
+static int mouseX = 0;
+static int mouseY = 0;
 
 
 static bool lockCallbackMaps = false;
@@ -161,6 +162,22 @@ void Input::RunBefore() {
 
 
     bool updated = manager->HandleEvents();
+    mouseY = MouseYDeviceToWorld2D(
+        thisState.devices[
+            (int)InputManager::DefaultDeviceSlots::Mouse
+        ]->axes[
+            (int)MouseAxes::Y
+        ]
+    );
+
+    mouseX = MouseXDeviceToWorld2D(
+        thisState.devices[
+            (int)InputManager::DefaultDeviceSlots::Mouse
+        ]->axes[
+            (int)MouseAxes::X
+        ]
+    );
+
     
     if (keyCallbackMap.size()) {
         for(auto i = keyCallbackMap.begin(); i != keyCallbackMap.end(); ++i) {
@@ -369,27 +386,11 @@ bool Input::IsHeld(const std::string & s) {
 
 
 int Input::MouseX() {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return 0;
-    return
-        MouseXDeviceToWorld2D(
-        thisState.devices[
-            (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->axes[
-            (int)MouseAxes::X
-        ]
-    );
+    return mouseX;
 }
 
 int Input::MouseY() {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return 0;
-    return
-        MouseYDeviceToWorld2D(
-        thisState.devices[
-            (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->axes[
-            (int)MouseAxes::Y
-        ]
-    );
+    return mouseY;
 }
 
 int Input::MouseXDelta() {

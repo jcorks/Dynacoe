@@ -527,15 +527,15 @@ class Dynacoe::TextState {
             // if glyph heigh > glyphH, glyphH = glyph Height
 
         int status = FT_Set_Pixel_Sizes(*fontFace, 0, fontSize);
+        FT_GlyphSlot glyph = (*fontFace)->glyph;            
         assert(status==0);
-        FT_GlyphSlot glyph = (*fontFace)->glyph;
         glyphW = 0;
         glyphU = 0;
         glyphL = 0;
         //for(uint32_t i = 'A'; i < 'Z'; ++i) {
 
         for(uint32_t i = 33; i < 126; ++i) {
-            status = FT_Load_Char(*fontFace, i, FT_LOAD_DEFAULT);
+            status = FT_Load_Char(*fontFace, i, FT_LOAD_RENDER);
             assert(status==0);
             if (glyphW < glyph->bitmap.width)
                 glyphW = glyph->bitmap.width;
@@ -665,6 +665,8 @@ class FontCache {
         }
 
         TextState * state = new TextState;
+        state->SetMode(space);
+
 
         bank.Deposit(state);
 
@@ -751,7 +753,7 @@ void Text2D::Initialize(const std::string & str, const Color & clr) {
     numVerticesAllocd = 0;
 
     fontFace  = nullptr;
-    fontSize  = 12;
+    fontSize  = 0;
     fontSpacing = SpacingMode::Kerned;
 
     modeInst = nullptr;
@@ -767,7 +769,7 @@ void Text2D::Initialize(const std::string & str, const Color & clr) {
     }
     SetTextColor(clr);
     SetFont(defaultFont);
-    
+    SetFontSize(12);
     text = str;
 }
 
@@ -819,7 +821,6 @@ void Text2D::SetSpacingMode(SpacingMode m) {
 
 
     modeInst =    fontCache.Get(fontSize, (FT_Face*)fontFace, fontSpacing);
-    modeInst->SetMode(fontSpacing);
     ReRender();
 }
 
@@ -921,11 +922,7 @@ void Text2D::ReRender() {
 void Text2D::OnDraw() {
     if (text != srcText) {
         srcText = text;
-        if (modeInst) fontCache.Remove(fontSize, (FT_Face*)fontFace, fontSpacing);
 
-
-        if (!fontFace || fontSize<=0) return;
-        modeInst =    fontCache.Get(fontSize, (FT_Face*)fontFace, fontSpacing);
 
         ReRender();
     }

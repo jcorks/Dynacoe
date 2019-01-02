@@ -1,6 +1,75 @@
 
+#include <cstring>
 
 class SpatialMap {
+    
+    // replacement for std::vector<uint32> tailored for:
+    // - reuse (lots of new/deletes -> use GetReserved/Store)
+    // - Lots of inserts
+    // - lots of size and data query
+    class FastVec {
+      private:
+        int alloc;
+      public:
+        static FastVec ** reserve;
+        static int reserveAmt;
+        static int reserveAlloc;
+
+        // preallocated with 16;
+        FastVec() : alloc(16), size(0){
+            data = (uint32_t*)malloc(sizeof(uint32_t)*16);
+        }
+
+        // gets an existing vector for use, faster than new'ing
+        static FastVec * GetReserved() {
+            FastVec * out;           
+            if (reserveAmt) {
+                out = reserve[reserveAmt-1];
+                out->size = 0;
+                reserveAmt--;
+            } else {
+                out = new FastVec();
+            }
+            return out;
+        }
+
+        // stores vector for use as another instance. More efficient than delete'ing
+        void Store() {
+            if (reserveAmt == reserveAlloc) {
+                FastVec ** reserveNew = (FastVec**)malloc(sizeof(FastVec*)*(reserveAlloc+1024));    
+                memcpy(reserveNew, reserve, reserveAlloc*sizeof(FastVec*));
+                free(reserve);
+                reserve = reserveNew; 
+                reserveAlloc += 1024;
+                
+            }
+            reserve[reserveAmt++] = this;
+        }
+
+        // not really used
+        ~FastVec() {
+            free(data);
+        }
+
+    
+        // adds a new member        
+        void push_back(uint32_t d) {
+            data[size++] = d;
+            if (size >= alloc) {
+                uint32_t * newData = (uint32_t*)malloc(alloc*2*sizeof(uint32_t));
+                memcpy(newData, data, sizeof(uint32_t)*alloc);
+                free(data);
+                data = newData;
+                alloc = alloc*2;
+            }
+        }
+
+        // public data and size
+        uint32_t * data;
+        int size;
+        
+        
+    };
   public:
 
     
@@ -11,9 +80,9 @@ class SpatialMap {
         spanH = spanH_;
 
         span = GetClosestEnclosingSpan(numObjects);
-        field = new std::vector<uint32_t>**[span];
+        field = new FastVec**[span];
         for(uint32_t i = 0; i < span; ++i) {
-            field[i] = new std::vector<uint32_t>*[span];
+            field[i] = new FastVec*[span];
             for(uint32_t n = 0; n < span; ++n) {
                 field[i][n] = nullptr;
             }
@@ -23,7 +92,7 @@ class SpatialMap {
     ~SpatialMap() {
         for(uint32_t i = 0; i < span; ++i) {
             for(uint32_t n = 0; n < span; ++n) {
-                if (field[i][n]) delete field[i][n];
+                if (field[i][n]) field[i][n]->Store();
             }
             delete[] field[i];
         }
@@ -36,7 +105,7 @@ class SpatialMap {
         for(int y = range.minY; y <= range.maxY; ++y) {
             for(int x = range.minX; x <= range.maxX; ++x) {
                 if (!field[x][y])
-                    field[x][y] = new std::vector<uint32_t>();
+                    field[x][y] = FastVec::GetReserved();
                     
                 field[x][y]->push_back(index);
             }
@@ -48,11 +117,11 @@ class SpatialMap {
         uint32_t len;
         for(int y = range.minY; y <= range.maxY; ++y) {
             for(int x = range.minX; x <= range.maxX; ++x) {
-                std::vector<uint32_t> * obj = field[x][y];
-                len = obj->size();
+                FastVec * obj = field[x][y];
+                len = obj->size;
                 if (len) {
                     for(uint32_t n = 0; n < len; ++n) {
-                        indicesHit[((*obj)[n])] = true;
+                        indicesHit[(obj->data[n])] = true;
                     }
                 }
             }
@@ -66,12 +135,12 @@ class SpatialMap {
         uint32_t len;
         for(int y = range.minY; y <= range.maxY; ++y) {
             for(int x = range.minX; x <= range.maxX; ++x) {
-                std::vector<uint32_t> * obj = field[x][y];
-                len = obj->size();
+                FastVec * obj = field[x][y];
+                len = obj->size;
                 for(uint32_t n = 0; n < len; ++n) {
-                    if (visited[((*obj)[n])]) continue;
-                    ids.push_back(((*obj)[n]));
-                    visited[((*obj)[n])] = true;
+                    if (visited[(obj->data[n])]) continue;
+                    ids.push_back((obj->data[n]));
+                    visited[(obj->data[n])] = true;
                 }
             }
         }
@@ -130,6 +199,11 @@ class SpatialMap {
     float spanH;
       
     int span;
-    std::vector<uint32_t> *** field;
+    FastVec *** field;
     
 };
+
+SpatialMap::FastVec** SpatialMap::FastVec::reserve = nullptr;
+int SpatialMap::FastVec::reserveAmt = 0;
+int SpatialMap::FastVec::reserveAlloc = 0;
+

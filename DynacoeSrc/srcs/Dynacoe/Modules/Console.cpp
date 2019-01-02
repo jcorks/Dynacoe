@@ -69,7 +69,7 @@ static Entity * messages;
 
 static bool         locked;
 static bool         shown;
-static bool         inputActive;
+static bool         inputActive = false;
 static ConsoleInputStream * streamIn;
 
 
@@ -520,6 +520,12 @@ void Console::Init() {
     Engine::AttachManager(messages->GetID(), false);
     mainGrid->Attach(streamIn->GetID());
     mainGrid->AddColumn("", 1, {.8f, 1.f, .9f, 1.f});
+
+    mainGrid->step = false;
+    mainGrid->draw = false;
+
+    streamIn->draw = false;
+    streamIn->step = false;
 }
 
 void Console::InitAfter() {
@@ -689,6 +695,11 @@ void Console::Show(bool b) {
 
     }
     shown = b;
+
+    mainGrid->draw = shown;
+    mainGrid->step = shown;
+
+  
 }
 
 void Console::PauseOnShow(bool b) {
