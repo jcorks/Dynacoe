@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
     #ifdef _MBCS
         #include <png.h>
     #else
-        #include <libpng/png.h>
+        #include <libpng12/png.h>
     #endif
 #endif
 #include <Dynacoe/Image.h>

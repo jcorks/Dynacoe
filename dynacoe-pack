@@ -57,7 +57,7 @@ cp -r ../licenses/* ./licenses/
 
 # now build it
 rm -f ../dynacoe.tar.xz 
-tar czf ../dynacoe.tar ./
+tar czf ../dynacoe.tar .
 xz --compress ../dynacoe.tar
 cd ..
 rm -f ../dynacoe.tar

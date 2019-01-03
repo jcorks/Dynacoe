@@ -174,24 +174,20 @@ void Dynacoe::OpenGLFBDisplay::SetViewPolicy(ViewPolicy v) {
 }
 
 
-void Dynacoe::OpenGLFBDisplay::AttachSource(Dynacoe::Framebuffer * f) {
-    if (!f) {
-        framebuffer = f;
-        return;
-    }
-    if (deviceHandle != wglGetCurrentDC()) {
-        wglMakeCurrent(
-            deviceHandle, 
-            wglGetCurrentContext()
-        );
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
 
-    if (f->GetHandleType() == Dynacoe::Framebuffer::Type::GLFBPacket)
+void Dynacoe::OpenGLFBDisplay::Update(Dynacoe::Framebuffer * f) {
+    if (framebuffer != f &&
+        f->GetHandleType() == Dynacoe::Framebuffer::Type::GLFBPacket) {
+        if (deviceHandle != wglGetCurrentDC()) {
+            wglMakeCurrent(
+                deviceHandle, 
+                wglGetCurrentContext()
+            );
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
         framebuffer = f;
-}
-
-void Dynacoe::OpenGLFBDisplay::Update() {
+    }
+    
     if (!framebuffer) 
         return;
 
@@ -806,9 +802,6 @@ void OpenGLFBDisplay::setupDisplayProgram() {
 }
 
 
-Dynacoe::Framebuffer * Dynacoe::OpenGLFBDisplay::GetSource() {
-    return framebuffer;
-}
 
 std::vector<Dynacoe::Framebuffer::Type> Dynacoe::OpenGLFBDisplay::SupportedFramebuffers() {
     return std::vector<Dynacoe::Framebuffer::Type>({
