@@ -61,8 +61,8 @@ static size_t ov_memory_read_func(void * ptr, size_t size, size_t nmemb, void * 
 
 struct _OggBlock {
     _OggBlock(){
-        size = 4096;
-        data = new char [4096];
+        size = 1024*1024;
+        data = new char [1024*1024];
     }
     ~_OggBlock() {
         delete[] data;
@@ -145,7 +145,7 @@ Asset * DecodeOGG::operator()(
     vector<_OggBlock *> blockList;
     int section = 0;
     int totalSize = 0;
-
+    
     while(true) {
         _OggBlock * nextBlock = new _OggBlock();
         int size = ov_read(&oggFile,
@@ -174,7 +174,7 @@ Asset * DecodeOGG::operator()(
         delete block;
     }
     
-    out->Append((AudioSample*)data, size/sizeof(AudioSample));
+    out->Define((AudioSample*)data, size/sizeof(AudioSample));
     out->SetVolume(.9);
     delete[] data;
     //out->volume = 255;
