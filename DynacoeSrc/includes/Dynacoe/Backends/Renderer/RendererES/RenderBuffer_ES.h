@@ -83,7 +83,9 @@ class RenderBuffer {
     GLuint glID;
     int size;
     GLenum type;
+    bool needsUpdate;
     float * data;
+
     
 };
 

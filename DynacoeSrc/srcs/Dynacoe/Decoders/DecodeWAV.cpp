@@ -141,7 +141,7 @@ Asset * DecodeWAV::operator()(
     
     std::vector<uint8_t> data = buf.ReadBytes(size);
 
-    out->Append((AudioSample*)(&data[0]), size/sizeof(AudioSample));
+    out->Define((AudioSample*)(&data[0]), size/sizeof(AudioSample));
     
     out->SetVolume(1);
     

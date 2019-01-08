@@ -190,6 +190,31 @@ class Renderer : public Backend {
         float contextHeight;
         
         float * contextTransform;
+
+        bool operator==(const Render2DStaticParameters & other) {
+            return contextWidth == other.contextWidth &&
+                   contextHeight == other.contextHeight &&
+                   contextTransform[0] == other.contextTransform[0] &&
+                   contextTransform[1] == other.contextTransform[1] &&
+                   contextTransform[2] == other.contextTransform[2] &&
+                   contextTransform[3] == other.contextTransform[3] &&
+
+                   contextTransform[4] == other.contextTransform[4] &&
+                   contextTransform[5] == other.contextTransform[5] &&
+                   contextTransform[6] == other.contextTransform[6] &&
+                   contextTransform[7] == other.contextTransform[7] &&
+
+                   contextTransform[8] == other.contextTransform[8] &&
+                   contextTransform[9] == other.contextTransform[9] &&
+                   contextTransform[10] == other.contextTransform[10] &&
+                   contextTransform[11] == other.contextTransform[11] &&
+
+                   contextTransform[12] == other.contextTransform[12] &&
+                   contextTransform[13] == other.contextTransform[13] &&
+                   contextTransform[14] == other.contextTransform[14] &&
+                   contextTransform[15] == other.contextTransform[15];
+        }
+
     };
 
     struct Render2DObjectParameters {
@@ -427,6 +452,9 @@ class Renderer : public Backend {
         AlphaRule * alhaRule
     ) = 0;
 
+
+    // Ensures that the all rendering operations are reflected in the attached target.
+    virtual void Sync() {};
 
     // The passed framebuffer becomes the destination for all future renderings
     // until a different valid framebuffer is given. If the Type of the given

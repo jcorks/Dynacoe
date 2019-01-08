@@ -339,7 +339,7 @@ void Graphics::Commit() {
                    Renderer::Dimension::D_2D,
                    Renderer::AlphaRule::Allow);
 
- 
+    drawBuffer->Sync(); 
     Display * d = ViewManager::Get(ViewManager::GetCurrent());
     Framebuffer * f = Graphics::GetRenderCamera().GetFramebuffer();
     if (d)

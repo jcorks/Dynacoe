@@ -37,6 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #else
     #ifdef _MBCS
         #include <png.h>
+    #elif ANDROID
+        #include <libpng/png.h>
     #else
         #include <libpng12/png.h>
     #endif

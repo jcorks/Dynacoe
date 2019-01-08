@@ -485,8 +485,10 @@ void Renderer2D::Queue2DVertices(const uint32_t * indices, uint32_t count) {
 static int ACTIVE_SLOTS[128];
 static int ACTIVE_IDS  [128];
 
-uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DStaticParameters & params) {
-    if (!data->queuedSize) return 0;
+
+static int r2d_active;
+static GLint r2d_activeID;
+void Renderer2D::Enable2DRenderMode() {
     /*
     if (data->lastW != data->textureSrc->GetTextureW() ||
         data->lastH != data->textureSrc->GetTextureH()) {
@@ -497,10 +499,23 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     */
     
 
-    int active;
-    GLint activeID;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &activeID);
-    glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
+
+
+
+}
+
+void Renderer2D::Disable2DRenderMode() {
+
+
+
+}
+
+uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DStaticParameters & params) {
+    if (!data->queuedSize) return 0;
+
+
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &r2d_activeID);
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &r2d_active);
 
     glUseProgram(data->programHandle);  
 
@@ -512,16 +527,6 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     }
     glUniform1iv(UNIFORM_SLOT__FRAG_TEX_I, slots, ACTIVE_SLOTS);
     
-
-
-
-
-
-    
-
-
-    
-
 
     GLuint currentVbo = data->mainVBO->GenerateBufferID();
     glBindBuffer(GL_ARRAY_BUFFER, currentVbo);
@@ -551,10 +556,25 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     if (VBO_SLOT__OBJECT_C>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_C);
     if (VBO_SLOT__OBJECT_D>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_D);
     
-    glUniform1f(UNIFORM_SLOT__CONTEXT_HEIGHT_F, params.contextHeight);
-    glUniform1f(UNIFORM_SLOT__CONTEXT_WIDTH_F, params.contextWidth);
-    glUniformMatrix4fv(UNIFORM_SLOT__CONTEXT_TRANSFORM_MAT4, 1, true, params.contextTransform);    
 
+
+
+
+
+
+
+
+
+
+
+
+    static Renderer::Render2DStaticParameters oldParams;
+    if (!(oldParams == params)) {
+        glUniform1f(UNIFORM_SLOT__CONTEXT_HEIGHT_F, params.contextHeight);
+        glUniform1f(UNIFORM_SLOT__CONTEXT_WIDTH_F, params.contextWidth);
+        glUniformMatrix4fv(UNIFORM_SLOT__CONTEXT_TRANSFORM_MAT4, 1, true, params.contextTransform);    
+        oldParams = params;
+    }
     
     glDrawElements(
         drawMode, 
@@ -565,9 +585,22 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
 
 
 
+    assert(glGetError() == GL_NO_ERROR);
+    uint32_t size = data->queuedSize;
+    Clear2DQueue();
+
     
 
- 
+
+
+
+
+
+
+
+
+
+
 
     
     if (VBO_SLOT__POS>=0)      glDisableVertexAttribArray(VBO_SLOT__POS);
@@ -581,16 +614,12 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
 
     glUseProgram(0);  
 
-    
 
-    assert(glGetError() == GL_NO_ERROR);
-    uint32_t size = data->queuedSize;
-    Clear2DQueue();
+    glActiveTexture(r2d_active);
+    glBindTexture(GL_TEXTURE_2D, r2d_activeID);
 
-    glActiveTexture(active);
-    glBindTexture(GL_TEXTURE_2D, activeID);
 
-    
+
     return size;
 }
 

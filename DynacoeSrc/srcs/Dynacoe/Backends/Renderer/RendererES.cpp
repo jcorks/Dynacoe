@@ -60,7 +60,7 @@ struct Dynacoe::GLES2Implementation {
     Renderer::Polygon curPolygon;
     Renderer::Dimension curDimension;
     Renderer::AlphaRule curAlphaRule;
-
+    bool render2dEnabled;
     GLenum drawMode;
     
 
@@ -87,6 +87,11 @@ struct Dynacoe::GLES2Implementation {
 
         drawMode = GL_TRIANGLES;
         assert(glGetError() == 0);
+
+        curAlphaRule = Renderer::AlphaRule::Allow;
+        curDimension = Renderer::Dimension::D_2D;
+        curPolygon = Renderer::Polygon::Triangle;
+
     }
 
 };
@@ -98,6 +103,8 @@ struct Dynacoe::GLES2Implementation {
 GLES2::GLES2() {
     ES = new GLES2Implementation();
     assert(glGetError() == 0);
+    ES->render2dEnabled = false;
+    SetDrawingMode(ES->curPolygon, ES->curDimension, ES->curAlphaRule);
 
 
 }
@@ -227,6 +234,11 @@ void GLES2::Set2DObjectParameters(uint32_t object, Render2DObjectParameters data
 
 void GLES2::Render2DVertices(const Render2DStaticParameters & data) {
     if (!ES->target) return;
+    if (!ES->render2dEnabled) {
+        ES->render2d->Enable2DRenderMode();
+        ES->render2dEnabled = true;
+
+    }
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     ES->render2d->Render2DVertices(ES->drawMode, data);
     (*(GLRenderTarget**)ES->target->GetHandle())->Invalidate();
@@ -419,8 +431,24 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::Dimension d, Renderer:
 
 
     switch(d) {
-        case Renderer::Dimension::D_2D: glDisable(GL_DEPTH_TEST); ES->curDimension = d; break;
-        case Renderer::Dimension::D_3D: glEnable(GL_DEPTH_TEST); ES->curDimension = d; break;
+        case Renderer::Dimension::D_2D: 
+            glDisable(GL_DEPTH_TEST); 
+            ES->curDimension = d; 
+            if (!ES->render2dEnabled) {
+                ES->render2d->Enable2DRenderMode();
+                ES->render2dEnabled = true;
+            }
+            break;
+
+        case Renderer::Dimension::D_3D: 
+            glEnable(GL_DEPTH_TEST); 
+            ES->curDimension = d;   
+            if (ES->render2dEnabled) {
+                ES->render2d->Disable2DRenderMode();
+                ES->render2dEnabled = false;
+            }
+            break;
+
         default:;
     }
 
@@ -467,5 +495,10 @@ void GLES2::GetDrawingMode(Polygon * p, Dimension * d, AlphaRule * a) {
 
 ////////////// drawing engine options
 
+
+void GLES2::Sync() {
+    ES->render2d->Disable2DRenderMode();
+    ES->render2dEnabled = false;
+}
 
 #endif

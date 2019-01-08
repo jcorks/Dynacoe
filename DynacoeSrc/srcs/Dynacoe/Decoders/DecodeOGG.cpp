@@ -61,8 +61,8 @@ static size_t ov_memory_read_func(void * ptr, size_t size, size_t nmemb, void * 
 
 struct _OggBlock {
     _OggBlock(){
-        size = 1024*1024;
-        data = new char [1024*1024];
+        size = 4096;
+        data = new char [4096];
     }
     ~_OggBlock() {
         delete[] data;
@@ -145,25 +145,28 @@ Asset * DecodeOGG::operator()(
     vector<_OggBlock *> blockList;
     int section = 0;
     int totalSize = 0;
+    std::vector<char> bufferDecoded;
+    _OggBlock nextBlock;
     
     while(true) {
-        _OggBlock * nextBlock = new _OggBlock();
         int size = ov_read(&oggFile,
-                           nextBlock->data,
-                           nextBlock->size,
+                           nextBlock.data,
+                           nextBlock.size,
                            0, 2, 1, &section);
         if (!size) {
             //Console::Info()  << "Done reading..\n";
             break;
         }
-        nextBlock->size = size;
-        blockList.push_back(nextBlock);
+        nextBlock.size = size;
+        if (totalSize+size > bufferDecoded.size()) {
+            bufferDecoded.resize(bufferDecoded.size()+1024*1024);
+        }
+        memcpy(&bufferDecoded[totalSize], nextBlock.data, size);
         totalSize += size;
     }
 
-
     AudioBlock * out = new AudioBlock(path);
-    char * data = new char[totalSize];
+    /*char * data = new char[totalSize];
     uint32_t size = totalSize;
 
     int bufferPos = 0;
@@ -172,11 +175,11 @@ Asset * DecodeOGG::operator()(
         memcpy(data + bufferPos, block->data, block->size);
         bufferPos += block->size;
         delete block;
-    }
+    }*/
     
-    out->Define((AudioSample*)data, size/sizeof(AudioSample));
+    out->Define((AudioSample*)&bufferDecoded[0], totalSize/sizeof(AudioSample));
     out->SetVolume(.9);
-    delete[] data;
+    //delete[] data;
     //out->volume = 255;
 
     return out;

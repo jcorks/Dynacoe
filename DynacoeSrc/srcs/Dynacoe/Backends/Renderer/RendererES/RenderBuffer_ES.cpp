@@ -52,6 +52,7 @@ RenderBuffer::RenderBuffer() {
     
     data = nullptr;
     type = GL_ARRAY_BUFFER;
+    needsUpdate = false;
     //cout << "[RenderBuffer]: Instantiating buffer" << endl;
 }
 
@@ -98,6 +99,7 @@ void RenderBuffer::UpdateData(const float * dataSrc, int offset, int numElts) {
 
     if (type == GL_ARRAY_BUFFER) {
         // Better, but still slow.
+        /*
         glBindBuffer(GL_ARRAY_BUFFER, glID); 
         //glBufferData(type, size, data, GL_DYNAMIC_DRAW);
 
@@ -112,6 +114,8 @@ void RenderBuffer::UpdateData(const float * dataSrc, int offset, int numElts) {
 
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        */
+        needsUpdate = true;
     }    
 
     assert(glGetError() == GL_NO_ERROR);
@@ -132,6 +136,12 @@ void RenderBuffer::SetType(GLenum e) {
 }
 
 GLuint RenderBuffer::GenerateBufferID() {
+    if (needsUpdate) {
+        glBindBuffer(GL_ARRAY_BUFFER, glID);
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        needsUpdate = false;
+    }
     return glID;
 }
 

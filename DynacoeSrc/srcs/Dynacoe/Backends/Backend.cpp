@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Backends/AudioManager/NoAudio_Multi.h>
 #include <Dynacoe/Backends/AudioManager/RtAudio_Multi.h>
+#include <Dynacoe/Backends/AudioManager/ABAudio_Multi.h>
 
 
 #include <Dynacoe/Backends/Display/NoDisplay_Multi.h>
@@ -92,10 +93,13 @@ Backend * Backend::CreateDefaultRenderer() {
 
 
 Backend * Backend::CreateDefaultAudioManager() {
-    #if defined(DC_BACKENDS_RTAUDIO_WIN32) || defined(DC_BACKENDS_RTAUDIO_ALSA) || defined(DC_BACKENDS_RTAUDIO_OSS)
-    return new RtAudioManager();
+    #ifdef ANDROID
+        return new ABAudio();
+    #else
+        #if defined(DC_BACKENDS_RTAUDIO_WIN32) || defined(DC_BACKENDS_RTAUDIO_ALSA) || defined(DC_BACKENDS_RTAUDIO_OSS)
+        return new RtAudioManager();
+        #endif
     #endif
-
     return new NoAudioManager();
 }
 

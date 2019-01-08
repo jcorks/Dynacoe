@@ -44,7 +44,7 @@ class Renderer2D {
     
 
 
-
+    
 
     
 
@@ -82,6 +82,8 @@ class Renderer2D {
         uint32_t count
     );
 
+    void Enable2DRenderMode();
+    void Disable2DRenderMode();
 
     // renders all currently queued vertices. This clears the queue upon completion.
     uint32_t Render2DVertices(GLenum drawMode, const Renderer::Render2DStaticParameters &);

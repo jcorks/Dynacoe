@@ -43,6 +43,8 @@ DEALINGS IN THE SOFTWARE.
     #else
         #include <GL/glew.h>
     #endif
+#elif ANDROID
+    #include <GLES2/gl2.h>
 #else
     #include <glew.h>    
 #endif

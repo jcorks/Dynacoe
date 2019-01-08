@@ -117,7 +117,7 @@ struct GLES2 : public Dynacoe::Renderer {
     void SetDrawingMode(Polygon, Dimension, AlphaRule);
     void GetDrawingMode(Polygon *, Dimension *, AlphaRule *);
     // drawing engine options
-
+    void Sync();
     void ClearRenderedData();
     bool IsSupported(Capability){return true;}
     void AttachTarget(Dynacoe::Framebuffer *);
