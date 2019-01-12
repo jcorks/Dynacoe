@@ -57,24 +57,10 @@ class StateControl : public Component {
     ///
     /// During each state, different logic is disgnated to run to control
     /// what happens during this state and when the state should be altered.
-    /// The StepFunc of the state loop is is meant to hold the bult of the logic, but 
-    /// it also returns what state should be transitioned to. If the state is to be 
-    /// kept the same, the StepFunc should simply return the empty string. The DrawFunc
-    /// can be used to produce visual effects associated with the state, but
-    /// may not change the current state.
+    /// The StepFunc of the state loop is is meant to hold the bulk of the logic. 
+    /// The DrawFunc can be used to produce visual effects associated with the state.
+    /// The state may be changed any time using Execute.
     ///
-    /// If the state tag returned by the StepFunc does not refer to a valid 
-    /// state part of StateControl, the execution state of the StateControl halts.
-    /// After being halted, the state machine will remain idle until the next
-    /// Execute() is called. 
-    /// 
-    /// 
-    /// It is possible to have multiple StepFuncs associated with the same state.
-    /// In such a case, the last added StepFunc will be run first. If any StepFunc 
-    /// requests to move to another state, all remaining StepFuncs that would 
-    /// would have been run are instead dropped. Note that a request to state-change 
-    /// to the same state also drops all the remaining StepFuncs and triggers. 
-    /// its InitFuncs. To continue normally, the empty string should be returned.
     struct StateLoop {
 
         /// \brief Creates a new StateLoop
@@ -102,28 +88,13 @@ class StateControl : public Component {
     ///
     /// CreateState sets this StateLoop as the only one associated 
     /// with the state ofthe given name.
-    /// The StateLoop function pointers should stay valid for as
-    /// long as this tag associated is valid.
     void CreateState(const std::string & tag, StateLoop);
 
-    /// \brief Adds an additional StateLoop to be associated with a state.
-    ///
-    /// In addition of any existing state loops associated with the 
-    /// given state tag, this StateLoop will be run as well. The order of 
-    /// state functions is from newest to oldest. If no state yet 
-    /// exists ofthe given tag, this call is equivalent to CreateState()
-    void ConnectState(const std::string & tag, StateLoop);
 
     /// \brief Removes the state.
     ///
     /// No action is taken if the tag does not refer to a valid state.
     void RemoveState(const std::string & tag);
-
-    /// \brief Specifically removes the given stateloop if associated with the given state tag.
-    ///
-    /// If tag and StateLoop dont correspond to an existing 
-    /// relationship, no action is taken. 
-    void RemoveLoop(const std::string & tag, StateLoop);
 
     /// \brief Begins the state machine execution loop from the given state.
     ///
@@ -152,8 +123,10 @@ class StateControl : public Component {
     void OnDraw();
     std::string GetInfo();
   private:
-    std::map<std::string, std::vector<StateLoop>> states;
+    std::map<std::string, StateLoop> states;
     std::string current;
+    StateLoop currentData;
+    bool hasCurrent;
     bool midTerminate;
     bool queuedInit;
 };

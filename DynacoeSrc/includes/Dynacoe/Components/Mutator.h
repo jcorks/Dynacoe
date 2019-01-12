@@ -58,6 +58,8 @@ namespace Dynacoe {
  *  the mutation interface.
  *  All times are delt with in seconds and
  *  the Mutator always begins at time 0.
+ * Known events:
+ * "on-finish" - Called when the end of a mutation cycle is detected. Stopping the mutation will also trigger this event.
 */
 class Mutator : public Component {
   public:

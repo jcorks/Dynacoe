@@ -142,6 +142,7 @@ Mutator::Mutator() : Component(),
       registr(new MutationState(0, Function::Constant, 0, 0, 0, false))
 {
     SetTag("Mutator");
+    InstallEvent("on-finish");
     bindVectors = new std::vector<std::pair<void*, BindFunctionBase>>[MTBind_UInt64+1];
     hasBinds = false;
     accountForLastStep = true;
@@ -214,9 +215,10 @@ void Mutator::Start() {
 }
 
 void Mutator::Stop() {
+    accountForLastStep = true;
+    EmitEvent("on-finish");
     timer.Set();
     timer.Pause();
-    accountForLastStep = true;
 }
 
 void Mutator::Loop(bool b) { isLooping = b; }
@@ -297,8 +299,11 @@ void Mutator::OnStep() {
                 }
             }
         }
-        if (exp)
+        if (exp) {
             accountForLastStep = true;
+            EmitEvent("on-finish");
+
+        }
     }
     if (exp && isLooping) {
         timer.Set();

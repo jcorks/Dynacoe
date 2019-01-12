@@ -37,8 +37,10 @@ class SpatialMap {
         void Store() {
             if (reserveAmt == reserveAlloc) {
                 FastVec ** reserveNew = (FastVec**)malloc(sizeof(FastVec*)*(reserveAlloc+1024));    
-                memcpy(reserveNew, reserve, reserveAlloc*sizeof(FastVec*));
-                free(reserve);
+                if (reserve) {
+                    memcpy(reserveNew, reserve, reserveAlloc*sizeof(FastVec*));
+                    free(reserve);
+                }
                 reserve = reserveNew; 
                 reserveAlloc += 1024;
                 

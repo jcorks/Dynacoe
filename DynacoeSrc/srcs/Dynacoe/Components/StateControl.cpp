@@ -36,36 +36,27 @@ using namespace Dynacoe;
 
 StateControl::StateControl(): Component(){
     SetTag("StateControl");
-
+    hasCurrent = false;
+    midTerminate = false;
+    queuedInit = false;
     current = "";
 }
 
 void StateControl::CreateState(const std::string & tag, StateLoop loop) {
-    std::vector<StateLoop> & localStates = states[tag];
-    localStates.clear();
-    localStates.push_back(loop);
-}
-
-void StateControl::ConnectState(const std::string & tag, StateLoop loop) {
-    std::vector<StateLoop> & localStates = states[tag];
-    localStates.push_back(loop);
+    states[tag] = loop;
+    if (current == tag) {
+        currentData = loop;
+    }
 }
 
 void StateControl::RemoveState(const std::string & tag) {
     auto iter = states.find(tag);
-    if (iter != states.end()) 
-        states.erase(iter);
-}
-
-void StateControl::RemoveLoop(const std::string & tag, StateLoop loop) {
-    auto iter = states.find(tag);
     if (iter != states.end()) {
-        auto loops = iter->second;
-        for(size_t i = 0; i < loops.size(); ++i) {
-            if (loops[i] == loop) {
-                loops.erase(loops.begin() + i);
-                return;
-            }
+        states.erase(iter);
+        if (current == tag) {
+            midTerminate = true;
+            hasCurrent = false;
+            
         }
     }
 }
@@ -76,17 +67,20 @@ void StateControl::Execute(const std::string & tag) {
     auto iter = states.find(tag);
     if (iter == states.end()) return;
     current = tag;
-    midTerminate = true;
+    currentData = iter->second;
+    midTerminate = false;
+    hasCurrent = true;
     queuedInit = true;
 }
 
 void StateControl::Halt() {
     current = "";
+    hasCurrent = false;
     midTerminate = true;
 }
 
 bool StateControl::IsHalted() {
-    return !current.size() || !GetHost() || current == "";
+    return !current.size() || !GetHost() || !hasCurrent;
 }
 
 std::string StateControl::GetCurrentState() {
@@ -97,67 +91,33 @@ std::string StateControl::GetCurrentState() {
 
 void StateControl::OnStep() {
     if (IsHalted()) return;
-    midTerminate = false;
-    StateLoop * state;
-    auto iter = states.find(current);
-
-    
-    // Looks like we ran on a state that was removed. Halt the machine.
-    if (iter == states.end()) {
-        current = "";
-        return;
-    }
-    auto loops = iter->second;
+    StateLoop * state = &currentData;
 
 
     // if this is the first Step set of this state,
     // we need to step any init functions of the state loop.
     if (queuedInit) {
-        for(int64_t i = loops.size()-1; i >= 0; --i) {
-            state = &loops[i];
-            if (state->Init) state->Init(state->data, this, GetHostID(), Entity::ID(), {});
-            if (midTerminate) return;
-        }
+        if (state->Init) state->Init(state->data, this, GetHostID(), Entity::ID(), {});
         queuedInit = false;      
+        if (midTerminate) return;
     }
 
 
 
-    // Go through all step funcs associated with the state 
-    // Keep stepnign until one requests a state change    
-    for(int64_t i = loops.size()-1; i >= 0; --i) {
-        state = &loops[i];        
 
-        // The stepFunc, while conventional, is not necessary. Merely skip  
-        // if it DNE.
-        if (!state->Step) {
-            continue;
-        }
+    // The stepFunc, while conventional, is not necessary. Merely skip  
+    // if it DNE.
+    if (state->Step) {
+        state->Step(state->data, this, GetHostID(), Entity::ID(), {});        
+    }
         
-        // execute all from the end of the state loop
-        state->Step(state->data, this, GetHostID(), Entity::ID(), {});
-        if (midTerminate) return;        
-    }
 
 }
 
 void StateControl::OnDraw() {
-    if (IsHalted()) return;
-    midTerminate = true;
+    if (IsHalted() || !currentData.Draw) return;
 
-    auto iter = states.find(current);
-
-    auto loops = iter->second;
-    StateLoop * state;
-    for(int64_t i = loops.size()-1; i >= 0; --i) {
-        state = &loops[i];
-        
-        if (state->Draw) {
-            state->Draw(state->data, this, GetHostID(), Entity::ID(), {});
-            if (midTerminate) return;
-        }        
-        
-    }
+    currentData.Draw(currentData.data, this, GetHostID(), Entity::ID(), {});
 }
 
 std::string StateControl::GetInfo() {
