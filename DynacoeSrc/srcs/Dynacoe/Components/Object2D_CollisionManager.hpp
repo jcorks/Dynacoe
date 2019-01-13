@@ -16,6 +16,7 @@ class CollisionManager : public Dynacoe::Entity {
         SetName("Object2D::CollisionManager");
         tree = nullptr;
         map = nullptr;
+        map = new SpatialMap();
     }
 
       
@@ -145,10 +146,6 @@ class CollisionManager : public Dynacoe::Entity {
         float spaceH = spaceY2 - spaceY;
 
 
-        if (map) {
-            delete map;
-            map = nullptr;
-        }
         // no viable collision detection can occur, so just update the objects and drop out.
         if (spaceW == 0.f || spaceH == 0.f) {
             for(uint32_t i = 0; i < numObj; ++i) {
@@ -158,14 +155,14 @@ class CollisionManager : public Dynacoe::Entity {
             }
             return;
         }
-        map = new SpatialMap(
+
+        map->Reset(
             spaceX,
             spaceY,
             spaceW,
             spaceH,
             numObj
         );
-        
         
         
         for(uint32_t i = 0; i < numObj; ++i) {

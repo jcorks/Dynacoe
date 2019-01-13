@@ -75,41 +75,67 @@ class SpatialMap {
   public:
 
     
-    SpatialMap(float spanX_, float spanY_, float spanW_, float spanH_, uint32_t numObjects) {
+    SpatialMap() {
+        size = 0;
+        allocSize = 0;
+        field = nullptr;
+    }  
+
+    void Reset(float spanX_, float spanY_, float spanW_, float spanH_, uint32_t numObjects) {
         spanX = spanX_;
         spanY = spanY_;
         spanW = spanW_;
         spanH = spanH_;
+    
+        // clear prev data
+        if (size) {
+            FastVec ** layer = field;
+            for(uint32_t i = 0; i < size; ++i) {
+                if (*layer) {
+                    (*layer)->Store();
+                    *layer = nullptr;
+                }                
+                layer++;
+            }
+        }
+
 
         span = GetClosestEnclosingSpan(numObjects);
-        field = new FastVec**[span];
-        for(uint32_t i = 0; i < span; ++i) {
-            field[i] = new FastVec*[span];
-            for(uint32_t n = 0; n < span; ++n) {
-                field[i][n] = nullptr;
-            }
-        }
+        if (span*span > allocSize) {
+            free(field);
+            field = (FastVec**)calloc(sizeof(FastVec*), span*span);
+            allocSize = span*span;
+        } 
+        size = span*span;
     }
     
+
     ~SpatialMap() {
-        for(uint32_t i = 0; i < span; ++i) {
-            for(uint32_t n = 0; n < span; ++n) {
-                if (field[i][n]) field[i][n]->Store();
-            }
-            delete[] field[i];
+        FastVec ** layer = field;
+        uint32_t total = span*span;
+        for(uint32_t i = 0; i < total; ++i) {
+            if (*layer) (*layer)->Store();
+            layer++;
         }
-        delete[] field;
+        free(field);
     }
     
     void Insert(const BoundingBox & region, uint32_t index) {
         XYRange range = GetCoveredRegions(region);
-        
-        for(int y = range.minY; y <= range.maxY; ++y) {
-            for(int x = range.minX; x <= range.maxX; ++x) {
-                if (!field[x][y])
-                    field[x][y] = FastVec::GetReserved();
+        uint32_t len;
+        FastVec ** iter;;
+        int xstart = range.minX;
+        int xend   = range.maxX;
+        int ystart = range.minY;
+        int yend   = range.maxY;
+        for(int y = ystart; y <= yend; ++y) {
+            iter = field+y*span+xstart;
+            for(int x = xstart; x <= xend; ++x) {
+                if (!*iter)
+                    *iter = FastVec::GetReserved();
                     
-                field[x][y]->push_back(index);
+                (*iter)->push_back(index);
+                *iter++;
             }
         }
     }
@@ -117,15 +143,22 @@ class SpatialMap {
     void Query(const BoundingBox & region, std::unordered_map<uint32_t, bool> & indicesHit) {
         XYRange range = GetCoveredRegions(region);
         uint32_t len;
-        for(int y = range.minY; y <= range.maxY; ++y) {
-            for(int x = range.minX; x <= range.maxX; ++x) {
-                FastVec * obj = field[x][y];
+        FastVec ** iter;
+        int xstart = range.minX;
+        int xend   = range.maxX;
+        int ystart = range.minY;
+        int yend   = range.maxY;
+        for(int y = ystart; y <= yend; ++y) {
+            iter = field+y*span+xstart;
+            for(int x = xstart; x <= xend; ++x) {
+                FastVec * obj = *iter;
                 len = obj->size;
                 if (len) {
                     for(uint32_t n = 0; n < len; ++n) {
                         indicesHit[(obj->data[n])] = true;
                     }
                 }
+                iter++;
             }
         }
         
@@ -135,15 +168,22 @@ class SpatialMap {
     void QueryFast(const BoundingBox & region, uint8_t * visited, std::vector<uint32_t> & ids) {
         XYRange range = GetCoveredRegions(region);
         uint32_t len;
-        for(int y = range.minY; y <= range.maxY; ++y) {
-            for(int x = range.minX; x <= range.maxX; ++x) {
-                FastVec * obj = field[x][y];
+        FastVec ** iter;
+        int xstart = range.minX;
+        int xend   = range.maxX;
+        int ystart = range.minY;
+        int yend   = range.maxY;
+        for(int y = ystart; y <= yend; ++y) {
+            iter = field+y*span+xstart;
+            for(int x = xstart; x <= xend; ++x) {
+                FastVec * obj = *iter;
                 len = obj->size;
                 for(uint32_t n = 0; n < len; ++n) {
                     if (visited[(obj->data[n])]) continue;
                     ids.push_back((obj->data[n]));
                     visited[(obj->data[n])] = true;
                 }
+                iter++;
             }
         }
         
@@ -201,7 +241,9 @@ class SpatialMap {
     float spanH;
       
     int span;
-    FastVec *** field;
+    uint32_t size;
+    uint32_t allocSize;
+    FastVec ** field;
     
 };
 
