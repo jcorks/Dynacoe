@@ -251,8 +251,8 @@ float Mutator::GetAt(float atTime) {
 
     auto iter = lower_bound(states.begin(), states.end(), registr, CompareMutationState());
     auto prev = iter;
+    if (!states.size()) return begin;
     if (prev != states.begin()) prev--;
-
 
 
 
