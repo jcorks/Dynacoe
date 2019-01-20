@@ -205,7 +205,7 @@ AssetID Assets::Load(const string & ext, const string & name, bool standard) {
     InputBuffer * f = new InputBuffer;
     f->Open(path.c_str());
     if (!f->Size()) {
-        Console::Error() << "[Dynacoe::Assets]: Failed to load file " << name<< Console::End();
+        //Console::Error() << "[Dynacoe::Assets]: Failed to load file " << name<< Console::End();
         delete f;
         return AssetID();
     }
@@ -251,8 +251,8 @@ AssetID Assets::LoadFromBuffer(
 
 
     if (!out) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to load "<< typeToString(dec->GetType())
-                 << " \"" << name << "\" !" << Console::End();
+        //Console::Error()  << "[Dynacoe::Assets]: Failed to load "<< typeToString(dec->GetType())
+        //         << " \"" << name << "\" !" << Console::End();
         return AssetID();
     }
 
@@ -262,12 +262,12 @@ AssetID Assets::LoadFromBuffer(
 
 bool Assets::Write(AssetID id, const std::string & ext, const std::string & name) {
     if (!id.Valid()) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
+        //Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
         return false;
     }
     Asset * asset = assetList[id.GetType()][id.GetHandle()];
     if (!asset) {
-        Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
+        //Console::Error()  << "[Dynacoe::Assets]: Failed to write asset: asset not found!"<< Console::End();
         return false;
     }
     return Encode(id.GetType(), asset, ext, name);

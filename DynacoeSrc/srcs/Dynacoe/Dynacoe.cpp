@@ -230,7 +230,7 @@ class PlaceholderDisplay : public Entity {
         shape = AddComponent<Shape2D>();
         background = Graphics::GetRenderCamera().GetBackVisual();
         shape->FormImage(background);
-        Node().Position() = {0.f, 0.f};        
+        Node().Position() = Dynacoe::Graphics::GetCamera2D().Node().Position();
     }
     
     void OnRemove() {
