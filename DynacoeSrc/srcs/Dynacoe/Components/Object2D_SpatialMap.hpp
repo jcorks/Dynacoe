@@ -135,7 +135,7 @@ class SpatialMap {
                     *iter = FastVec::GetReserved();
                     
                 (*iter)->push_back(index);
-                *iter++;
+                iter++;
             }
         }
     }
