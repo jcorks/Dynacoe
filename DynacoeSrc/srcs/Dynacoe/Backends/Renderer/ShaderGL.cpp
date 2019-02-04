@@ -309,14 +309,14 @@ int ShaderGLRenderer::AddTexture(int w, int h, const uint8_t * data) {
 }
 
 
-void ShaderGLRenderer::SetDrawingMode(Polygon p, Dimension d, AlphaRule a) {
+void ShaderGLRenderer::SetDrawingMode(Polygon p, DepthTest d, AlphaRule a) {
     resolveDisplayMode(p, d, a);
 }
 
 
-void ShaderGLRenderer::GetDrawingMode(Polygon * p, Dimension * d, AlphaRule * a) {
+void ShaderGLRenderer::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a) {
     *p = curPolygon;
-    *d = curDimension;
+    *d = curDepthTest;
     *a = curAlphaRule;
 }
 

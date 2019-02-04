@@ -8,7 +8,7 @@ BACKENDS			= $(shell cat lib_defines)
 #--------------------
 
 
-CC = g++  -fmax-errors=5 -fsanitize=address -fsanitize=undefined
+CC = g++  -fmax-errors=5
 
 # Define Dynacoe assets
 

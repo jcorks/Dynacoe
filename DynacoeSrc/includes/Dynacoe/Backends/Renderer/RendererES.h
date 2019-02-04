@@ -114,8 +114,8 @@ struct GLES2 : public Dynacoe::Renderer {
 
 
     // drawing engine options
-    void SetDrawingMode(Polygon, Dimension, AlphaRule);
-    void GetDrawingMode(Polygon *, Dimension *, AlphaRule *);
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule);
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *);
     // drawing engine options
     void Sync();
     void ClearRenderedData();

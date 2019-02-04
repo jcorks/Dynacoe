@@ -489,7 +489,7 @@ void ShaderGLRenderer::framebufferCheck() {
 
 
 void ShaderGLRenderer::resolveDisplayMode(
-    ShaderGLRenderer::Polygon p, ShaderGLRenderer::Dimension d, ShaderGLRenderer::AlphaRule a) {
+    ShaderGLRenderer::Polygon p, ShaderGLRenderer::DepthTest d, ShaderGLRenderer::AlphaRule a) {
 
     
     switch(p) {
@@ -503,8 +503,11 @@ void ShaderGLRenderer::resolveDisplayMode(
 
 
     switch(d) {
-        case ShaderGLRenderer::Dimension::D_2D: glDisable(GL_DEPTH_TEST); curDimension = d; break;
-        case ShaderGLRenderer::Dimension::D_3D: glEnable(GL_DEPTH_TEST); curDimension = d; break;
+        case ShaderGLRenderer::DepthTest::NoTest:  glDisable(GL_DEPTH_TEST); curDepthTest = d; break;
+        case ShaderGLRenderer::DepthTest::Greater: glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GREATER); curDepthTest = d; break;
+        case ShaderGLRenderer::DepthTest::Less:    glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS); curDepthTest = d; break;
+        case ShaderGLRenderer::DepthTest::GEQ:     glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GEQUAL); curDepthTest = d; break;
+        case ShaderGLRenderer::DepthTest::LEQ:     glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LEQUAL); curDepthTest = d; break;
         default:;
     }
 

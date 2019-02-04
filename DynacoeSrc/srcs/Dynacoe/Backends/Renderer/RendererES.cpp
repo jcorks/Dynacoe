@@ -58,9 +58,8 @@ struct Dynacoe::GLES2Implementation {
     Dynacoe::Light_ES * lighting;
 
     Renderer::Polygon curPolygon;
-    Renderer::Dimension curDimension;
+    Renderer::DepthTest curDepthTest;
     Renderer::AlphaRule curAlphaRule;
-    bool render2dEnabled;
     GLenum drawMode;
     
 
@@ -89,7 +88,7 @@ struct Dynacoe::GLES2Implementation {
         assert(glGetError() == 0);
 
         curAlphaRule = Renderer::AlphaRule::Allow;
-        curDimension = Renderer::Dimension::D_2D;
+        curDepthTest = Renderer::DepthTest::None;
         curPolygon = Renderer::Polygon::Triangle;
 
     }
@@ -103,8 +102,7 @@ struct Dynacoe::GLES2Implementation {
 GLES2::GLES2() {
     ES = new GLES2Implementation();
     assert(glGetError() == 0);
-    ES->render2dEnabled = false;
-    SetDrawingMode(ES->curPolygon, ES->curDimension, ES->curAlphaRule);
+    SetDrawingMode(ES->curPolygon, ES->curDepthTest, ES->curAlphaRule);
 
 
 }
@@ -234,11 +232,6 @@ void GLES2::Set2DObjectParameters(uint32_t object, Render2DObjectParameters data
 
 void GLES2::Render2DVertices(const Render2DStaticParameters & data) {
     if (!ES->target) return;
-    if (!ES->render2dEnabled) {
-        ES->render2d->Enable2DRenderMode();
-        ES->render2dEnabled = true;
-
-    }
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     ES->render2d->Render2DVertices(ES->drawMode, data);
     (*(GLRenderTarget**)ES->target->GetHandle())->Invalidate();
@@ -415,7 +408,7 @@ int GLES2::NumLights(){
 
 
 /////////// drawing engine options
-void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::Dimension d, Renderer::AlphaRule a) {
+void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a) {
 
     
     switch(p) {
@@ -431,23 +424,12 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::Dimension d, Renderer:
 
 
     switch(d) {
-        case Renderer::Dimension::D_2D: 
-            glDisable(GL_DEPTH_TEST); 
-            ES->curDimension = d; 
-            if (!ES->render2dEnabled) {
-                ES->render2d->Enable2DRenderMode();
-                ES->render2dEnabled = true;
-            }
-            break;
+        case Renderer::DepthTest::NoTest:  glDisable(GL_DEPTH_TEST); curDepthTest = d; break;
+        case Renderer::DepthTest::Greater: glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GREATER); ES->curDepthTest = d; break;
+        case Renderer::DepthTest::Less:    glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS); ES->curDepthTest = d; break;
+        case Renderer::DepthTest::GEQ:     glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GEQUAL); ES->curDepthTest = d; break;
+        case Renderer::DepthTest::LEQ:     glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LEQUAL); ES->curDepthTest = d; break;
 
-        case Renderer::Dimension::D_3D: 
-            glEnable(GL_DEPTH_TEST); 
-            ES->curDimension = d;   
-            if (ES->render2dEnabled) {
-                ES->render2d->Disable2DRenderMode();
-                ES->render2dEnabled = false;
-            }
-            break;
 
         default:;
     }
@@ -487,9 +469,9 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::Dimension d, Renderer:
 }
 
 
-void GLES2::GetDrawingMode(Polygon * p, Dimension * d, AlphaRule * a) {
+void GLES2::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a) {
     *p = ES->curPolygon;
-    *d = ES->curDimension;
+    *d = ES->curDepthTest;
     *a = ES->curAlphaRule;
 }
 
@@ -498,7 +480,6 @@ void GLES2::GetDrawingMode(Polygon * p, Dimension * d, AlphaRule * a) {
 
 void GLES2::Sync() {
     ES->render2d->Disable2DRenderMode();
-    ES->render2dEnabled = false;
 }
 
 #endif

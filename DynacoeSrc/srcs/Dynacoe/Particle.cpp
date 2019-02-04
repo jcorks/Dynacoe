@@ -241,7 +241,7 @@ void ParticleEmitter2D::OnDraw() {
     Renderer * drawBuffer = Graphics::GetRenderer();
 
 
-    Renderer::Dimension d;
+    Renderer::DepthTest d;
     Renderer::Polygon p;
     Renderer::AlphaRule a;
 
@@ -251,7 +251,7 @@ void ParticleEmitter2D::OnDraw() {
     Graphics::Flush2D();
 
     drawBuffer->SetDrawingMode(Renderer::Polygon::Triangle,
-                               Renderer::Dimension::D_2D,
+                               Renderer::DepthTest::NoTest,
                                translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow);
 
     // particle drawing always uses bilinear filtering and

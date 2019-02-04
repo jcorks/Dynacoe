@@ -93,8 +93,8 @@ class NoRenderer : public Renderer {
 
 
     bool IsSupported(Capability){return true;}
-    void SetDrawingMode(Polygon, Dimension, AlphaRule){}
-    void GetDrawingMode(Polygon *, Dimension *, AlphaRule *){}
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule){}
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *){}
     void AttachTarget(Dynacoe::Framebuffer * f){target = f;}
     Dynacoe::Framebuffer * GetTarget(){return target;}
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){

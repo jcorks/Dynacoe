@@ -90,7 +90,7 @@ static std::vector<int> consoleTextures;
 
 
 struct GraphicsState {
-    Renderer::Dimension dim;
+    Renderer::DepthTest dim;
     Renderer::Polygon polygon;
     Renderer::AlphaRule alpha;
 
@@ -147,7 +147,7 @@ static float quadTex[] {
 
 
 static void storeFont();
-static void setDisplayMode(Renderer::Polygon p, Renderer::Dimension, Renderer::AlphaRule a);
+static void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest, Renderer::AlphaRule a);
 
 
 
@@ -195,7 +195,7 @@ void Graphics::Init() {
 
         state.alpha = Renderer::AlphaRule::Opaque;
         state.polygon = Renderer::Polygon::Line;
-        state.dim = Renderer::Dimension::D_2D;
+        state.dim = Renderer::DepthTest::NoTest;
 
 
         //state.currentCamera2D = GetCamera2D().GetID();
@@ -216,7 +216,7 @@ void Graphics::Init() {
 
 
         setDisplayMode(Renderer::Polygon::Triangle,
-                       Renderer::Dimension::D_2D,
+                       Renderer::DepthTest::NoTest,
                        Renderer::AlphaRule::Allow);
 
 }
@@ -269,7 +269,7 @@ void Graphics::Draw(Render2D & aspect) {
 
 
     setDisplayMode(aspect.GetPolygon(),
-                   Renderer::Dimension::D_2D,
+                   Renderer::DepthTest::NoTest,
                    aspect.mode == Render2D::RenderMode::Translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow);
 
     if (round(params2D.contextWidth) != cam2d->Width() ||
@@ -291,7 +291,7 @@ void Graphics::Draw(RenderMesh & aspect) {
 
     // flush out any queued dynamic actions
     setDisplayMode(aspect.GetRenderPrimitive(),
-                   Renderer::Dimension::D_3D,
+                   Renderer::DepthTest::Less,
                    Renderer::AlphaRule::Allow);
 
     drawBuffer->Render2DVertices(params2D);
@@ -336,7 +336,7 @@ void Graphics::Commit() {
 
     drawBuffer->Render2DVertices(params2D);
     setDisplayMode(Renderer::Polygon::Triangle,
-                   Renderer::Dimension::D_2D,
+                   Renderer::DepthTest::NoTest,
                    Renderer::AlphaRule::Allow);
 
     drawBuffer->Sync(); 
@@ -544,7 +544,7 @@ void Graphics::Flush2D() {
     drawBuffer->Render2DVertices(params2D);
 }
 
-void setDisplayMode(Renderer::Polygon p, Renderer::Dimension d, Renderer::AlphaRule a) {
+void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a) {
 	if (state.polygon != p || state.alpha != a || state.dim != d) {
 
         // Settings with which to draw have changed, so we commit what we have and start over

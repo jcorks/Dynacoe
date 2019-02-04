@@ -123,8 +123,8 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
 
 
     bool IsSupported(Capability);
-    void SetDrawingMode(Polygon, Dimension, AlphaRule);
-    void GetDrawingMode(Polygon *, Dimension *, AlphaRule *);
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule);
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *);
     void AttachTarget(Dynacoe::Framebuffer *);
     Dynacoe::Framebuffer * GetTarget();
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers();
@@ -152,7 +152,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
 
 
     // list of reserved active textures
-    void resolveDisplayMode(Renderer::Polygon, Renderer::Dimension, Renderer::AlphaRule);
+    void resolveDisplayMode(Renderer::Polygon, Renderer::DepthTest, Renderer::AlphaRule);
     void resolveDisplayMode();
     void onFirstAttach();
     void initGL();
@@ -205,7 +205,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
 
     Polygon curPolygon;
     AlphaRule curAlphaRule;
-    Dimension curDimension;
+    DepthTest curDepthTest;
 
 
     

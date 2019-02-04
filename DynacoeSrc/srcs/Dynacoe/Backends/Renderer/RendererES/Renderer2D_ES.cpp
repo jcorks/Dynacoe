@@ -488,27 +488,7 @@ static int ACTIVE_IDS  [128];
 
 static int r2d_active;
 static GLint r2d_activeID;
-void Renderer2D::Enable2DRenderMode() {
-    /*
-    if (data->lastW != data->textureSrc->GetTextureW() ||
-        data->lastH != data->textureSrc->GetTextureH()) {
-        data->RebaseTextures();
-        data->lastW = data->textureSrc->GetTextureW();
-        data->lastH = data->textureSrc->GetTextureH();
-    }
-    */
-    
 
-
-
-
-}
-
-void Renderer2D::Disable2DRenderMode() {
-
-
-
-}
 
 uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DStaticParameters & params) {
     if (!data->queuedSize) return 0;

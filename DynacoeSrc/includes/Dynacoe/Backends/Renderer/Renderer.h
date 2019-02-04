@@ -144,9 +144,12 @@ class Renderer : public Backend {
     };
 
 
-    enum class Dimension {
-        D_2D,
-        D_3D
+    enum class DepthTest {
+        Less,
+        LEQ,
+        Greater,
+        GEQ,
+        NoTest
     };
 
 
@@ -441,14 +444,14 @@ class Renderer : public Backend {
     // Modifes how all following drawn geometry is handled.
     virtual void SetDrawingMode (
         Polygon,
-        Dimension,
+        DepthTest,
         AlphaRule
     ) = 0;
 
     // Retrieves how all the geometry will be drawn
     virtual void GetDrawingMode (
         Polygon * polygon,
-        Dimension * dimension,
+        DepthTest * dimension,
         AlphaRule * alhaRule
     ) = 0;
 
