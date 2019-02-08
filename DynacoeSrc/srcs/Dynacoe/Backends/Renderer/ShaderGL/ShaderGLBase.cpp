@@ -489,7 +489,7 @@ void ShaderGLRenderer::framebufferCheck() {
 
 
 void ShaderGLRenderer::resolveDisplayMode(
-    ShaderGLRenderer::Polygon p, ShaderGLRenderer::DepthTest d, ShaderGLRenderer::AlphaRule a) {
+    ShaderGLRenderer::Polygon p, ShaderGLRenderer::DepthTest d, ShaderGLRenderer::AlphaRule a, Renderer::EtchRule e) {
 
     
     switch(p) {
@@ -500,6 +500,34 @@ void ShaderGLRenderer::resolveDisplayMode(
 
     }
 
+    switch(e) {
+        case Renderer::EtchRule::NoEtching: curEtchRule = e; glDisable(GL_STENCIL_TEST); break;
+        case Renderer::EtchRule::EtchDefine: 
+            curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_ALWAYS, 1, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            break;
+
+        case Renderer::EtchRule::EtchUndefine: 
+            curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_ALWAYS, 0, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            break;
+
+        case Renderer::EtchRule::EtchIn: 
+            curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_EQUAL, 1, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            break;
+
+
+    }
 
 
     switch(d) {
@@ -517,19 +545,14 @@ void ShaderGLRenderer::resolveDisplayMode(
             glEnable(GL_BLEND);
             glAlphaFunc(GL_GREATER,0);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            curAlphaRule = a;
-            break;
-
-        case ShaderGLRenderer::AlphaRule::PassThrough:
-            glDisable(GL_ALPHA_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ZERO);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
             curAlphaRule = a;
             break;
 
         case ShaderGLRenderer::AlphaRule::Opaque:
             glDisable(GL_ALPHA_TEST);
             glDisable(GL_BLEND);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
             curAlphaRule = a;
             break;
 
@@ -539,10 +562,14 @@ void ShaderGLRenderer::resolveDisplayMode(
             glEnable(GL_BLEND);
             glAlphaFunc(GL_GREATER,0);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
             curAlphaRule = a;
             break;
 
-
+        case Renderer::AlphaRule::Invisible:
+            glDisable(GL_ALPHA_TEST);
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
+            curAlphaRule = a;
 
         default:;
 

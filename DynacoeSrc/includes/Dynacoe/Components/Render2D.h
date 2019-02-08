@@ -47,16 +47,29 @@ class Render2D : public Component, public Spatial {
     enum class RenderMode {
         Normal, ///<This is the default. Colors are interpreted as you would normally expect
                 /// with the alpha channle being expressed as a transparency value.
+        Opaque, ///< Ignores transparency overall.        
         Translucent, ///<Translucency in Dynacoe is a way of expressing transparency. When an Aspect is
                      /// translucent, the aspect's colors are added to whatever is drawn underneath it.
                      /// This is referred to in some places as additive blending.
         None, ///< If an aspect's render mode is None, it will not be drawn.
     };
 
+    enum class EtchMode {
+        EtchIgnore,   ///<Default, ignores etching.
+        EtchDefine,   ///<Defines the etchable region, but with no visual
+        EtchUndefine, ///<Undefines a previously defined region
+        EtchIn,       ///<Draws only on regions with the etch defined
+    };
+
     /// \brief  The visual mode for rendered vertices
     ///
     /// See Renderer.h
     RenderMode mode;
+
+    /// \brief The etching mode. Etching can use custom geometry to define what should and
+    /// should not be shown.
+    ///
+    EtchMode etch;
 
 
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 

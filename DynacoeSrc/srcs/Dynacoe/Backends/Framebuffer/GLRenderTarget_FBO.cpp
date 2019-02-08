@@ -75,6 +75,7 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
     glGenTextures(1, &texture);
     glGenFramebuffers (1, &framebuffer);
     glGenRenderbuffers(1, &renderbuffer);
+    glGenRenderbuffers(1, &renderbufferStencil);
 
 
     GLint oldT, oldFB, oldRB;
@@ -99,12 +100,16 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
     #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 640, 480);
-    #else 
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 640, 480);
-    #endif
-    
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, 640, 480);    
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferStencil);
+    #else
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 640, 480);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+    #endif 
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
 
     glBindTexture(GL_TEXTURE_2D, oldT);
     glBindFramebuffer(GL_FRAMEBUFFER, oldFB);
@@ -119,6 +124,7 @@ GLRenderTarget_FBO::~GLRenderTarget_FBO() {
     glDeleteTextures(1, &texture);
     glDeleteFramebuffers(1, &framebuffer);
     glDeleteRenderbuffers(1, &renderbuffer);
+    glDeleteRenderbuffers(1, &renderbufferStencil);
 }
 
 
@@ -135,9 +141,15 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
     #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, newW, newH);
-    #else 
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, newW, newH);
-    #endif
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, newW, newH);    
+
+    #else
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, newW, newH);
+
+    #endif 
+
+
     glBindTexture(GL_TEXTURE_2D, old);
     glBindRenderbuffer(GL_RENDERBUFFER, oldRB);
 

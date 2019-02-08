@@ -90,6 +90,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     
     void RenderStatic(StaticState *);
     void ClearRenderedData();
+    void Reset(Renderer::DataLayer layer);
     RenderBufferID GetStaticViewingMatrixID();
     RenderBufferID GetStaticProjectionMatrixID();
 
@@ -122,9 +123,8 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     ProgramID ProgramAdd(const std::string&, const std::string &, std::string &);
 
 
-    bool IsSupported(Capability);
-    void SetDrawingMode(Polygon, DepthTest, AlphaRule);
-    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *);
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule, EtchRule);
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *, EtchRule *);
     void AttachTarget(Dynacoe::Framebuffer *);
     Dynacoe::Framebuffer * GetTarget();
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers();
@@ -152,7 +152,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
 
 
     // list of reserved active textures
-    void resolveDisplayMode(Renderer::Polygon, Renderer::DepthTest, Renderer::AlphaRule);
+    void resolveDisplayMode(Renderer::Polygon, Renderer::DepthTest, Renderer::AlphaRule, Renderer::EtchRule);
     void resolveDisplayMode();
     void onFirstAttach();
     void initGL();
@@ -206,6 +206,7 @@ struct ShaderGLRenderer : public Dynacoe::Renderer {
     Polygon curPolygon;
     AlphaRule curAlphaRule;
     DepthTest curDepthTest;
+    EtchRule curEtchRule;
 
 
     

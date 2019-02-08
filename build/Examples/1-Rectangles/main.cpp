@@ -56,6 +56,25 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
     ExampleRectangles() : Entity("ExRectangles") { 
 
 
+        // It needs to have length, so lets make the square be
+        // one half of the render resolution height. Keep in mind, link in most 
+        // multimedia visual setups, the render resolution is not necessarily the window 
+        // width and height.
+        float length = Graphics::GetRenderCamera().Height()  / 2.0;
+        
+        shapeIn = AddComponent<Shape2D>();
+        shapeIn->FormRectangle(length, length);
+        shapeIn->etch = Dynacoe::Render2D::EtchMode::EtchDefine;
+        shapeIn->Node().Position() = {-length/2.f, -length/2.f};
+        shapeIn->mode = Dynacoe::Render2D::RenderMode::None;
+        
+        shapeOut = AddComponent<Shape2D>();
+        shapeOut->FormCircle(150, 50);
+        shapeOut->etch = Dynacoe::Render2D::EtchMode::EtchUndefine;
+        shapeOut->Node().Position() = {-length/2.f, -length/2.f};
+        shapeOut->mode = Dynacoe::Render2D::RenderMode::None;
+
+
         // Attachs and creates the rectangle to the entity.
         // Components are attachments to entitys that allow them to do 
         // additional behavior. Shape2D is the basic component that 
@@ -69,11 +88,6 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
         shape->color = "cyan";
 
 
-        // It needs to have length, so lets make the square be
-        // one half of the render resolution height. Keep in mind, link in most 
-        // multimedia visual setups, the render resolution is not necessarily the window 
-        // width and height.
-        float length = Graphics::GetRenderCamera().Height()  / 2.0;
 
 
         // Actually changes the Shape2D component to be the square shape.
@@ -93,7 +107,13 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
         // the default topleft.
         shape->Node().Position() = {-length/2.f, -length/2.f};
 
+        
 
+        shape->etch = Dynacoe::Render2D::EtchMode::EtchIn;
+
+
+
+    
     }
 
 
@@ -112,6 +132,8 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
 
   private:
     // A reference to the shape
+    Shape2D * shapeIn;
+    Shape2D * shapeOut;
     Shape2D * shape;
 
 

@@ -92,10 +92,10 @@ class NoRenderer : public Renderer {
     ProgramID ProgramAdd(const std::string&, const std::string &, std::string &){return ProgramID();}
 
 
-    bool IsSupported(Capability){return true;}
-    void SetDrawingMode(Polygon, DepthTest, AlphaRule){}
-    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *){}
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule, EtchRule){}
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *, EtchRule *){}
     void AttachTarget(Dynacoe::Framebuffer * f){target = f;}
+    void Reset(Renderer::DataLayer){}
     Dynacoe::Framebuffer * GetTarget(){return target;}
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){
         return std::vector<Dynacoe::Framebuffer::Type>({

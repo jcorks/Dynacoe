@@ -69,6 +69,7 @@ class GLRenderTarget_FBO : public GLRenderTarget {
     GLuint texture;
     GLuint framebuffer;
     GLuint renderbuffer;
+    GLuint renderbufferStencil;
     int w; int h;
 };  
 }

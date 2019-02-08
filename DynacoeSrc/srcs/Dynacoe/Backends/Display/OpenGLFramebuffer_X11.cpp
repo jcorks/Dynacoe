@@ -373,6 +373,7 @@ bool Dynacoe::OpenGLFBDisplay::createContext() {
         GLX_RGBA,
         GLX_DOUBLEBUFFER,
         GLX_DEPTH_SIZE, 24,
+        GLX_STENCIL_SIZE, 8,
 
         None };
 

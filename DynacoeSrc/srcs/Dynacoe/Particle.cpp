@@ -244,15 +244,17 @@ void ParticleEmitter2D::OnDraw() {
     Renderer::DepthTest d;
     Renderer::Polygon p;
     Renderer::AlphaRule a;
+    Renderer::EtchRule e;
 
-    drawBuffer->GetDrawingMode(&p, &d, &a);
+    drawBuffer->GetDrawingMode(&p, &d, &a, &e);
 
     // dump all currently queued drawing operations
     Graphics::Flush2D();
 
     drawBuffer->SetDrawingMode(Renderer::Polygon::Triangle,
                                Renderer::DepthTest::NoTest,
-                               translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow);
+                               translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow,
+                               Renderer::EtchRule::NoEtching);
 
     // particle drawing always uses bilinear filtering and
     // 'translucent' drawing. So we needed to dump the
@@ -281,7 +283,7 @@ void ParticleEmitter2D::OnDraw() {
     }
 
     Graphics::Flush2D();
-    drawBuffer->SetDrawingMode(p, d, a);
+    drawBuffer->SetDrawingMode(p, d, a, e);
     drawBuffer->SetTextureFilter(prev);
 
 }

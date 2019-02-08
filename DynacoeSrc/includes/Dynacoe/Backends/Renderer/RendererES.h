@@ -119,7 +119,7 @@ struct GLES2 : public Dynacoe::Renderer {
     // drawing engine options
     void Sync();
     void ClearRenderedData();
-    bool IsSupported(Capability){return true;}
+    void Reset(Renderer::DataLayer layer);
     void AttachTarget(Dynacoe::Framebuffer *);
     Dynacoe::Framebuffer * GetTarget();
     std::vector<Dynacoe::Framebuffer::Type> SupportedFramebuffers(){

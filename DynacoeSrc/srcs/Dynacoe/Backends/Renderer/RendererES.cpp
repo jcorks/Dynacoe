@@ -136,6 +136,15 @@ void GLES2::ClearRenderedData() {
 
 }
 
+void GLES2::Reset(Renderer::DataLayer layer) {
+    (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
+    switch(layer) {
+      case Renderer::DataLayer::Color: glClear(GL_COLOR_BUFFER_BIT); break;
+      case Renderer::DataLayer::Depth: glClear(GL_DEPTH_BUFFER_BIT); break;
+      case Renderer::DataLayer::Etch:  glClear(GL_STENCIL_BUFFER_BIT); break;
+    }
+}
+
 
 
 
@@ -438,17 +447,14 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
         case Renderer::AlphaRule::Allow:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
             ES->curAlphaRule = a;
             break;
 
-        case Renderer::AlphaRule::PassThrough:
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ZERO);
-            ES->curAlphaRule = a;
-            break;
 
         case Renderer::AlphaRule::Opaque:
             glDisable(GL_BLEND);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); 
             ES->curAlphaRule = a;
             break;
 
@@ -456,12 +462,48 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
         case Renderer::AlphaRule::Translucent:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);  
             ES->curAlphaRule = a;
             break;
 
+        case Renderer::AlphaRule::Invisible:
+            glDisable(GL_ALPHA_TEST);
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
+            ES->curAlphaRule = a;
 
 
         default:;
+
+    }
+
+
+
+    switch(e) {
+        case Renderer::EtchRule::NoEtching: curEtchRule = e; glDisable(GL_STENCIL_TEST); break;
+        case Renderer::EtchRule::EtchDefine: 
+            ES->curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_ALWAYS, 1, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            break;
+
+        case Renderer::EtchRule::EtchUndefine: 
+            ES->curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_ALWAYS, 0, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            break;
+
+        case Renderer::EtchRule::EtchIn: 
+            ES->curEtchRule = e; 
+            glEnable(GL_STENCIL_TEST); 
+            glStencilFunc(GL_EQUAL, 1, 0xff);
+            glStencilMask(0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_Replace);
+            break;
+
 
     }
     assert(glGetError() == 0);

@@ -132,7 +132,9 @@ namespace Graphics {
 
     void Commit();
 
-
+    /// \breaf Clears the specified data layer. Normally this is done for you at the end fo the frame.
+    ///
+    void Clear(Renderer::DataLayer);
 
     /// \brief Sets whether or not to automatically draw, commit, and clear.
     ///
@@ -184,6 +186,7 @@ namespace Graphics {
     /// Bilinear filtering makes stratched images look less grainy.
     /// The default is not to enable
     void EnableFiltering(bool doIt);
+
 
 
 

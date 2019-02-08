@@ -133,17 +133,24 @@ class Renderer : public Backend {
         float userDefinedData[4];
     };
 
+    // Defines the texture filter. Linear will 
+    // texture all subsequent textures bilinearly, giving 
+    // a smoother look to textures when scaled up.
     enum class TexFilter {
         Linear,
         NoFilter,
     };
 
+    // Defines the polygon type 
     enum class Polygon {
         Triangle,
         Line
     };
 
-
+    // Defines the depth test, meaning the rule that determines which objects are to be 
+    // to be drawn in front or behind. "Less" is the standard for 3D, which allows polygons 
+    // with a lower depth to be drawn in front. "NoTest" is standard for 2D, which 
+    // allows graphics drawn later to be on top.
     enum class DepthTest {
         Less,
         LEQ,
@@ -152,19 +159,29 @@ class Renderer : public Backend {
         NoTest
     };
 
-
+    // Allows for differenct transparency effects 
     enum class AlphaRule {
-        Allow,
-        PassThrough,
-        Opaque,
-        Translucent
+        Allow,       // allows for standard "fade" transparency. What we're all used to
+        Opaque,      // Ignores transparency
+        Translucent, // Additive blending, which adds the result color ontop of whats already there.
+        Invisible    // Makes the drawn objects invisible. Note that etching and depth information may still be written.
     };
 
-    enum class Capability {
-        Lighting,
-        UserShaders
-
+    // Allows for etching, which will ignore rendered results if they arent in the etch.
+    // Etch regions last until next frame.
+    enum class EtchRule {
+        NoEtching,    // Default, no etching is done
+        EtchDefine,   // Along with whatever is being drawn, the etch region is defined. In the 3D case, etches are only defined in ares where the depth text passes
+        EtchUndefine, // Along with whatever is being drawn, the etch region is undefined if defined within the frame.
+        EtchIn        // Only shows things that fall within the etch region
     };
+
+    enum class DataLayer {
+        Color,
+        Depth,
+        Etch
+    };
+
 
     enum class BuiltInShaderMode {
         // MaterialIDs for render objects should be only 4 floats
@@ -290,6 +307,11 @@ class Renderer : public Backend {
 
     // Resets the renderer's render space to an initial state.
     virtual void ClearRenderedData() = 0;
+
+    
+    // Resets a specific part of the renderer's render space. This is often useful for 
+    // complex scenes.
+    virtual void Reset(DataLayer) = 0;
 
     // Returns the transformation matrix buffer IDs for static rendering.
     // All RenderStatic positional vertices are multiplied by the Viewing and
@@ -430,14 +452,6 @@ class Renderer : public Backend {
 
 
 
-    /* Extension management */
-
-    // Returns whether or not the capability is supported on this backend
-    // For the Renderer, capabilities are close to "standardized extensions":
-    // functionality that isnt necessarily supported by a renderer's backend to
-    // function properly, but is usually supported by most modern, complete backends.
-    virtual bool IsSupported(Capability) = 0;
-
 
     /* Display management */
 
@@ -445,14 +459,16 @@ class Renderer : public Backend {
     virtual void SetDrawingMode (
         Polygon,
         DepthTest,
-        AlphaRule
+        AlphaRule,
+        EtchRule
     ) = 0;
 
     // Retrieves how all the geometry will be drawn
     virtual void GetDrawingMode (
         Polygon * polygon,
         DepthTest * dimension,
-        AlphaRule * alhaRule
+        AlphaRule * alhaRule,
+        EtchRule * etchRule
     ) = 0;
 
 

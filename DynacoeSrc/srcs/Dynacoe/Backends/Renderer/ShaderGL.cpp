@@ -309,15 +309,16 @@ int ShaderGLRenderer::AddTexture(int w, int h, const uint8_t * data) {
 }
 
 
-void ShaderGLRenderer::SetDrawingMode(Polygon p, DepthTest d, AlphaRule a) {
-    resolveDisplayMode(p, d, a);
+void ShaderGLRenderer::SetDrawingMode(Polygon p, DepthTest d, AlphaRule a, EtchRule e) {
+    resolveDisplayMode(p, d, a, e);
 }
 
 
-void ShaderGLRenderer::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a) {
+void ShaderGLRenderer::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a, EtchRule * e) {
     *p = curPolygon;
     *d = curDepthTest;
     *a = curAlphaRule;
+    *e = curEtchRule;
 }
 
 void ShaderGLRenderer::AttachTarget(Framebuffer * f) {
@@ -385,9 +386,17 @@ void ShaderGLRenderer::ClearRenderedData() {
     for(RenderBuffer * b : bufs) {
         b->ReclaimIDs();
     }
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
+void ShaderGLRenderer::Reset(Renderer::DataLayer layer) {
+    framebufferCheck();
+    switch(layer) {
+      case Renderer::DataLayer::Color: glClear(GL_COLOR_BUFFER_BIT); break;
+      case Renderer::DataLayer::Depth: glClear(GL_DEPTH_BUFFER_BIT); break;
+      case Renderer::DataLayer::Etch:  glClear(GL_STENCIL_BUFFER_BIT); break;
+    }
+}
 
 
 void ShaderGLRenderer::UpdateTexture(int tex, const GLubyte * newData) {
@@ -714,10 +723,6 @@ std::string ShaderGLRenderer::Version() {return "v1.0 (OpenGL 2.0/3.1)";}
 
 
 
-
-bool ShaderGLRenderer::IsSupported(Capability) {
-    return true;
-}
 
 
 
