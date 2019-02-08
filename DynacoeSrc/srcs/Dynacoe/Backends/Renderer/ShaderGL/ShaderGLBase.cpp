@@ -523,7 +523,7 @@ void ShaderGLRenderer::resolveDisplayMode(
             glEnable(GL_STENCIL_TEST); 
             glStencilFunc(GL_EQUAL, 1, 0xff);
             glStencilMask(0xff);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
             break;
 
 

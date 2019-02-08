@@ -98,12 +98,12 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
                                    GL_TEXTURE_2D, texture, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+    #if defined DC_BACKENDS_GLES_X11
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, 640, 480);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, 640, 480);    
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferStencil);
+        //glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
+        //glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, 640, 480);    
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferStencil);
     #else
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 640, 480);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
@@ -117,6 +117,7 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
 
     w = 640;
     h = 480;
+    assert(glGetError() == 0);
 
 }
 
@@ -139,10 +140,10 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
                                            newH, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    #if defined DC_BACKENDS_GLESFRAMEBUFFER_X11
+    #if defined DC_BACKENDS_GLES_X11
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, newW, newH);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, newW, newH);    
+        //glBindRenderbuffer(GL_RENDERBUFFER, renderbufferStencil);
+        //glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, newW, newH);    
 
     #else
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, newW, newH);
@@ -152,6 +153,7 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
 
     glBindTexture(GL_TEXTURE_2D, old);
     glBindRenderbuffer(GL_RENDERBUFFER, oldRB);
+    assert(glGetError() == 0);
 
     w = newW;
     h = newH;
@@ -196,6 +198,8 @@ void GLRenderTarget_FBO::GetRawData(uint8_t * data) {
 void GLRenderTarget_FBO::DrawTo() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glViewport(0, 0, w, h);
+    assert(glGetError() == 0);
+
 }
 
 
@@ -220,6 +224,8 @@ void GLRenderTarget_FBO::SetFiltering(bool doIt) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, doIt ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, doIt ? GL_LINEAR : GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, oldBinding);
+    assert(glGetError() == 0);
+
 }
 
 

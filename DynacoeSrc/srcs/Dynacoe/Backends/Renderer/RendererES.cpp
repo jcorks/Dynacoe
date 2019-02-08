@@ -60,6 +60,7 @@ struct Dynacoe::GLES2Implementation {
     Renderer::Polygon curPolygon;
     Renderer::DepthTest curDepthTest;
     Renderer::AlphaRule curAlphaRule;
+    Renderer::EtchRule curEtchRule;
     GLenum drawMode;
     
 
@@ -88,8 +89,9 @@ struct Dynacoe::GLES2Implementation {
         assert(glGetError() == 0);
 
         curAlphaRule = Renderer::AlphaRule::Allow;
-        curDepthTest = Renderer::DepthTest::None;
+        curDepthTest = Renderer::DepthTest::NoTest;
         curPolygon = Renderer::Polygon::Triangle;
+        curEtchRule = Renderer::EtchRule::NoEtching;
 
     }
 
@@ -102,7 +104,7 @@ struct Dynacoe::GLES2Implementation {
 GLES2::GLES2() {
     ES = new GLES2Implementation();
     assert(glGetError() == 0);
-    SetDrawingMode(ES->curPolygon, ES->curDepthTest, ES->curAlphaRule);
+    SetDrawingMode(ES->curPolygon, ES->curDepthTest, ES->curAlphaRule, ES->curEtchRule);
 
 
 }
@@ -131,18 +133,23 @@ void GLES2::AttachTarget(Framebuffer * f) {
 
 void GLES2::ClearRenderedData() {
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    assert(glGetError() == 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     assert(glGetError() == 0);
 
 }
 
 void GLES2::Reset(Renderer::DataLayer layer) {
+
+    assert(glGetError() == 0);
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     switch(layer) {
       case Renderer::DataLayer::Color: glClear(GL_COLOR_BUFFER_BIT); break;
       case Renderer::DataLayer::Depth: glClear(GL_DEPTH_BUFFER_BIT); break;
       case Renderer::DataLayer::Etch:  glClear(GL_STENCIL_BUFFER_BIT); break;
     }
+    assert(glGetError() == 0);
+
 }
 
 
@@ -155,6 +162,7 @@ void GLES2::Reset(Renderer::DataLayer layer) {
 ///////////////////// static render
 void GLES2::RenderStatic(StaticState * st) {
     if (!ES->target) return;
+    assert(glGetError() == 0);
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     ES->renderStatic->Render(st);
     (*(GLRenderTarget**)ES->target->GetHandle())->Invalidate();
@@ -200,11 +208,14 @@ void GLES2::Queue2DVertices(
     const uint32_t * indices,
     uint32_t count
 ) {
+    assert(glGetError() == 0);
 
-    return ES->render2d->Queue2DVertices(
+    ES->render2d->Queue2DVertices(
         indices,
         count
     );
+    assert(glGetError() == 0);
+
 }
 
 uint32_t GLES2::Add2DObject() {
@@ -241,15 +252,22 @@ void GLES2::Set2DObjectParameters(uint32_t object, Render2DObjectParameters data
 
 void GLES2::Render2DVertices(const Render2DStaticParameters & data) {
     if (!ES->target) return;
+    assert(glGetError() == 0);
+
     (*(GLRenderTarget**)ES->target->GetHandle())->DrawTo();
     ES->render2d->Render2DVertices(ES->drawMode, data);
     (*(GLRenderTarget**)ES->target->GetHandle())->Invalidate();
+    assert(glGetError() == 0);
 
 }
 
 // Clears all requests queued before the last RenderDynamicQueue
 void GLES2::Clear2DQueue() {
+    assert(glGetError() == 0);
+
     ES->render2d->Clear2DQueue();
+    assert(glGetError() == 0);
+
 }
 ////////////////////////// 2D
 
@@ -417,9 +435,10 @@ int GLES2::NumLights(){
 
 
 /////////// drawing engine options
-void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a) {
+void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a, Renderer::EtchRule e) {
 
-    
+    assert(glGetError() == 0);
+
     switch(p) {
         case Renderer::Polygon::Triangle: 
             ES->drawMode = GL_TRIANGLES; ES->curPolygon = p; break;
@@ -433,7 +452,7 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
 
 
     switch(d) {
-        case Renderer::DepthTest::NoTest:  glDisable(GL_DEPTH_TEST); curDepthTest = d; break;
+        case Renderer::DepthTest::NoTest:  glDisable(GL_DEPTH_TEST); ES->curDepthTest = d; break;
         case Renderer::DepthTest::Greater: glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GREATER); ES->curDepthTest = d; break;
         case Renderer::DepthTest::Less:    glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS); ES->curDepthTest = d; break;
         case Renderer::DepthTest::GEQ:     glEnable(GL_DEPTH_TEST); glDepthFunc(GL_GEQUAL); ES->curDepthTest = d; break;
@@ -467,7 +486,7 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
             break;
 
         case Renderer::AlphaRule::Invisible:
-            glDisable(GL_ALPHA_TEST);
+            glDisable(GL_BLEND);
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
             ES->curAlphaRule = a;
 
@@ -479,7 +498,7 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
 
 
     switch(e) {
-        case Renderer::EtchRule::NoEtching: curEtchRule = e; glDisable(GL_STENCIL_TEST); break;
+        case Renderer::EtchRule::NoEtching: ES->curEtchRule = e; glDisable(GL_STENCIL_TEST); break;
         case Renderer::EtchRule::EtchDefine: 
             ES->curEtchRule = e; 
             glEnable(GL_STENCIL_TEST); 
@@ -501,7 +520,7 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
             glEnable(GL_STENCIL_TEST); 
             glStencilFunc(GL_EQUAL, 1, 0xff);
             glStencilMask(0xff);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_Replace);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
             break;
 
 
@@ -511,17 +530,17 @@ void GLES2::SetDrawingMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer:
 }
 
 
-void GLES2::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a) {
+void GLES2::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a, EtchRule * e) {
     *p = ES->curPolygon;
     *d = ES->curDepthTest;
     *a = ES->curAlphaRule;
+    *e = ES->curEtchRule;
 }
 
 ////////////// drawing engine options
 
 
 void GLES2::Sync() {
-    ES->render2d->Disable2DRenderMode();
 }
 
 #endif
