@@ -273,7 +273,7 @@ void Graphics::Draw(Render2D & aspect) {
     setDisplayMode(aspect.GetPolygon(),
                    Renderer::DepthTest::NoTest,
                    (Renderer::AlphaRule)(int)aspect.mode,
-                   (Renderer::EtchRule)(int)aspect.etch);
+                   Renderer::EtchRule::NoEtching);
 
     if (round(params2D.contextWidth) != cam2d->Width() ||
         round(params2D.contextHeight) != cam2d->Height()) {

@@ -66,11 +66,6 @@ class Render2D : public Component, public Spatial {
     /// See Renderer.h
     RenderMode mode;
 
-    /// \brief The etching mode. Etching can use custom geometry to define what should and
-    /// should not be shown.
-    ///
-    EtchMode etch;
-
 
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 
     /// pixel values on the display or should be within the hierarchy. The default is false.

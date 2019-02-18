@@ -245,47 +245,41 @@ void ParticleEmitter2D::OnDraw() {
     Renderer::Polygon p;
     Renderer::AlphaRule a;
     Renderer::EtchRule e;
-
-    drawBuffer->GetDrawingMode(&p, &d, &a, &e);
-
-    // dump all currently queued drawing operations
-    Graphics::Flush2D();
-
-    drawBuffer->SetDrawingMode(Renderer::Polygon::Triangle,
-                               Renderer::DepthTest::NoTest,
-                               translucent ? Renderer::AlphaRule::Translucent : Renderer::AlphaRule::Allow,
-                               Renderer::EtchRule::NoEtching);
-
     // particle drawing always uses bilinear filtering and
     // 'translucent' drawing. So we needed to dump the
     // drawings that uses a different state.
     Renderer::TexFilter prev = drawBuffer->GetTextureFilter();
-    drawBuffer->SetTextureFilter(filter ?
+    Renderer::TexFilter cur = filter ?
         Renderer::TexFilter::Linear
       :
-        Renderer::TexFilter::NoFilter);
-
+        Renderer::TexFilter::NoFilter;
+    bool sameAsPrev = prev == prev;
+    if (!sameAsPrev)
+        drawBuffer->SetTextureFilter(cur);
+    
+    Render2D::RenderMode mode = translucent ? Render2D::RenderMode::Translucent : Render2D::RenderMode::Normal;
 
     // queue all draw particle requests
     for(int i = 0; i < (int) particleActiveList.size(); i++) {
+        EParticle * e = particleActiveList[i].IdentifyAs<EParticle>();
         if (!particleActiveList[i].Valid()) {
             particleActiveList.erase(i + particleActiveList.begin());
             i--;
             continue;
         }
-        (particleActiveList[i].IdentifyAs<EParticle>())->Step();
+        e->Step();
         if (!particleActiveList[i].Valid()) {
             particleActiveList.erase(i + particleActiveList.begin());
             i--;
             continue;
         }
-        (particleActiveList[i].IdentifyAs<EParticle>())->Draw();
+        e->shape->mode = mode;
+        e->Draw();
     }
-
-    Graphics::Flush2D();
-    drawBuffer->SetDrawingMode(p, d, a, e);
-    drawBuffer->SetTextureFilter(prev);
-
+    if (!sameAsPrev) {
+        Graphics::Flush2D();
+        drawBuffer->SetTextureFilter(prev);
+    }
 }
 
 

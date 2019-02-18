@@ -117,7 +117,6 @@ GLRenderTarget_FBO::GLRenderTarget_FBO() {
 
     w = 640;
     h = 480;
-    assert(glGetError() == 0);
 
 }
 
@@ -153,7 +152,6 @@ void GLRenderTarget_FBO::Resize(int newW, int newH) {
 
     glBindTexture(GL_TEXTURE_2D, old);
     glBindRenderbuffer(GL_RENDERBUFFER, oldRB);
-    assert(glGetError() == 0);
 
     w = newW;
     h = newH;

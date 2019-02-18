@@ -38,7 +38,6 @@ Render2D::Render2D(const std::string & n) : Component(){
     SetTag(n);
     absolute = false;
     mode = RenderMode::Normal;
-    etch = EtchMode::EtchIgnore;
     polygon = Renderer::Polygon::Triangle;
     objectID = Graphics::GetRenderer()->Add2DObject();
 }

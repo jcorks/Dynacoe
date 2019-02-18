@@ -97,8 +97,10 @@ void StateControl::OnStep() {
     // if this is the first Step set of this state,
     // we need to step any init functions of the state loop.
     if (queuedInit) {
-        if (state->Init) state->Init(state->data, this, GetHostID(), Entity::ID(), {});
         queuedInit = false;      
+        if (state->Init) {
+            state->Init(state->data, this, GetHostID(), Entity::ID(), {});
+        }
         if (midTerminate) return;
     }
 
