@@ -581,6 +581,11 @@ void Console::RunAfter()  {
     // interactive console
     
     if (shown) {
+        static bool openVK = false;
+        if (Input::IsPressed(MouseButtons::Left)) {
+            Input::ShowVirtualKeyboard(!openVK);
+            openVK = !openVK;
+        }
 
             
         

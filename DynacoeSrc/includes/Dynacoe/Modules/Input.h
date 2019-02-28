@@ -206,6 +206,11 @@ namespace Input {
     /// \brief Update the state of input. This is done for you.
     ///
     void Update();
+
+    /// \brief Attempts to open a virtual keyboard that belongs to the system
+    /// if any is available.
+    ///
+    void ShowVirtualKeyboard(bool);
     
     
     /// \brief Returns the system-dependent object that handles input requests.

@@ -296,7 +296,7 @@ int Engine::GetMaxFPS() {
 std::string Engine::GetBaseDirectory() {
     return origCWD;
 }
-
+static bool initialized = false;
 int Engine::Startup() {
     Random::Seed();
     {
@@ -353,9 +353,14 @@ int Engine::Startup() {
 
 
 
+    initialized = true;
     return 1;
 
 
+}
+
+bool Engine::Initialized() {
+    return initialized;
 }
 
 

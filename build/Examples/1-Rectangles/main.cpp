@@ -61,18 +61,7 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
         // multimedia visual setups, the render resolution is not necessarily the window 
         // width and height.
         float length = Graphics::GetRenderCamera().Height()  / 2.0;
-        
-        shapeIn = AddComponent<Shape2D>();
-        shapeIn->FormRectangle(length, length);
-        shapeIn->etch = Dynacoe::Render2D::EtchMode::EtchDefine;
-        shapeIn->Node().Position() = {-length/2.f, -length/2.f};
-        shapeIn->mode = Dynacoe::Render2D::RenderMode::None;
-        
-        shapeOut = AddComponent<Shape2D>();
-        shapeOut->FormCircle(150, 50);
-        shapeOut->etch = Dynacoe::Render2D::EtchMode::EtchUndefine;
-        shapeOut->Node().Position() = {-length/2.f, -length/2.f};
-        shapeOut->mode = Dynacoe::Render2D::RenderMode::None;
+
 
 
         // Attachs and creates the rectangle to the entity.
@@ -108,8 +97,6 @@ class ExampleRectangles : public Entity { // enherits from the base Entity
         shape->Node().Position() = {-length/2.f, -length/2.f};
 
         
-
-        shape->etch = Dynacoe::Render2D::EtchMode::EtchIn;
 
 
 

@@ -112,7 +112,11 @@ class InputManager : public Backend {
     virtual Display * GetFocus() = 0;
 
 
-
+    // Attempts to open a virtual keyboard. This is intended to 
+    // follow the same input detection as a normal keyboard, so no additional
+    // behavior is required or guaranteed outside of the conceptual idea 
+    // of the opening of a virtual keyboard. By default, this does nothing.
+    virtual void ShowVirtualKeyboard(bool){};
 
 };
 

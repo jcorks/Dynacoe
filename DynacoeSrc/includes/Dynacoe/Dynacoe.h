@@ -52,8 +52,11 @@ namespace Dynacoe {
  */
 namespace Engine {
 
-
-
+    /// \brief 
+    ///
+    /// Returns whether Dynacoe has been initialized successfully.
+    ///
+    bool Initialized();
 
     /// \brief Initializes all Dynacoe assets.
     ///

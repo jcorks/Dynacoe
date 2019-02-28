@@ -131,6 +131,10 @@ void Input::Init() {
 
 }
 
+void Input::ShowVirtualKeyboard(bool b) {
+    manager->ShowVirtualKeyboard(b);
+}
+
 
 
 
