@@ -549,12 +549,12 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
 
 
     static Renderer::Render2DStaticParameters oldParams;
-    if (!(oldParams == params)) {
+    //if (!(oldParams == params)) {
         glUniform1f(UNIFORM_SLOT__CONTEXT_HEIGHT_F, params.contextHeight);
         glUniform1f(UNIFORM_SLOT__CONTEXT_WIDTH_F, params.contextWidth);
         glUniformMatrix4fv(UNIFORM_SLOT__CONTEXT_TRANSFORM_MAT4, 1, true, params.contextTransform);    
         oldParams = params;
-    }
+    //}
     
     glDrawElements(
         drawMode, 

@@ -89,6 +89,8 @@ class AndroidBridge_Input : public InputManager {
     // Returns the current focus. The default is nullptr;
     Display * GetFocus();
     
+
+    void ShowVirtualKeyboard(bool b);
     
     
     // Versioning
