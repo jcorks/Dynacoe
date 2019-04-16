@@ -1,8 +1,8 @@
 //
 const char * static_es_glsl = R"(//GLSL BEGIN
 #version 100
-#pragma optimize(off)
-#pragma debug(on)
+//#pragma optimize(off)
+//#pragma debug(on)
 #line 7
 
 
@@ -34,7 +34,7 @@ uniform highp vec4    _impl_Dynacoe_MaterialSpecular;
 #define Dynacoe_MaterialSpecularAmount (_impl_Dynacoe_MaterialSpecular.w)
 
 
-uniform highp vec4[8] Dynacoe_MaterialData;
+uniform highp vec4 Dynacoe_MaterialData[8];
 
 uniform highp mat4 Dynacoe_ModelTransform;
 uniform highp mat4 Dynacoe_ModelNormalTransform;
@@ -206,7 +206,7 @@ bool Dynacoe_CanSampleFramebuffer() {
 
 
 // blinn-phong shading based on implementation from Wikipedia
-vec3 _impl_Dynacoe_BFLight(in highp vec3 pos, in highp vec3 normal, in highp vec3 lightDir,
+lowp vec3 _impl_Dynacoe_BFLight(in highp vec3 pos, in highp vec3 normal, in highp vec3 lightDir,
                       in highp float diffuseAmount,  in lowp vec3 diffuseColor,
                       in highp float specularAmount, in lowp vec3 specularColor,
                       in highp float distance, in highp float shininess) {
@@ -230,7 +230,7 @@ vec3 _impl_Dynacoe_BFLight(in highp vec3 pos, in highp vec3 normal, in highp vec
 }
 
 // Direction shading
-vec3 Dynacoe_DirectionalLight(in highp vec3 pos, in highp vec3 normal, in highp vec3 lightPos,
+lowp vec3 Dynacoe_DirectionalLight(in highp vec3 pos, in highp vec3 normal, in highp vec3 lightPos,
                         in highp float diffuseAmount,  in lowp vec3 diffuseColor,
                         in highp float specularAmount, in lowp vec3 specularColor, in highp float shininess) {
     highp vec3 lightDir = -lightPos;
@@ -241,7 +241,7 @@ vec3 Dynacoe_DirectionalLight(in highp vec3 pos, in highp vec3 normal, in highp 
 
 
 // 
-vec3 Dynacoe_PointLight(in highp vec3 pos, in highp vec3 normal, in lowp vec3 lightPos,
+lowp vec3 Dynacoe_PointLight(in highp vec3 pos, in highp vec3 normal, in lowp vec3 lightPos,
                         in highp float diffuseAmount, in lowp vec3 diffuseColor,
                         in highp float specularAmount, in lowp vec3 specularColor, in highp float shininess) {
     highp vec3 lightDir = lightPos - pos;
@@ -275,7 +275,7 @@ vec3 Dynacoe_PointLight(in highp vec3 pos, in highp vec3 normal, in lowp vec3 li
 
 // transformed point (*mv, not projected)
 // normal 
-vec3 Dynacoe_CalculateLightFragment(in highp vec3 position, in highp vec3 normal, in highp float diffuseAmount, in lowp vec3 diffuseMaterial, in highp float specularAmount, in lowp vec3 specularMaterial, in highp float shininess) {
+lowp vec3 Dynacoe_CalculateLightFragment(in highp vec3 position, in highp vec3 normal, in highp float diffuseAmount, in lowp vec3 diffuseMaterial, in highp float specularAmount, in lowp vec3 specularMaterial, in highp float shininess) {
 
     int index = 0;
     highp vec3 srcLightPos;

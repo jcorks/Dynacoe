@@ -178,6 +178,9 @@ void GUI::UngrabInput() {
 
 void GUI::SetFocus() {
     if (focused == this) return;
+    if (focused) {
+        focused->Unfocus();
+    }
     focused = this;
     EmitEvent("on-focus");
 }

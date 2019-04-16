@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
  
 
 */
- 
+
 
 #if (defined DC_BACKENDS_GLES_X11)
 
@@ -94,7 +94,7 @@ class ProgramES {
         header = static_es_glsl;
         vSrc = header + vertPreamble + vert;
         fSrc = header + frag;
-
+ 
 
         const char * vPtr = vSrc.c_str();
         const char * fPtr = fSrc.c_str();
