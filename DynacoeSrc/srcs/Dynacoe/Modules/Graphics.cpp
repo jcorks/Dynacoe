@@ -89,11 +89,15 @@ static std::vector<int> consoleTextures;
 
 
 
+static Renderer::Render2DStaticParameters params2D;
+
+
+
+
 struct GraphicsState {
     Renderer::DepthTest dim;
     Renderer::Polygon polygon;
     Renderer::AlphaRule alpha;
-    Renderer::EtchRule etch;
 
 
 
@@ -148,7 +152,7 @@ static float quadTex[] {
 
 
 static void storeFont();
-static void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest, Renderer::AlphaRule a, Renderer::EtchRule e);
+static void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest, Renderer::AlphaRule a);
 
 
 
@@ -166,7 +170,7 @@ void Graphics::Init() {
         filter = true;
 
 
-
+        params2D.etchRule = Renderer::EtchRule::NoEtching;
 
 
         // immediate init
@@ -218,8 +222,7 @@ void Graphics::Init() {
 
         setDisplayMode(Renderer::Polygon::Triangle,
                        Renderer::DepthTest::NoTest,
-                       Renderer::AlphaRule::Allow,
-                       Renderer::EtchRule::NoEtching);
+                       Renderer::AlphaRule::Allow);
 
 }
 
@@ -257,29 +260,31 @@ void Graphics::InitAfter() {
 
 
 
-static Renderer::Render2DStaticParameters params2D;
-
-
-
-
 
 void Graphics::Draw(Render2D & aspect) {    
     aspect.CheckUpdate();
-    
+
+
     Camera * cam2d = &GetCamera2D();
     if (!cam2d) return;
 
 
     setDisplayMode(aspect.GetPolygon(),
                    Renderer::DepthTest::NoTest,
-                   (Renderer::AlphaRule)(int)aspect.mode,
-                   Renderer::EtchRule::NoEtching);
+                   (Renderer::AlphaRule)(int)aspect.mode);
 
     if (round(params2D.contextWidth) != cam2d->Width() ||
         round(params2D.contextHeight) != cam2d->Height()) {
 
         UpdateCameraTransforms();
     }
+
+    if ((int)params2D.etchRule != (int)aspect.etch) {
+        drawBuffer->Render2DVertices(params2D);
+        params2D.etchRule = (Renderer::EtchRule)(int)aspect.etch;
+    }
+
+
 
     drawBuffer->Queue2DVertices(
         &aspect.GetVertexIDs()[0],
@@ -295,8 +300,7 @@ void Graphics::Draw(RenderMesh & aspect) {
     // flush out any queued dynamic actions
     setDisplayMode(aspect.GetRenderPrimitive(),
                    Renderer::DepthTest::Less,
-                   Renderer::AlphaRule::Allow,
-                   Renderer::EtchRule::NoEtching);
+                   Renderer::AlphaRule::Allow);
 
     drawBuffer->Render2DVertices(params2D);
 
@@ -341,8 +345,7 @@ void Graphics::Commit() {
     drawBuffer->Render2DVertices(params2D);
     setDisplayMode(Renderer::Polygon::Triangle,
                    Renderer::DepthTest::NoTest,
-                   Renderer::AlphaRule::Allow,
-                   Renderer::EtchRule::NoEtching);
+                   Renderer::AlphaRule::Allow);
 
     drawBuffer->Sync(); 
     Display * d = ViewManager::Get(ViewManager::GetCurrent());
@@ -554,18 +557,17 @@ void Graphics::Clear(Renderer::DataLayer data) {
     drawBuffer->Reset(data);
 }
 
-void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a, Renderer::EtchRule e) {
-	if (state.polygon != p || state.alpha != a || state.dim != d || state.etch != e) {
+void setDisplayMode(Renderer::Polygon p, Renderer::DepthTest d, Renderer::AlphaRule a) {
+	if (state.polygon != p || state.alpha != a || state.dim != d) {
 
         // Settings with which to draw have changed, so we commit what we have and start over
-        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha, state.etch);
+        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
 		drawBuffer->Render2DVertices(params2D);
 
 	    state.alpha = a;
         state.polygon = p;
         state.dim = d;
-        state.etch = e;
-        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha, state.etch);
+        drawBuffer->SetDrawingMode(state.polygon, state.dim, state.alpha);
 
 	}
 

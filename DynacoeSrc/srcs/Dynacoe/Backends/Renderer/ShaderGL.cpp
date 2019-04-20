@@ -309,16 +309,15 @@ int ShaderGLRenderer::AddTexture(int w, int h, const uint8_t * data) {
 }
 
 
-void ShaderGLRenderer::SetDrawingMode(Polygon p, DepthTest d, AlphaRule a, EtchRule e) {
-    resolveDisplayMode(p, d, a, e);
+void ShaderGLRenderer::SetDrawingMode(Polygon p, DepthTest d, AlphaRule a) {
+    resolveDisplayMode(p, d, a);
 }
 
 
-void ShaderGLRenderer::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a, EtchRule * e) {
+void ShaderGLRenderer::GetDrawingMode(Polygon * p, DepthTest * d, AlphaRule * a) {
     *p = curPolygon;
     *d = curDepthTest;
     *a = curAlphaRule;
-    *e = curEtchRule;
 }
 
 void ShaderGLRenderer::AttachTarget(Framebuffer * f) {
@@ -394,7 +393,9 @@ void ShaderGLRenderer::Reset(Renderer::DataLayer layer) {
     switch(layer) {
       case Renderer::DataLayer::Color: glClear(GL_COLOR_BUFFER_BIT); break;
       case Renderer::DataLayer::Depth: glClear(GL_DEPTH_BUFFER_BIT); break;
-      case Renderer::DataLayer::Etch:  glClear(GL_STENCIL_BUFFER_BIT); break;
+      case Renderer::DataLayer::Etch:  
+        glClear(GL_DEPTH_BUFFER_BIT); 
+        break;
     }
 }
 

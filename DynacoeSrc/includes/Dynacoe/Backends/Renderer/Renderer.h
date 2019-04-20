@@ -173,7 +173,8 @@ class Renderer : public Backend {
         NoEtching,    // Default, no etching is done
         EtchDefine,   // Along with whatever is being drawn, the etch region is defined. In the 3D case, etches are only defined in ares where the depth text passes
         EtchUndefine, // Along with whatever is being drawn, the etch region is undefined if defined within the frame.
-        EtchIn        // Only shows things that fall within the etch region
+        EtchIn,       // Only shows things that fall within the etch region
+        EtchOut       // Only shows things that fall OUTSIDE the etch region
     };
 
     enum class DataLayer {
@@ -208,7 +209,7 @@ class Renderer : public Backend {
     struct Render2DStaticParameters {
         float contextWidth;
         float contextHeight;
-        
+        EtchRule etchRule;        
         float * contextTransform;
 
         bool operator==(const Render2DStaticParameters & other) {
@@ -459,16 +460,14 @@ class Renderer : public Backend {
     virtual void SetDrawingMode (
         Polygon,
         DepthTest,
-        AlphaRule,
-        EtchRule
+        AlphaRule
     ) = 0;
 
     // Retrieves how all the geometry will be drawn
     virtual void GetDrawingMode (
         Polygon * polygon,
         DepthTest * dimension,
-        AlphaRule * alhaRule,
-        EtchRule * etchRule
+        AlphaRule * alhaRule
     ) = 0;
 
 

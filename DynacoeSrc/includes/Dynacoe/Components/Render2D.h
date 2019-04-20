@@ -59,12 +59,19 @@ class Render2D : public Component, public Spatial {
         EtchDefine,   ///<Defines the etchable region, but with no visual
         EtchUndefine, ///<Undefines a previously defined region
         EtchIn,       ///<Draws only on regions with the etch defined
+        EtchOut,      ///<Draws only on regions with the etch not defined
     };
 
     /// \brief  The visual mode for rendered vertices
     ///
     /// See Renderer.h
     RenderMode mode;
+
+
+    /// \brief The etch mode for rendered vertices
+    ///
+    /// See Renderer.h
+    EtchMode etch;
 
 
     /// \brief Sets whether drawing calculations from the node should be interpreted as absolute 

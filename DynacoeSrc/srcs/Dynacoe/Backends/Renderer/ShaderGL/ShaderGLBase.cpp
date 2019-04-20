@@ -489,7 +489,7 @@ void ShaderGLRenderer::framebufferCheck() {
 
 
 void ShaderGLRenderer::resolveDisplayMode(
-    ShaderGLRenderer::Polygon p, ShaderGLRenderer::DepthTest d, ShaderGLRenderer::AlphaRule a, Renderer::EtchRule e) {
+    ShaderGLRenderer::Polygon p, ShaderGLRenderer::DepthTest d, ShaderGLRenderer::AlphaRule a) {
 
     
     switch(p) {
@@ -500,6 +500,7 @@ void ShaderGLRenderer::resolveDisplayMode(
 
     }
 
+    /*
     switch(e) {
         case Renderer::EtchRule::NoEtching: curEtchRule = e; glDisable(GL_STENCIL_TEST); break;
         case Renderer::EtchRule::EtchDefine: 
@@ -528,6 +529,7 @@ void ShaderGLRenderer::resolveDisplayMode(
 
 
     }
+    */
 
 
     switch(d) {

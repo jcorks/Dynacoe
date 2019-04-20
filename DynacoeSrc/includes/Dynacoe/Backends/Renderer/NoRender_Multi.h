@@ -92,8 +92,8 @@ class NoRenderer : public Renderer {
     ProgramID ProgramAdd(const std::string&, const std::string &, std::string &){return ProgramID();}
 
 
-    void SetDrawingMode(Polygon, DepthTest, AlphaRule, EtchRule){}
-    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *, EtchRule *){}
+    void SetDrawingMode(Polygon, DepthTest, AlphaRule){}
+    void GetDrawingMode(Polygon *, DepthTest *, AlphaRule *){}
     void AttachTarget(Dynacoe::Framebuffer * f){target = f;}
     void Reset(Renderer::DataLayer){}
     Dynacoe::Framebuffer * GetTarget(){return target;}
