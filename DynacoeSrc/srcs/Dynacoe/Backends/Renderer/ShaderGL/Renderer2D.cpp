@@ -344,35 +344,36 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     int   depth_func;
     int   depth_mask;
 
+
+
+    glGetIntegerv(GL_POLYGON_OFFSET_FILL, &offset_active);
+    glGetFloatv(GL_POLYGON_OFFSET_UNITS, &offset_units);
+    glGetFloatv(GL_POLYGON_OFFSET_FACTOR, & offset_factor);
+    glGetIntegerv(GL_DEPTH_TEST, &depth_test);
+    glGetIntegerv(GL_DEPTH_FUNC, &depth_func);
+    glGetIntegerv(GL_DEPTH_WRITEMASK, &depth_mask);
+    glEnable(GL_DEPTH_TEST); 
+
     switch(params.etchRule) {
         case Renderer::EtchRule::EtchDefine: 
-            glGetIntegerv(GL_POLYGON_OFFSET_FILL, &offset_active);
-            glGetFloatv(GL_POLYGON_OFFSET_UNITS, &offset_units);
-            glGetFloatv(GL_POLYGON_OFFSET_FACTOR, & offset_factor);
-            glGetIntegerv(GL_DEPTH_TEST, &depth_test);
-            glGetIntegerv(GL_DEPTH_FUNC, &depth_func);
-
+            glDepthMask(GL_TRUE);
             glEnable(GL_POLYGON_OFFSET_FILL);
-            glEnable(GL_DEPTH_TEST); 
             glPolygonOffset(0, -1);
             glDepthFunc(GL_ALWAYS);
+
             break;
 
         case Renderer::EtchRule::EtchUndefine: 
-            glGetIntegerv(GL_DEPTH_TEST, &depth_test);
-            glGetIntegerv(GL_DEPTH_FUNC, &depth_func);
 
+            glDepthMask(GL_TRUE);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(0, 0);
             glEnable(GL_DEPTH_TEST); 
             glDepthFunc(GL_ALWAYS);
+            
             break;
 
         case Renderer::EtchRule::EtchIn: 
-            glGetIntegerv(GL_POLYGON_OFFSET_FILL, &offset_active);
-            glGetFloatv(GL_POLYGON_OFFSET_UNITS, &offset_units);
-            glGetFloatv(GL_POLYGON_OFFSET_FACTOR, & offset_factor);
-            glGetIntegerv(GL_DEPTH_TEST, &depth_test);
-            glGetIntegerv(GL_DEPTH_FUNC, &depth_func);
-            glGetIntegerv(GL_DEPTH_WRITEMASK, &depth_mask);
 
             glDepthMask(GL_FALSE);
             glEnable(GL_POLYGON_OFFSET_FILL);
@@ -382,22 +383,17 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
             break;
 
         case Renderer::EtchRule::EtchOut:
-            glGetIntegerv(GL_POLYGON_OFFSET_FILL, &offset_active);
-            glGetFloatv(GL_POLYGON_OFFSET_UNITS, &offset_units);
-            glGetFloatv(GL_POLYGON_OFFSET_FACTOR, & offset_factor);
-            glGetIntegerv(GL_DEPTH_TEST, &depth_test);
-            glGetIntegerv(GL_DEPTH_FUNC, &depth_func);
-            glGetIntegerv(GL_DEPTH_WRITEMASK, &depth_mask);
 
             glDepthMask(GL_FALSE);
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(0, -1);
-            glEnable(GL_DEPTH_TEST); 
             glDepthFunc(GL_NOTEQUAL);
             break;
 
 
         case Renderer::EtchRule::NoEtching:
+            glPolygonOffset(0, 0);
+            glDepthFunc(GL_LEQUAL);
             break;
 
         default:;
@@ -456,30 +452,14 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     glBindTexture(GL_TEXTURE_2D, 0);
     uint32_t size = data->queued.size();
     data->queued.clear();
-
+    
     switch(params.etchRule) {
         case Renderer::EtchRule::EtchDefine: 
-            if (depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-            if (offset_active) glEnable(GL_POLYGON_OFFSET_FILL); else glDisable(GL_POLYGON_OFFSET_FILL);
-            glDepthFunc(depth_func);
-            glPolygonOffset(offset_factor, offset_units);
-            break;
-
         case Renderer::EtchRule::EtchUndefine: 
-            if (depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-            glDepthFunc(depth_func);
-
-            break;
-
         case Renderer::EtchRule::EtchIn: 
-            if (depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
-            if (offset_active) glEnable(GL_POLYGON_OFFSET_FILL); else glDisable(GL_POLYGON_OFFSET_FILL);
-            glDepthFunc(depth_func);
-            glPolygonOffset(offset_factor, offset_units);
-            glDepthMask(depth_mask);
-            break;
-
         case Renderer::EtchRule::EtchOut:
+        case Renderer::EtchRule::NoEtching:
+
             if (depth_test) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
             if (offset_active) glEnable(GL_POLYGON_OFFSET_FILL); else glDisable(GL_POLYGON_OFFSET_FILL);
             glDepthFunc(depth_func);
@@ -488,7 +468,6 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
             break;
 
 
-        case Renderer::EtchRule::NoEtching:
             break;
 
         default:;
