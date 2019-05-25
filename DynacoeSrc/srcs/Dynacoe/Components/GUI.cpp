@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 GUI *       GUI::focused = nullptr;
 GUI *       GUI::grabbed = nullptr;
-
+static GUI * clicked     = nullptr;
 
 static Entity::ID tooltipManager;
 
@@ -107,6 +107,7 @@ void GUI::Initialize() {
     InstallEvent("on-click");
     InstallEvent("on-enter");
     InstallEvent("on-leave");
+    InstallEvent("on-hover");
     InstallEvent("on-drag");
     InstallEvent("on-focus");
     InstallEvent("on-unfocus");
@@ -146,9 +147,6 @@ bool GUI::IsHovered() {
     return hovered;
 }
 
-bool GUI::IsClicked() {
-    return IsHovered() && Input::IsPressed(MouseButtons::Left);
-}
 
 
 bool GUI::IsBeingDragged() {
@@ -156,10 +154,6 @@ bool GUI::IsBeingDragged() {
 }
 
 
-bool GUI::IsFocusedClicked() {
-    if (!focused) return false;
-    return focused->IsClicked();
-}
 
 bool GUI::IsFocusedHovered() {
     if (!focused) return false;
@@ -232,20 +226,27 @@ void GUI::OnStep() {
     }
 
     hovered = newHovered;
+    if (hovered) {
+        EmitEvent("on-hover");
+        if (Input::IsPressed(MouseButtons::Left)) {
+            clicked = this;
+        }
+    
+        if (Input::IsReleased(MouseButtons::Left)) {
+            if (clicked == this) {
+                EmitEvent("on-click");
+            }
+        }
 
-    if (IsClicked()) {
-        EmitEvent("on-click");
-    }
-
-    if (IsBeingDragged()) {
-        EmitEvent("on-drag");
+        if (IsBeingDragged()) {
+            EmitEvent("on-drag");
+        }
     }
 }
 
 
 std::string GUI::GetInfo() {
     return (Chain() << "@" << Node().GetPosition() << " w/h:" << w << ", " << h << "\n"
-                    << "Clicked? " << (IsClicked() ? "Yes" : "Nope") << "\n"
                     << "Hovered? " << (IsHovered() ? "Yes" : "Nope") << "\n"
                     << "Focused? " << (IsFocused() ? "Yes" : "Nope") << "\n");
 }

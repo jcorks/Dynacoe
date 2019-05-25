@@ -243,6 +243,15 @@ class Display : public Backend {
     /// after Update() has been called and is valid until the next Update() call.
     virtual void * GetLastSystemEvent() = 0;
     
+
+    /// \brief Returns the current contents of the clipboard, if applicable.
+    ///
+    virtual std::vector<uint8_t> GetCurrentClipboard(){return {};}
+    
+    /// \brief Sets the current contents of the clipboard, if applicable.
+    ///
+    virtual void SetCurrentClipboard(const std::vector<uint8_t> &){}
+
     
 
 };

@@ -124,6 +124,9 @@ class OpenGLFBDisplay : public Dynacoe::Display {
     
     bool Dump(const std::string &);
     void QueueDump(const std::string &, int delay);
+    std::vector<uint8_t> GetCurrentClipboard();
+    void SetCurrentClipboard(const std::vector<uint8_t> &);
+
     
   private:
     
@@ -188,7 +191,7 @@ class OpenGLFBDisplay : public Dynacoe::Display {
         XWindowAttributes       gwa;
         XEvent                  xev;
         std::vector<XEvent>      lastEvents;
-
+        std::vector<uint8_t> clipboardLocalSend;
         int winX, winY;
         
         void updateDims();

@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <ctime>
 #include <cassert>
+#include <cstring>
 #include <set>
 
 
@@ -104,10 +105,40 @@ ViewID ViewManager::New(const std::string & name, int w, int h) {
 }
 
 
-void ViewManager::NewMain(const std::string & name, int w, int h) {
-    SetMain(New(name, w, h));
+Dynacoe::Display * ViewManager::NewMain(const std::string & name, int w, int h) {
+    auto id = New(name, w, h);
+    SetMain(id);
     
     Graphics::GetRenderCamera().SetRenderResolution(w, h);
+    return Get(id);
+}
+
+std::string ViewManager::GetCurrentClipboardAsString() {
+    auto disp = Get(currentDisplay);
+    if (!disp) return "";
+
+    // usually the clipboard will give raw data, so 
+    // the data buffer might not be null-terminated.
+    auto data = disp->GetCurrentClipboard();
+    char * dataBuffered = new char[data.size()+1];
+    memcpy(dataBuffered, &data[0], data.size());
+    dataBuffered[data.size()] = 0;
+    
+    std::string out(dataBuffered);
+    delete[] dataBuffered;
+    return out;
+}
+
+void ViewManager::SetCurrentClipboardAsString(const std::string & str) {
+    auto disp = Get(currentDisplay);
+    if (!disp) return;
+
+    std::vector<uint8_t> dataReal;
+    dataReal.resize(str.size()+1);
+    dataReal[str.size()] = 0;
+    memcpy(&dataReal[0], str.c_str(), str.size());
+
+    disp->SetCurrentClipboard(dataReal);
 }
 
 

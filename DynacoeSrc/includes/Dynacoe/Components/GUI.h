@@ -45,6 +45,7 @@ namespace Dynacoe {
 /// Supported events:
 /// - "on-click"
 /// - "on-enter"
+/// - "on-hover"
 /// - "on-leave"
 /// - "on-drag"
 /// - "on-focus"
@@ -73,10 +74,6 @@ class GUI : public Component, public Spatial {
     ///
     bool IsHovered();
 
-    /// \brief Returns whether the user's pointer clicked within this GUI's region this frame.
-    ///
-    bool IsClicked();
-
     /// \brief Returns whether the user's pointer is attempting to drag the region.
     ///
     bool IsBeingDragged();
@@ -104,11 +101,7 @@ class GUI : public Component, public Spatial {
     ///
     /// This triggers the Unfocus event for the GUI that was previously focused.
     static void Unfocus();
-
-    /// \brief Convenience function to get whether the focused widget is clicked.
-    ///
-    static bool IsFocusedClicked();
-    
+   
     
     /// \brief Convenience function to get whether the focused widget is hovered. 
     ///

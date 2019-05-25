@@ -866,6 +866,7 @@ void Text2D::SetTextColor(int charBegin, int charEnd, const Color & color) {
 
 
 Vector Text2D::GetCharPosition(int i) {
+    GetDimensions();
     if (!offsets.size()) return Vector();
     Math::Clamp(i, 0, offsets.size()-1);
     return offsets[i];

@@ -76,7 +76,7 @@ namespace ViewManager {
     /// \brief Convenience function for creating and immediately setting the new display as the current display to use.
     /// The graphics resultion is also set to match the display's dimensions.
     ///
-    void NewMain(const std::string & name = "", int w = 640, int h = 480);
+    Display * NewMain(const std::string & name = "", int w = 640, int h = 480);
 
    
     /// \brief Destroys the specified display.
@@ -94,6 +94,15 @@ namespace ViewManager {
     /// \brief Sets the given Display as the one to update and draw to.
     ///
     void SetMain(ViewID);
+
+    /// \brief Gets the current main display's clipboard contents
+    /// as a UTF8 string.
+    ///
+    std::string GetCurrentClipboardAsString();
+
+    /// \brief Sets the current main display's clipboard contents as a UTF8 string.
+    ///
+    void SetCurrentClipboardAsString(const std::string &);
 
 
     /// \brief Returns a pointer to the currently set Display.

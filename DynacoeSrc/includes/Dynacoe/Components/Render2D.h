@@ -55,11 +55,11 @@ class Render2D : public Component, public Spatial {
     };
 
     enum class EtchMode {
-        EtchIgnore,   ///<Default, ignores etching.
+        EtchIgnore,   ///<Ignores etching.
         EtchDefine,   ///<Defines the etchable region, but with no visual
         EtchUndefine, ///<Undefines a previously defined region
         EtchIn,       ///<Draws only on regions with the etch defined
-        EtchOut,      ///<Draws only on regions with the etch not defined
+        EtchOut,      ///<Draws only on regions with the etch not defined. THis is the default
     };
 
     /// \brief  The visual mode for rendered vertices

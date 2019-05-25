@@ -40,7 +40,7 @@ Render2D::Render2D(const std::string & n) : Component(){
     mode = RenderMode::Normal;
     polygon = Renderer::Polygon::Triangle;
     objectID = Graphics::GetRenderer()->Add2DObject();
-    etch = EtchMode::EtchIgnore;
+    etch = EtchMode::EtchOut;
 }
 
 void Render2D::OnUpdateTransform() {
