@@ -636,6 +636,61 @@ void OpenGLFBDisplay::UpdateSize() {
 }
 
 
+std::vector<uint8_t> OpenGLFBDisplay::GetCurrentClipboard() {
+    if (!OpenClipboard(NULL)) return{};
+    HGLOBAL rawData_handle = GetClipboardData(CF_TEXT);
+    char * rawData = (char*)GlobalLock(rawData_handle);
+    
+    if (!(rawData && rawData[0])) {
+        GlobalUnlock(rawData_handle);
+        CloseClipboard();
+        return {};
+    }
+    
+    uint32_t size = strlen(rawData);
+    std::vector<uint8_t> out;
+    out.resize(size+1);
+    memcpy(&out[0], rawData, size);
+
+    GlobalUnlock(rawData_handle);
+    CloseClipboard();
+    char * iter = (char*)&out[0];
+    while(*iter) {
+        if (*iter == '\r') {
+            *iter = ' ';
+        }        
+        iter++;
+    }
+    return out;
+}
+
+void OpenGLFBDisplay::SetCurrentClipboard(const std::vector<uint8_t> & data) {
+    if (!OpenClipboard(NULL)) return;
+    EmptyClipboard();
+    if (data[data.size()-1] != 0) return;
+    
+    std::string clean((const char *)&data[0]);
+    // bad
+    int pos;
+    while((pos = clean.find("\r\n")) != std::string::npos) {
+        clean.replace(pos, 2, "\n");
+    }
+    HGLOBAL windowsOwned = GlobalAlloc(GMEM_MOVEABLE, clean.size()+1);
+    char * copyable = (char*)GlobalLock(windowsOwned);
+    memcpy(copyable, clean.c_str(), clean.size());
+    copyable[clean.size()] = 0;
+    GlobalUnlock(windowsOwned);
+    
+
+    
+    HANDLE ref = SetClipboardData(
+        CF_TEXT,
+        windowsOwned
+    );
+    CloseClipboard();
+}
+
+
 void wrangleGL() {
 
 }
