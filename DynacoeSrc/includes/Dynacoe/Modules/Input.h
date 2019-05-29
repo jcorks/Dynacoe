@@ -68,12 +68,26 @@ class ButtonListener {
 };
 
 /// \brief Callbacck functor for unicode values from a user's keyboard.
+/// On a US keyboard, the following special key signals exist:
+/// 17  -> left
+/// 18  -> up
+/// 19  -> right 
+/// 20  -> down
+///
+/// For all keyboards, the following special characters exist:
+/// 32  -> newline 
+/// 8   -> backspace
+///
 ///
 class UnicodeListener {
   public:    
     /// \brief An incoming unicode value.
     ///
     virtual void OnNewUnicode(int unicodeValue){};
+
+    /// \brief A unicode value is being requested to be 
+    /// processed multiple times in a row.
+    virtual void OnRepeatUnicode(int unicodeValue){};
 };
 
 /// \brief Singleton class for querying input devices

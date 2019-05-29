@@ -37,46 +37,116 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 
 
-// StringExample allows you to type in a text editor-like fashion, entering 
-// new lines with the "enter" key and removing characters with "backspace"
-class StringExample : public Dynacoe::Entity {
 
+
+
+// This example will involve 2 classes.
+//
+// The TextHandler here actually handles incoming input from the keyboard.
+// Instead of actually looking for specific keys, the Dynacoe::Input has an 
+// alternative for text: UnicodeListeners. These objects, once customized, 
+// respond to actual text from a keyboard and allow for custom 
+// behavior after specific text is detected.
+class TextHandler : public Dynacoe::UnicodeListener {
   public:
+    // The TextHandler holds a copy to the main Entity's Text2D
+    Text2D * textObject ;
 
-    StringExample() {
-        SetName("Typer");
-        textObject = AddComponent<Text2D>();
+    // The full string displayed.
+    std::string text;
+
+
+
+    TextHandler(Text2D * ref) {
+        textObject = ref;
+
         // Lets load in the font. By default, Dynacoe 
         // can read OTF and TTF fonts.
         textObject->SetFont    (Assets::Load("ttf", "monospace.ttf"));
         textObject->SetFontSize(24);
-
         textObject->text =     "Try typing!";
         
         // There exist different spacing modes, discussed below.
         textObject->SetSpacingMode(Text2D::SpacingMode::Monospace);
 
 
+    }
+
+
+    // This function is a built-in function called when the UnicodeListener 
+    // detects a new character is entered in the keyboard.
+    // Note the special characters.
+    void OnNewUnicode(int character) {
+
+        // 17, 18, 19, and 20 are special characters that represent the arrow keys.
+        if (character == 17) {
+            Console::Info() << "Left arrow!\n";
+            return;
+        }
+
+        if (character == 18) {
+            Console::Info() << "Up arrow!\n";
+            return;
+        }
+
+        if (character == 19) {
+            Console::Info() << "Right arrow!\n";
+            return;
+        }
+
+        if (character == 20) {
+            Console::Info() << "Down arrow!\n";
+            return;
+        }
+
+
+        // \b is the backspace character!
+        if (character == '\b') {
+            text = text.substr(0, text.size()-1);
+        } else {
+            text += (char)character;
+        }
+
+        textObject->text =  text + '|';
+    }
+
+
+    // If an input is held on a keyboard, it may send a "repeat request"
+    // for quicker input. This usually only makes sense for text input.
+    // If we get a request to repeat, we will just run the normal text addition 
+    // function.
+    void OnRepeatUnicode(int character) {
+        OnNewUnicode(character);
+    }
+};
+
+
+// StringExample allows you to type in a text editor-like fashion, entering 
+// new lines with the "enter" key and removing characters with "backspace"
+class StringExample : public Dynacoe::Entity {
+
+  public:
+
+
+
+    StringExample() {
+        SetName("Typer");
+        textObject = AddComponent<Text2D>();
+
+        // Here we instantiate the text handler. At 
+        // this point, it isnt activated and wont actually listen 
+        // to keys yet.
+        handler = new TextHandler(textObject);
+
+
+        // This call activates the listener        
+        Dynacoe::Input::AddUnicodeListener(handler);
 
     }
 
-    void OnStep() {
-     
-        // This controles when to add additional characters to 
-        // this displayed string. GetLastUnicode() is a nifty function for 
-        // retrieving the last character the user typed. This takes into 
-        // account Shift.
-        int character;
-        if (character = Input::GetLastUnicode()) {
-            if (character == '\b') {
-                text = text.substr(0, text.size()-1);
-            } else {
-                text += (char)character;
-            }
-            textObject->text =  text + '|';
-        }
-        
 
+
+    void OnStep() {
 
         // Text rendering with Dynacoe gives you a few options to 
         // display character spacings. 'Kerned' text draws the text 
@@ -109,7 +179,7 @@ class StringExample : public Dynacoe::Entity {
 
     }
   private:
-
+    TextHandler * handler;
     Dynacoe::Text2D  * textObject;
     Dynacoe::Shape2D * cursor;
     

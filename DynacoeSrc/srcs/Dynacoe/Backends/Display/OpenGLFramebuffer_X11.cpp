@@ -256,7 +256,6 @@ void Dynacoe::OpenGLFBDisplay::Update(Dynacoe::Framebuffer * framebuffer) {
 
           // handles giving X11 the owned clipboard contents
           case SelectionRequest: {
-            break;
 
             // notify the server that we changed the selection
             XSelectionRequestEvent event = evt.xselectionrequest;
@@ -265,7 +264,7 @@ void Dynacoe::OpenGLFBDisplay::Update(Dynacoe::Framebuffer * framebuffer) {
             Atom text_x11 = XInternAtom(dpy, "UTF8_STRING", True);
 
             // only handle normal string requests
-            if (event.target != text_x11) break;
+            //if (event.target != text_x11) break;
 
             // Alters the input property with the contents of the clipboard
             // X11 essentially gives you a "bowl" from a foreign client 

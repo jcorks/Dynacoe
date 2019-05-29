@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/InputManager/InputDevice.h>
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Modules/ViewManager.h>
+#include <Dynacoe/Dynacoe.h>
 #include <algorithm>
 #include <cstring>
 
@@ -246,9 +247,9 @@ void Input::RunBefore() {
     }
     deletedListeners.clear();
 
-    if (updated) {
+    //if (updated) {
         getUnicode();
-    }
+    //}
 }
 
 
@@ -629,17 +630,18 @@ bool IsShiftMod() {
 
 void getUnicode() {
     // Go through a - z
+    static int previousUnicode = 0;
     InputDevice * kb = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
     lastUnicode = 0;
     for(int i = (int)Keyboard::Key_a; i < (int)Keyboard::Key_z + 1; ++i) {
-        if (Input::IsPressed((Keyboard)i)) {
+        if (Input::GetState((Keyboard)i)) {
             lastUnicode = i - (int)Keyboard::Key_a + 'a';
             if (IsShiftMod()) { lastUnicode += 'A' - 'a'; }
         }
     }
     for(int i = (int)Keyboard::Key_0; i < (int)Keyboard::Key_9 + 1; ++i) {
 
-        if (Input::IsPressed((Keyboard)i)) {
+        if (Input::GetState((Keyboard)i)) {
             lastUnicode = i - (int)Keyboard::Key_0 + '0';
             if (IsShiftMod()) {
                      if (lastUnicode == '1') lastUnicode = '!';
@@ -660,42 +662,70 @@ void getUnicode() {
     }
 
     if (!IsShiftMod()) {
-         if (Input::IsPressed(Keyboard::Key_comma))     lastUnicode = ',';
-    else if (Input::IsPressed(Keyboard::Key_period))    lastUnicode = '.';
-    else if (Input::IsPressed(Keyboard::Key_semicolon)) lastUnicode = ';';
-    else if (Input::IsPressed(Keyboard::Key_apostrophe))lastUnicode = '\'';
-    else if (Input::IsPressed(Keyboard::Key_lbracket))  lastUnicode = '[';
-    else if (Input::IsPressed(Keyboard::Key_rbracket))  lastUnicode = ']';
-    else if (Input::IsPressed(Keyboard::Key_minus))     lastUnicode = '-';
-    else if (Input::IsPressed(Keyboard::Key_equal))     lastUnicode = '=';
-    else if (Input::IsPressed(Keyboard::Key_backslash)) lastUnicode = '\\';
-    else if (Input::IsPressed(Keyboard::Key_frontslash))lastUnicode = '/';
-    else if (Input::IsPressed(Keyboard::Key_grave))     lastUnicode = '`';
+         if (Input::GetState(Keyboard::Key_comma))     lastUnicode = ',';
+    else if (Input::GetState(Keyboard::Key_period))    lastUnicode = '.';
+    else if (Input::GetState(Keyboard::Key_semicolon)) lastUnicode = ';';
+    else if (Input::GetState(Keyboard::Key_apostrophe))lastUnicode = '\'';
+    else if (Input::GetState(Keyboard::Key_lbracket))  lastUnicode = '[';
+    else if (Input::GetState(Keyboard::Key_rbracket))  lastUnicode = ']';
+    else if (Input::GetState(Keyboard::Key_minus))     lastUnicode = '-';
+    else if (Input::GetState(Keyboard::Key_equal))     lastUnicode = '=';
+    else if (Input::GetState(Keyboard::Key_backslash)) lastUnicode = '\\';
+    else if (Input::GetState(Keyboard::Key_frontslash))lastUnicode = '/';
+    else if (Input::GetState(Keyboard::Key_grave))     lastUnicode = '`';
 
     } else {
-         if (Input::IsPressed(Keyboard::Key_comma))     lastUnicode = '<';
-    else if (Input::IsPressed(Keyboard::Key_period))    lastUnicode = '>';
-    else if (Input::IsPressed(Keyboard::Key_semicolon)) lastUnicode = ':';
-    else if (Input::IsPressed(Keyboard::Key_apostrophe))lastUnicode = '"';
-    else if (Input::IsPressed(Keyboard::Key_lbracket))  lastUnicode = '{';
-    else if (Input::IsPressed(Keyboard::Key_rbracket))  lastUnicode = '}';
-    else if (Input::IsPressed(Keyboard::Key_minus))     lastUnicode = '_';
-    else if (Input::IsPressed(Keyboard::Key_equal))     lastUnicode = '+';
-    else if (Input::IsPressed(Keyboard::Key_backslash)) lastUnicode = '|';
-    else if (Input::IsPressed(Keyboard::Key_frontslash))lastUnicode = '?';
-    else if (Input::IsPressed(Keyboard::Key_grave))     lastUnicode = '~';
+         if (Input::GetState(Keyboard::Key_comma))     lastUnicode = '<';
+    else if (Input::GetState(Keyboard::Key_period))    lastUnicode = '>';
+    else if (Input::GetState(Keyboard::Key_semicolon)) lastUnicode = ':';
+    else if (Input::GetState(Keyboard::Key_apostrophe))lastUnicode = '"';
+    else if (Input::GetState(Keyboard::Key_lbracket))  lastUnicode = '{';
+    else if (Input::GetState(Keyboard::Key_rbracket))  lastUnicode = '}';
+    else if (Input::GetState(Keyboard::Key_minus))     lastUnicode = '_';
+    else if (Input::GetState(Keyboard::Key_equal))     lastUnicode = '+';
+    else if (Input::GetState(Keyboard::Key_backslash)) lastUnicode = '|';
+    else if (Input::GetState(Keyboard::Key_frontslash))lastUnicode = '?';
+    else if (Input::GetState(Keyboard::Key_grave))     lastUnicode = '~';
     }
 
-    if (Input::IsPressed(Keyboard::Key_enter)) lastUnicode = '\n';
-    if (Input::IsPressed(Keyboard::Key_backspace)) lastUnicode = '\b';
-    if (Input::IsPressed(Keyboard::Key_space)) lastUnicode = ' ';
-    if (Input::IsPressed(Keyboard::Key_tab)) lastUnicode = '\t';
+    if (Input::GetState(Keyboard::Key_enter)) lastUnicode = '\n';
+    if (Input::GetState(Keyboard::Key_backspace)) lastUnicode = '\b';
+    if (Input::GetState(Keyboard::Key_space)) lastUnicode = ' ';
+    if (Input::GetState(Keyboard::Key_tab)) lastUnicode = '\t';
+
+    if (Input::GetState(Keyboard::Key_left))  lastUnicode = 17;
+    if (Input::GetState(Keyboard::Key_up))    lastUnicode = 18;
+    if (Input::GetState(Keyboard::Key_right)) lastUnicode = 19;
+    if (Input::GetState(Keyboard::Key_down))  lastUnicode = 20;
+
+
+    static int counter = 0;
+    if (!lastUnicode) {
+        counter = 0;
+    }
     
-    if (lastUnicode) {
+
+    // New press is detected
+    if (lastUnicode != previousUnicode && lastUnicode) {
+        counter = 0;
         for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
             unicodeListeners[i]->OnNewUnicode(lastUnicode);
         }
+    } 
+
+
+    // Key has been held, implying a multiple key request (for us / latin keyboards)
+    if (lastUnicode == previousUnicode && lastUnicode) {
+        counter++;
+        if ((counter > Dynacoe::Engine::GetMaxFPS() / 2) && counter % 3 == 0) {
+                
+            for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+                unicodeListeners[i]->OnRepeatUnicode(lastUnicode);
+            }
+        }
     }
+
+    previousUnicode = lastUnicode;
 }
 
 InputManager * Input::GetManager() {

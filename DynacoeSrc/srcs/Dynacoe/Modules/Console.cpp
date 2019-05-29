@@ -257,7 +257,7 @@ std::vector<Entity::ID> DebugMessage::others;
 
 
 
-class InputRepeater  {
+/*class InputRepeater  {
   public:
       
     InputRepeater() {
@@ -280,24 +280,25 @@ class InputRepeater  {
     
   private:
     int accumulator;
-};
+};*/
 
 class ConsoleInputStream;
 class ConsoleUnicodeListener : public UnicodeListener {
   public:
     ConsoleUnicodeListener(ConsoleInputStream *);
     void OnNewUnicode(int);
+    void OnRepeatUnicode(int);
   private:
     ConsoleInputStream * src;
 };
 class ConsoleInputStream : public Entity {
   public:
       
-    InputRepeater left;
+    /*InputRepeater left;
     InputRepeater right;
     InputRepeater up;
     InputRepeater down;
-    InputRepeater back;
+    InputRepeater back;*/
     
 
     ConsoleInputStream() {
@@ -316,22 +317,26 @@ class ConsoleInputStream : public Entity {
 
 
         Input::AddUnicodeListener(new ConsoleUnicodeListener(this));
+        changed = false;
+        saturation = 0.f;
 
-        up.key = Keyboard::Key_up;
-        down.key = Keyboard::Key_down;
-        left.key = Keyboard::Key_left;
-        right.key = Keyboard::Key_right;
-        back.key = Keyboard::Key_backspace;
 
     }
     
     void UnicodeAddRequest(int ch) {
         if (!Console::IsVisible()) return;
         
+        if (ch == 17) {Left(); return;}
+        if (ch == 18) {Up(); return;}
+        if (ch == 19) {Right(); return;}
+        if (ch == 20) {Down(); return;}
         
+
         int character = ch;
         if (character == '\n') {
         } else if (character == '\b') {
+            Backspace();
+            return;
         } else {
             //saturation = 0.f;
             inputString =
@@ -345,17 +350,50 @@ class ConsoleInputStream : public Entity {
         //changed = true;
     }
 
+
+    void Left() {
+        cursorIter--;
+        saturation = 0.f;            
+    }
+
+    void Right() {
+        cursorIter++;
+        saturation = 0.f;            
+    }
+
+    void Up() {
+        historyIter--;
+        changed = true;
+        saturation = 0.f;
+
+    }
+
+    void Down() {
+        historyIter++;
+        changed = true;
+        saturation = 0.f;
+     
+    }
+
+
+    void Backspace() {
+        if (cursorIter > 0) {
+            saturation = 0.f;
+            inputString =
+                inputString.substr(0, cursorIter-1) +
+
+                inputString.substr(cursorIter, std::string::npos);
+            cursorIter--;
+            inputStringAspect->text = Chain() << "$  " << inputString;  
+        }
+    }
+    bool changed = false;
+    float saturation;
+
     void OnStep() {
-        left.Update();
-        right.Update();
-        down.Update();
-        up.Update();
-        back.Update();
 
         
         
-        bool changed = false;
-        static float saturation = 0.f;
         cursorStringAspect->color = (Color(255, 255, 255, 255*(.5*(1+sin(saturation)))));
         saturation += .04;
         Node().Position() = Vector(0, Graphics::GetRenderCamera().Height() - 12);
@@ -364,15 +402,7 @@ class ConsoleInputStream : public Entity {
 
         // Cursor control
         
-        if (left.Query()) {
-            cursorIter--;
-            saturation = 0.f;            
-        }
-        
-        if (right.Query()) {
-            cursorIter++;
-            saturation = 0.f;            
-        }
+
 
 
         Math::Clamp(cursorIter, 0, inputString.size());
@@ -380,17 +410,7 @@ class ConsoleInputStream : public Entity {
 
         // history control:
         // moves the old commadn to the active command slot
-        if (up.Query()) {
-            historyIter--;
-            changed = true;
-            saturation = 0.f;
-        }
 
-        if (down.Query()) {
-            historyIter++;
-            changed = true;
-            saturation = 0.f;
-        }
         
 
 
@@ -408,17 +428,6 @@ class ConsoleInputStream : public Entity {
 
 
 
-        if (back.Query()) {
-            if (cursorIter > 0) {
-                saturation = 0.f;
-                inputString =
-                    inputString.substr(0, cursorIter-1) +
-
-                    inputString.substr(cursorIter, std::string::npos);
-                cursorIter--;
-            }
-            changed = true;
-        }
         Math::Clamp(cursorIter, 0, inputString.size());
 
 
@@ -426,6 +435,7 @@ class ConsoleInputStream : public Entity {
         if (changed) {
             inputStringAspect->text = Chain() << "$  " << inputString;
         }
+        changed = false;
     }
 
     std::string Consume() {
@@ -465,6 +475,12 @@ ConsoleUnicodeListener::ConsoleUnicodeListener(ConsoleInputStream * src_) {
 }
 
 void ConsoleUnicodeListener::OnNewUnicode(int un) {
+    if (!shown) return;
+    src->UnicodeAddRequest(un);
+}
+
+void ConsoleUnicodeListener::OnRepeatUnicode(int un) {
+    if (!shown) return;
     src->UnicodeAddRequest(un);
 }
 
@@ -703,6 +719,7 @@ void Console::Show(bool b) {
 
     mainGrid->draw = shown;
     mainGrid->step = shown;
+    
 
   
 }
