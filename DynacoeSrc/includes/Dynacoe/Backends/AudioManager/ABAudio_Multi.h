@@ -53,7 +53,7 @@ class ABAudio : public Dynacoe::AudioManager {
     // bring the backend to a usable state. Returns whether or 
     // not the connection was successfully made. Else,
     // it is recommended to try again.
-    bool Connect();
+    bool Connect(AudioStreamHandler *);
 
     // Sets the number of samples second.
     // The default is 44100.
@@ -61,20 +61,6 @@ class ABAudio : public Dynacoe::AudioManager {
 
     // returns the current sample rate in kHz
     uint32_t GetSampleRate();
-
-    // Queues data to be interpreted by the AudioManager. The format is in
-    // 2 channel, interleaved form, meaning that the samples should be organized
-    // in an interleaved channel format. In most device setups, the 
-    // odd samples are for the left speaker, and the
-    // even samples are for the right speaker
-    // each sample is a floating point number
-    // and expected to be normalized between -1 and 1.
-    void PushData(float * data, uint32_t numSamples);
-
-
-    // returns the number of samples pending to be consumed
-    uint32_t PendingSamplesCount();
-
 
 
     // Returns whether or not the AudioManager is in an underrun state

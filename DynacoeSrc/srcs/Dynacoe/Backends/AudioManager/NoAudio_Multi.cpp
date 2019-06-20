@@ -37,11 +37,9 @@ using std::vector;
 using std::string;
 
 
-bool        NoAudioManager::Connect(){ return true; }
+bool        NoAudioManager::Connect(AudioStreamHandler*){ return true; }
 void        NoAudioManager::SetSampleRate(uint32_t){}
 uint32_t    NoAudioManager::GetSampleRate(){return 0;}
-void        NoAudioManager::PushData(float *, uint32_t){}
-uint32_t    NoAudioManager::PendingSamplesCount(){return 0;}
 bool        NoAudioManager::Underrun(){return false;}
 void        NoAudioManager::EnableOutput(bool){}
 void        NoAudioManager::SetVolumeMultiplier(float){}

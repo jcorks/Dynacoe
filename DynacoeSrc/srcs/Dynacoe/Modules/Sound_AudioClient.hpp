@@ -23,51 +23,48 @@ class AudioClient {
     void UpdateMain() {
         //processor->ProcessAudio();
 
-        // need a better process.. There are much more efficient ways to do this
-        if (!ioShared.lock) {
-            bool wasLocked = false;
-            auto list = activeSoundIDs;
-            
-            
-            ioShared.lock++;
-            if (ioShared.lock == 1) {
-                ioOwned.current   = ioShared.current;
-                ioShared.commands = ioOwned.commands;
-                for(uint32_t i = 0; i < ioOwned.in.GetCount(); ++i) {
-                    ioShared.in.Push(ioOwned.in.Get(i));
-                }
-                ioShared.channels = ioOwned.channels;
-                ioOwned.out       = ioShared.out;
-                ioShared.out.Clear();
-                wasLocked = true;
+        bool wasLocked = false;
+        auto list = activeSoundIDs;
+        
+        
+        if (mtlock.try_lock()) {
+            ioOwned.current   = ioShared.current;
+            ioShared.commands = ioOwned.commands;
+            for(uint32_t i = 0; i < ioOwned.in.GetCount(); ++i) {
+                ioShared.in.Push(ioOwned.in.Get(i));                
             }
-            ioShared.lock--;
-
-
-            if (wasLocked) {
-
-                ioOwned.in.Clear();
-                auto source = ioOwned.out;
-                for(uint32_t i = 0; i < source.GetCount(); ++i) {
-                    AudioStreamObject * aso = source.Get(i);
-                    LookupID id;
-                    for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
-                        id = activeSoundIDs[n];
-                        if (activeSounds.Find(id) == aso) {
-
-                            activeSoundIDs.erase(activeSoundIDs.begin()+n);
-                            break;
-                        }
-                    }
-                    activeSounds.Remove(id);
-                    delete aso;
-
-                }
-                ioOwned.out.Clear();
-                
-
-            }
+            ioShared.channels = ioOwned.channels;
+            ioOwned.out       = ioShared.out;
+            ioShared.out.Clear();
+            wasLocked = true;
+            mtlock.unlock();
         }
+
+
+        if (wasLocked) {
+
+            ioOwned.in.Clear();
+            auto source = ioOwned.out;
+            for(uint32_t i = 0; i < source.GetCount(); ++i) {
+                AudioStreamObject * aso = source.Get(i);
+                LookupID id;
+                for(uint32_t n = 0; n < activeSoundIDs.size(); ++n) {
+                    id = activeSoundIDs[n];
+                    if (activeSounds.Find(id) == aso) {
+
+                        activeSoundIDs.erase(activeSoundIDs.begin()+n);
+                        break;
+                    }
+                }
+                activeSounds.Remove(id);
+                delete aso;
+
+            }
+            ioOwned.out.Clear();
+            
+
+        }
+        //}
         
     }
 
@@ -78,7 +75,6 @@ class AudioClient {
         // thread safe?
         return processor->manager;
     }
-
 
 
     void AddEffect(AudioEffect * effect, uint8_t channel) {

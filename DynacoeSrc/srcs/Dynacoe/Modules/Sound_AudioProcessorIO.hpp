@@ -4,7 +4,6 @@ class AudioProcessorIO {
 
     AudioProcessorIO() {
         status = 0;
-        lock = 0;
     }
 
 
@@ -19,7 +18,6 @@ class AudioProcessorIO {
     };
 
     uint32_t status;
-    int lock;
 
     // current objects being processed by the stream
     StateArray<AudioStreamObject*> current;
@@ -37,3 +35,6 @@ class AudioProcessorIO {
     StateArray<AudioStreamObject *> out;
 
 };
+
+#include <mutex>
+static std::mutex mtlock;

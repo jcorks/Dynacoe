@@ -48,88 +48,14 @@ const int BufferCount_c = 4;
 
 
 
-  
-// data queue to holds IO audio data.
-class Dynacoe::StreamBuffer {
-  public:
-    
-
-    StreamBuffer() {
-        iterRead = 0;
-        iterWrite = 0;
-        data = new float[BufferSize_c];
-        size = BufferSize_c;
-        occupied = false;
-    }
-    ~StreamBuffer() {
-        delete[] data;
-    }
-    // puts as many floats onto this stream until full.
-    // If there isn't enough room in the buffer, the number of
-    // overflow float values is returned
-    void PushData(float * src, uint32_t numVals) {
-        for(uint32_t i = 0; i < numVals; ++i) {
-            data[(i+iterWrite)%BufferSize_c] = src[i];
-        }
-        iterWrite += numVals;
-        iterWrite = iterWrite%BufferSize_c;
-    }
-
-    
-
-
-    // Requests the reading of numVals floats into target.
-    // target must point to a buffer that holds at least sizeof(float)*numVals bytes.
-    // The number of bytes read is returned.        
-    uint32_t PopData(float * target, uint32_t numVals) {
-        for(uint32_t i = 0; i < numVals; ++i) {
-            if ((i+iterRead)%BufferSize_c == iterWrite) {
-                numVals = i;
-                break;
-            }
-            target[i] = data[(i+iterRead)%BufferSize_c];
-        }
-        iterRead += numVals;
-        iterRead = iterRead%BufferSize_c;
-        
-        //std::cout << "processed " << numVals << " flt, r=" << iterRead << " w=" << iterWrite << "\n";
-        return numVals;
-    }
-
-
-    int32_t Size() {        
-        return (iterRead > iterWrite ? (iterWrite-iterRead)+BufferSize_c : iterWrite-iterRead);
-    }
-
-
-
-    void Reset() {
-        iterRead = 0;
-        iterWrite = 0;
-    }
-  private:
-
-    
-    static const int BufferSize_c  = 1024*1024;
-
-
-    float * data;
-    int iterRead;
-    int iterWrite;
-
-    int size;
-    bool occupied;
-
-
-};
 
 
 RtAudioManager::~RtAudioManager() {
-    delete streamQueue;
 }
 
 
-bool RtAudioManager::Connect() {
+bool RtAudioManager::Connect(AudioStreamHandler * handler) {
+    handlerMain = handler;
     OpenStream();        
     EnableOutput(true);
     return connected;
@@ -146,16 +72,9 @@ uint32_t RtAudioManager::GetSampleRate() {
     return sampleRate;
 }
 
-void RtAudioManager::PushData(float * data, uint32_t numSamples) {
-    //bufferMutex.lock();
-    streamQueue->PushData(data, numSamples*2);
 
-    //bufferMutex.unlock();
-}
 
-uint32_t RtAudioManager::PendingSamplesCount() {
-    return streamQueue->Size()/2;
-}
+
 
 
 bool RtAudioManager::Underrun() {
@@ -231,8 +150,6 @@ RtAudioManager::RtAudioManager() {
     rtParams.deviceId = rtAudio->getDefaultOutputDevice();
     connected = false;
 
-    streamQueue = new StreamBuffer;
-    
     
 }
 
@@ -324,9 +241,12 @@ int RtAudioManager::StreamCallback(
 
 
     RtAudioManager * audio = (RtAudioManager*) userData;
-
+    (*audio->handlerMain)(
+        nBufferFrames*2,
+        (float*)oBuffer
+    );
     
-
+    /*
     float * targetBuffer = (float*)oBuffer;   
     uint32_t underrunFloats = nBufferFrames*2 - 
         audio->streamQueue->PopData(
@@ -345,6 +265,7 @@ int RtAudioManager::StreamCallback(
     }
 
     audio->isUnderrun = underrunFloats;  
+    */
 
     return 0;
   

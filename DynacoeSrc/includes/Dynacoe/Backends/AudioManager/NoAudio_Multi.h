@@ -39,11 +39,9 @@ namespace Dynacoe {
 class NoAudioManager : public AudioManager {
   public:
     // standard interface
-    bool Connect();
+    bool Connect(AudioStreamHandler *);
     void SetSampleRate(uint32_t);
     uint32_t GetSampleRate();
-    void PushData(float * data, uint32_t numSamples);
-    uint32_t PendingSamplesCount();
     bool Underrun();
     void EnableOutput(bool doIt);
     void SetVolumeMultiplier(float);

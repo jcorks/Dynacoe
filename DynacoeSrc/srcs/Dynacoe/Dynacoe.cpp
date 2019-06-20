@@ -338,8 +338,8 @@ int Engine::Startup() {
 
     Assets::Init();
     Graphics::Init();
-    Sound::Init();
     Input::Init();
+    Sound::Init();
     Console::Init();
 
     Graphics::InitAfter();

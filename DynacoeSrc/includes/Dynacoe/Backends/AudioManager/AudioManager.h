@@ -55,11 +55,27 @@ class AudioManager : public Backend {
 
     };
 
+    // Functor that can modify samples to be delivered to the audio processing 
+    // hardware.
+    class AudioStreamHandler {
+      public:
+
+        // Callback that delivers process data. The format is in
+        // 2 channel, interleaved form, meaning that the samples should be organized
+        // in an interleaved channel format. In most device setups, the 
+        // odd samples are for the left speaker, and the
+        // even samples are for the right speaker
+        // each sample is a floating point number
+        // and expected to be normalized between -1 and 1.
+        virtual void operator()(uint32_t numValues, float * sampleData){};
+    
+    };
+
     // Makes the connection to hardware to attempt to
     // bring the backend to a usable state. Returns whether or 
     // not the connection was successfully made. Else,
     // it is recommended to try again.
-    virtual bool Connect() = 0;
+    virtual bool Connect(AudioStreamHandler *) = 0;
 
     // Sets the number of samples second.
     // The default is 44100.
@@ -68,18 +84,6 @@ class AudioManager : public Backend {
     // returns the current sample rate in kHz
     virtual uint32_t GetSampleRate() = 0;
 
-    // Queues data to be interpreted by the AudioManager. The format is in
-    // 2 channel, interleaved form, meaning that the samples should be organized
-    // in an interleaved channel format. In most device setups, the 
-    // odd samples are for the left speaker, and the
-    // even samples are for the right speaker
-    // each sample is a floating point number
-    // and expected to be normalized between -1 and 1.
-    virtual void PushData(float * data, uint32_t numSamples) = 0;
-
-
-    // returns the number of samples pending to be consumed
-    virtual uint32_t PendingSamplesCount() = 0;
 
 
 

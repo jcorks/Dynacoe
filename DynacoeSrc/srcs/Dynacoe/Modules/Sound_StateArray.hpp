@@ -9,6 +9,7 @@ class StateArray {
     StateArray() :
         dataSize(0),
         dataAllocated(0),
+        count(0),
         data(nullptr),
         lock(false) {}
 
@@ -23,6 +24,7 @@ class StateArray {
             dataAllocated = other.dataSize;
         }
         dataSize = other.dataSize;
+        count = other.count;
         memcpy(data, other.data, other.dataSize);
         return *this;
     }
@@ -38,6 +40,7 @@ class StateArray {
         }
         memcpy(data + dataSize, &in, sizeof(T));
         dataSize += sizeof(T);
+        count++;
     }
 
     void Remove(uint32_t i) {
@@ -46,14 +49,16 @@ class StateArray {
         if (i != GetCount()-1)
             memmove(data+index, data+index+sizeof(T), dataSize-(index+sizeof(T)));
         dataSize -= sizeof(T);
+        count--;
     }
 
     void Clear() {
         dataSize = 0;
+        count = 0;
     }
 
-    uint32_t GetCount() {
-        return dataSize / sizeof(T);
+    uint32_t GetCount() const {
+        return count;
     }
 
     T & Get(uint32_t i) {
@@ -67,6 +72,7 @@ class StateArray {
   private:
     uint32_t dataSize;
     uint32_t dataAllocated;
+    uint32_t count;
     uint8_t * data;
 };
 

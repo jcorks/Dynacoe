@@ -51,11 +51,9 @@ class StreamBuffer;
 class RtAudioManager : public AudioManager {
   public:
     // standard interface
-    bool Connect();
+    bool Connect(AudioStreamHandler *);
     void SetSampleRate(uint32_t);
     uint32_t GetSampleRate();
-    void PushData(float * data, uint32_t numSamples);
-    uint32_t PendingSamplesCount();
     bool Underrun();
     void EnableOutput(bool doIt);
     void SetVolumeMultiplier(float);
@@ -85,7 +83,7 @@ class RtAudioManager : public AudioManager {
     RtAudio * rtAudio;
     RtAudio::StreamParameters   rtParams;
     RtAudio::StreamOptions      rtOpts;
-
+    AudioStreamHandler * handlerMain;
 
     /* Attributes */
     uint32_t sampleRate;

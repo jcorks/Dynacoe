@@ -8,8 +8,22 @@
     #include <mutex>
 #endif
 
+#include <Dynacoe/Modules/Input.h>
+
 class AudioProcessor;
 static AudioProcessor * instance;
+
+class Dynacoe_Sound_AudioStreamHandler : public AudioManager::AudioStreamHandler {
+  public:
+    AudioProcessor * p;
+
+    Dynacoe_Sound_AudioStreamHandler(AudioProcessor * processor) {
+        p = processor;
+    }
+
+    void operator()(uint32_t count, float * data);
+
+};
 
 
 class AudioProcessor {
@@ -19,12 +33,7 @@ class AudioProcessor {
     AudioManager * manager;
     AudioProcessor(AudioProcessorIO * c) {
         instance = this;
-        manager = (AudioManager *) Backend::CreateDefaultAudioManager();
-        manager->Connect();
 
-        outputBufferSize = 1024*80; //512*2; //1024*7;
-        outputBuffer = (float*)new char[outputBufferSize];
-        memset(outputBuffer, 0, outputBufferSize);
         limiterScale = 1.f;
         ioShared = c;
 
@@ -33,13 +42,17 @@ class AudioProcessor {
             AudioEffectChannel buffer;
 
             // allocates buffer. Is never destroyed intentionally.
-            buffer.SetSize(outputBufferSize);
+            buffer.SetSize(1024*10);
             io.channels.Push(buffer);
         }
 
         // copy back over to ioShared
         *c = io;
+        manager = (AudioManager *) Backend::CreateDefaultAudioManager();
+        manager->Connect(new Dynacoe_Sound_AudioStreamHandler(instance));
 
+
+        /*
         // start processing
         thread = new std::thread(ThreadControl);
         #ifdef DC_OS_WINDOWS
@@ -48,11 +61,12 @@ class AudioProcessor {
             HANDLE h = (HANDLE) ((std::thread*)thread)->native_handle();
             SetThreadPriority(h, THREAD_PRIORITY_TIME_CRITICAL);
         #endif
+        */
     }
 
 
     void RunCommands() {
-        for(uint32_t i = 0; i < io.commands.GetCount(); ++i) {
+        for(uint32_t i = 0; i < io.commands.GetCount(); ++i) {     
             switch(io.commands.Get(i)) {
               case AudioProcessorIO::Command::DumpAllSamples:
                 for(uint32_t i = 0; i < io.current.GetCount(); ++i) {
@@ -69,142 +83,58 @@ class AudioProcessor {
 
     // Pushes played audio to the audio manager
     void ProcessAudio() {
-        
-        // Before the frame officially starts, we want to determine how 
-        // many frames we wish to deliver to the audio manager
-        uint32_t count = manager->PendingSamplesCount();
-        
-        /*int FPS = Dynacoe::Engine::GetDiagnostics().currentFPS;
-        if (FPS == 0) FPS = Dynacoe::Engine::GetMaxFPS();*/
-        int FPS = 60;
-        uint32_t sampleRate = manager->GetSampleRate();
-        uint32_t idealRate = (sampleRate/FPS)*1.1; //1.1 gives us a little leeway but shouldnt cause too much lag
 
-        
-        if (count > 2*idealRate) { // already pretty backed up, so we can relax the rate a little
-            samplesThisIteration = idealRate*.5;
-            //std::cout << "!!Buffer too full! dropping a frame\n";
-        } else if (count < .5*idealRate){ // buffer too low so lets up the numder of delivered frames
-            //std::cout << "!!Buffer too empty! adding an extra frame\n";
-            samplesThisIteration = idealRate*2;
-        } else { // normal. within tolerance
-            samplesThisIteration = idealRate;
-        }
-        //std::cout << count << "frames waiting\n";
-        
-        
-
-        if (samplesThisIteration*2 >= outputBufferSize/(sizeof(float))) samplesThisIteration = (outputBufferSize/sizeof(float)-1)/2;
 
 
         //Dynacoe::Console::Info() << "Samples this iteration: " << samplesThisIteration << "\n";
 
 
-        if (!ioShared->lock) {
-            ioShared->lock++;
-            if (ioShared->lock == 1) { 
-                io.channels = ioShared->channels;
+        mtlock.lock();
+        io.channels = ioShared->channels;
 
 
-                // first xfer the new sounds over here.
-                for(uint32_t i = 0; i < ioShared->in.GetCount(); ++i) {
-                    io.current.Push(ioShared->in.Get(i));
-                    //printf("Pushed %d (%d left)\n", i, io.current.GetCount());
-                }
-                ioShared->in.Clear();
+        // first xfer the new sounds over here.
+        for(uint32_t i = 0; i < ioShared->in.GetCount(); ++i) {
+            io.current.Push(ioShared->in.Get(i));
+            //printf("Pushed %d (%d left)\n", i, io.current.GetCount());
+        }
+        ioShared->in.Clear();
 
 
-                // also copy over the commands from the ioShared.
-                io.commands = ioShared->commands;
-                ioShared->commands.Clear();
+        // also copy over the commands from the ioShared.
+        io.commands = ioShared->commands;
+        ioShared->commands.Clear();
 
 
 
-                // then copy all ioShared data
-                //for(uint32_t i = 0; i < ioShared->current.GetCount(); ++i) {
-                //    io.current.Get(i)->client = ioShared->current.Get(i)->client;
-                //}
-
-
-                // then, remove dead sounds and copy all to ioShared
-                for(uint32_t i = 0; i < io.current.GetCount(); ++i) {
-                    AudioStreamObject * object = io.current.Get(i);
-                    if (object->processor.destroy) {
-                        ioShared->out.Push(object);
-                        //delete io.current.Get(i); // deletion of audiostreamobjects entirely handled by the audioprocessor
-                        io.current.Remove(i);
-                        i--;
-                        //printf("Removed %d (%d left)\n", i+1, io.current.GetCount());
-                    }
-                }
-                ioShared->current = io.current;
-
-                // dont forget state flags
-                ioShared->status = io.status;
-
-
-                //audio_processor_mutex.unlock();
-
-                // if we have any incoming commands, they'll be processed here.
-                RunCommands();
+        // then, remove dead sounds and copy all to ioShared
+        for(uint32_t i = 0; i < io.current.GetCount(); ++i) {
+            AudioStreamObject * object = io.current.Get(i);
+            if (object->processor.destroy) {
+                ioShared->out.Push(object);
+                //delete io.current.Get(i); // deletion of audiostreamobjects entirely handled by the audioprocessor
+                io.current.Remove(i);
+                i--;
+                //printf("Removed %d (%d left)\n", i+1, ioShared->out.GetCount());
             }
-            ioShared->lock--;
         }
+        ioShared->current = io.current;
 
-
-        ProcessStreamChunks();
-        ProcessMasterChannel();
-
-
-
+        // dont forget state flags
+        ioShared->status = io.status;
 
 
 
-
-        CommitProcessedData();
-        //audio_processor_mutex.unlock();
-    }
-
-  private:
-    float * outputBuffer;
-    uint32_t outputBufferSize;
-    uint32_t samplesThisIteration;
-    float limiterScale;
-
-
-    AudioProcessorIO io;
-    AudioProcessorIO * ioShared;
-
-    void * thread;
-
-    static void ThreadControl() {
-        
-        // TODO: determine good, stable sleep amount
-        while(1) {
-            instance->ProcessAudio();
-            Time::SleepMS(16);
-        }
-    }
-
-
-    void CommitProcessedData() {
-        // Phase 0: Commit processed data
-
-        // If there are any samples that have been fully computed already
-        // that havent been processed by the AudioManager yet,
-        // do not do any further processing and just focus on pushing to
-        // the AudioManager.
-
-
-        manager->PushData(outputBuffer, samplesThisIteration);
-        memset(outputBuffer, 0, samplesThisIteration*sizeof(float)*2);
-
+        // if we have any incoming commands, they'll be processed here.
+        RunCommands();
+        mtlock.unlock();
 
     }
 
 
 
-    void ProcessStreamChunks() {
+    
+    void MixBuffer(int samplesThisIteration, float * outputBuffer) {
 
         // first lets welcome the new sounds that were queued
 
@@ -216,6 +146,7 @@ class AudioProcessor {
         //set<AudioEffectChannel *> effectChannels;
         uint16_t channelVisited[CHANNEL_COUNT];
         memset(channelVisited, 0, CHANNEL_COUNT*2);
+        memset(outputBuffer, 0, samplesThisIteration*2*sizeof(float));
 
 
 
@@ -253,8 +184,7 @@ class AudioProcessor {
             }
 
             // should be the channel associated with the stream chunk;
-            effectBuffer = &io.channels.Get(streamData->client.channel);//GetAudioEffectChannel(streamData->channel);
-            // if not written to set this pass, zero it out.
+            effectBuffer = &io.channels.Get(streamData->client.channel);//GetAudioEffectChannel(streamData->channel);            // if not written to set this pass, zero it out.
             if (!channelVisited[streamData->client.channel]) {
                 effectBuffer->Zero();
             }
@@ -294,6 +224,7 @@ class AudioProcessor {
         for(uint32_t i = 0; i < CHANNEL_COUNT; ++i) {
             AudioEffectChannel * buffer = &io.channels.Get(i);
             if (!channelVisited[i] && !buffer->keepAwake) continue;
+
             
             float leftPan  = panning_to_multiplier_l(buffer->panning);
             float rightPan = panning_to_multiplier_r(buffer->panning);
@@ -301,7 +232,7 @@ class AudioProcessor {
             // scan for limiting needs
             float highest = 0;
             for(uint32_t n = 0; n < numManagerSamples; ++n) {                
-                buffer->data[n] = ((i%2==0 ? leftPan : rightPan) * buffer->volume * buffer->data[n]);
+                buffer->data[n] = ((i%2==0 ? leftPan : rightPan) * buffer->volume * buffer->data[n]);                       if (fabs(buffer->data[n]) > highest)
                 if (fabs(buffer->data[n]) > highest)
                     highest = fabs(buffer->data[n]);
             }
@@ -345,11 +276,6 @@ class AudioProcessor {
 
 
 
-        //printf("Waiting on %f KB of audio\n", (outputBufferSamplesLeft/ (float) 1024));
-    }
-    
-    void ProcessMasterChannel() {
-
         // Phase II: Master channel handling
         // Now that we know all out final buffer contents, lets
         // apply any master effects
@@ -375,9 +301,34 @@ class AudioProcessor {
                 outputBuffer[i] *= limiterScale;
             }
             limiterScale = Mutator::StepTowards(limiterScale, 1.f, .1);
-            //printf("MASTER_LIMITER: %f\n", limiterScale);
+        }
+
+
+
+        //printf("Waiting on %f KB of audio\n", (outputBufferSamplesLeft/ (float) 1024));
+    }
+ 
+
+  private:
+    float limiterScale;
+
+
+    AudioProcessorIO io;
+    AudioProcessorIO * ioShared;
+
+    void * thread;
+
+    /*
+    static void ThreadControl() {
+        
+        // TODO: determine good, stable sleep amount
+        while(1) {
+            Time::SleepMS(16);
         }
     }
+    */
+
+
 
 
 
@@ -386,7 +337,36 @@ class AudioProcessor {
 
 
 
+void Dynacoe_Sound_AudioStreamHandler::operator()(uint32_t count, float * data) {
+    //printf("sample count: %d\n", count);
+    p->ProcessAudio();
+    p->MixBuffer(count/2, data);
+    
+    /*
+    int sr = p->GetSampleRate(); 
+    static int counter = 0;       
 
+    if (Dynacoe::Input::GetState(MouseButtons::Left)) {
+        for(uint32_t i = 0; i < count/2; ++i) {
+            float v = sin(440 * (counter / (float)sr) * 3.1459 * 2);
+
+            data[i*2+0] = v;
+            data[i*2+1] = v;
+            counter++;
+     
+       }
+    } else {
+        for(uint32_t i = 0; i < count/2; ++i) {
+            data[i*2+0] = 0;
+            data[i*2+1] = 0;
+            counter++;
+     
+       }
+
+    }
+    */
+
+}
 
 
 
