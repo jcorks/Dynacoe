@@ -114,7 +114,7 @@ float RtAudioManager::GetCurrentOutputSample() {
 
 const int RtAudio_n_internal_buffers_c = 1;
 #ifndef DC_BACKENDS_RTAUDIO_WIN32
-    const int RtAudio_n_internal_buffer_size_c = 256;
+    const int RtAudio_n_internal_buffer_size_c = 512;
 #else   
     // not sure what to do here. 256 seems fine on some machines, while 
     // on others it induces some kind of desync clicking? This seems more like a 
