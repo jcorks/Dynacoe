@@ -105,6 +105,8 @@ void GUI::Initialize() {
     hovered = false;
 
     InstallEvent("on-click");
+    InstallEvent("on-press");
+    InstallEvent("on-release");
     InstallEvent("on-enter");
     InstallEvent("on-leave");
     InstallEvent("on-hover");
@@ -230,12 +232,15 @@ void GUI::OnStep() {
         EmitEvent("on-hover");
         if (Input::IsPressed(MouseButtons::Left)) {
             clicked = this;
+            EmitEvent("on-press");
         }
     
         if (Input::IsReleased(MouseButtons::Left)) {
             if (clicked == this) {
                 EmitEvent("on-click");
             }
+            EmitEvent("on-release");
+
         }
 
         if (IsBeingDragged()) {

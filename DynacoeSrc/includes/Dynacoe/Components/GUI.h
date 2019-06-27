@@ -44,6 +44,8 @@ namespace Dynacoe {
 ///
 /// Supported events:
 /// - "on-click"
+/// - "on-press"
+/// - "on-release"
 /// - "on-enter"
 /// - "on-hover"
 /// - "on-leave"
