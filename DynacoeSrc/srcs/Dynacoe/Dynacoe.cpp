@@ -249,6 +249,10 @@ void Engine::Pause() {
     
 }
 
+bool Engine::IsPaused() {
+    return paused;
+}
+
 void Engine::Resume() {
     if (placeholderID.Valid()) {
         placeholderID.Identify()->Remove();

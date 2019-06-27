@@ -77,19 +77,28 @@ namespace Engine {
     
     /// \brief Pauses the Engine execution loop.
     ///
-    /// Once in a paused state, 
+    /// Once in a paused state, only critical objects (managers marked with pausable == false),
+    /// will be updated.
     void Pause();
     
-    // like pause but disrupts the engine immediately rather than safely waiting 
-    // until the next iteration. Most useful for debugging prupose
+    /// \brief Immediately pauses the execution loop.
+    ///
+    /// Like Pause() but disrupts the engine immediately rather than safely waiting 
+    /// until the next iteration. Most useful for debugging purposes.
     void Break();
     
-    // resumes from a paused or broken state.
+    /// \brief  resumes from a paused or broken state.
+    ///
     void Resume();
     
-    // Not equivalent to a frame, since frame throttling can occur.
+    /// \brief Updates the main engine.
+    ///
+    ///  Not equivalent to a frame, since frame throttling can occur.
     void Iterate(); 
 
+    /// \brief  returns whether the engine is in a paused or broken state.
+    ///
+    bool IsPaused();
 
     /// \brief Returns the toplevel Entity. 
     ///
