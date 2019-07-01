@@ -139,6 +139,11 @@ namespace Console {
     /// Calling the function again with false re-enables the toggling.
     void Lock(bool);
 
+    /// \brief Enables / disables the keyboard combination that 
+    /// Shows / Hides the console. Shift + TAB toggles the console, and the default 
+    /// is to have it enabled.
+    void EnableHotkey(bool);
+
     /// \brief Sets whether to pause the engine when showing the console.
     ///
     /// The default is true.

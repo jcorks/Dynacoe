@@ -71,7 +71,7 @@ static bool         locked;
 static bool         shown;
 static bool         inputActive = false;
 static ConsoleInputStream * streamIn;
-
+static bool         enableKey = true;
 
 static Console::MessageMode messageMode;
 static uint32_t viewOffsetY;    
@@ -583,13 +583,19 @@ void Console::RunBefore() {
     saturator *= .83;
 
 }
+
+void  Console::EnableHotkey(bool b) {
+    enableKey = b;
+}
+
 void Console::RunAfter()  {
     ProcessStreamOutput();
 
 
-    if ((Input::IsHeld(Keyboard::Key_lshift) ||
+    if (enableKey && (
+        (Input::IsHeld(Keyboard::Key_lshift) ||
          Input::IsHeld(Keyboard::Key_rshift)) &&
-        Input::IsPressed(Keyboard::Key_tab))
+        Input::IsPressed(Keyboard::Key_tab)))
         Console::Show(!shown);
 
 
