@@ -288,7 +288,9 @@ class ConsoleGrid : public Dynacoe::Entity {
             viewIndex = text.size() - totalLines;
         }
 
-        for(uint32_t i = viewIndex; i < text.size(); ++i, n++) {
+        uint32_t count = text.size();
+        if (lines.size() > count) count = lines.size();
+        for(uint32_t i = viewIndex; i < count; ++i, n++) {
             lineText = "";
             if (i >= 0 && i < text.size()) {
                 c = &textColor[i];
