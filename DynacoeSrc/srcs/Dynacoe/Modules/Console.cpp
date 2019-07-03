@@ -78,23 +78,168 @@ static uint32_t viewOffsetY;
 
 
 static void AddDefaultCommands();
-static void AcquireStreamOutput(const std::string &, ConsoleStream::MessageType);
+static void AcquireStreamOutput(const std::string &, ConsoleStream::MessageType, const Color & color);
 static void ProcessStreamOutput();
-static void ProcessStreamIteration(const std::string &, ConsoleStream::MessageType);    
+static void ProcessStreamIteration(const std::string &, ConsoleStream::MessageType, const Color & color);    
 static int fontHeight;
 static float basePositionOffsetRatio;
 
 static void PostMessageConsole(const std::string & c, ConsoleStream::MessageType);
-static std::vector<std::pair<std::string, ConsoleStream::MessageType>> stream;
+static std::vector<std::tuple<std::string, ConsoleStream::MessageType, Color>> stream;
 static Interpreter * interp;
 
+
+
+class ConsoleGrid : public Dynacoe::Entity {
+  public:
+    ConsoleGrid() {
+        bg = AddComponent<Shape2D>();
+        bg->color = {.0f, .0f, .0f, .8f};
+        
+    
+        source = AddComponent<Text2D>();
+        source->text = "TEST";
+        textHeight = source->GetDimensions().y;
+        source->text = "";
+
+
+        totalWidth = 0;
+        totalHeight = 0;
+        viewIndex = 0;
+        needsUpdate = true;
+    }
+    void OnStep() {
+        UpdateParams();
+    }    
+
+    void OnDraw() {
+        if (needsUpdate) {
+            UpdateText();
+            needsUpdate = false;
+        }
+    }
+
+    int GetRowCount() const {
+        return text.size();
+    }
+
+    std::string GetLine(int i) {
+        if (i < 0 || i >= text.size()) return "";
+        return text[i];
+    }
+
+    std::string & SetLine(int i) {
+        if (i < 0) {
+            static std::string bad;
+            bad = "";
+            return bad;
+        }
+        while(text.size() <= i) {
+            text.push_back("");
+            textColor.push_back(Color("white"));
+        }
+        needsUpdate = true;
+        return text[i];
+    }
+
+    Color & SetLineColor(int i) {
+        if (i < 0) {
+            static Color bad;
+            bad = "white";
+            return bad;
+        }
+        while(text.size() <= i) {
+            text.push_back("");
+            textColor.push_back(Color("white"));
+        }        
+        needsUpdate = true;
+        return textColor[i];
+    }
+
+    void SetViewPosition(int i) {
+        viewIndex = i;
+        if (text.size() < totalLines) {
+            viewIndex = 0;
+        } else if (viewIndex > text.size() - totalLines) {
+            viewIndex = text.size() - totalLines;
+        } else if (viewIndex < 0) viewIndex = 0;
+        needsUpdate = true;
+    }
+
+    void Clear() {
+        text.clear();
+        needsUpdate = true;
+    }
+  private:
+    void UpdateParams() {
+        int w = Dynacoe::Graphics::GetRenderCamera().Width();
+        int h = Dynacoe::Graphics::GetRenderCamera().Height();
+        if (w != totalWidth || h != totalHeight) {
+            totalWidth = w;
+            totalHeight = h;
+            totalLines = totalHeight / textHeight;
+
+            bg->FormRectangle(w, h);
+    
+            while(lines.size() < totalLines) {
+                Text2D * newText = AddComponent<Text2D>();
+                newText->SetTextColor({.8f, 1.f, .9f, 1.f});
+                newText->Node().Position() = {0, textHeight*lines.size()};
+                lines.push_back(newText);
+            }
+            while(lines.size() > totalLines) {
+                RemoveComponent(lines[lines.size()-1]);
+            }
+
+            UpdateText();
+        }
+
+    }
+
+    void UpdateText() {
+        uint32_t n = 0;
+        std::string lineText = "";
+        Color * c;
+
+        for(uint32_t i = viewIndex; i < text.size(); ++i, n++) {
+            lineText = "";
+            if (i >= 0 && i < text.size()) {
+                c = &textColor[i];
+                lineText = text[i];
+            }
+            
+            Text2D * textGraphics;
+            if (n < lines.size()) {
+                textGraphics = lines[n];
+            }
+
+            if (textGraphics) {
+                textGraphics->text = lineText;
+                textGraphics->SetTextColor(*c);
+            }
+        }
+    }
+    Text2D * source;
+    Shape2D * bg;
+    std::vector<std::string> text;
+    std::vector<Color> textColor;
+    std::vector<Text2D*> lines;
+    int viewIndex;
+    int totalLines;
+    int textHeight;
+    int totalWidth;
+    int totalHeight;
+    bool needsUpdate;
+
+        
+};
 
 
 // Console::System << "System message" << Console::End;
 // Console << "Normal message" << Console::End;
 // Console::Info << "Info Message" << Console::End;
 
-static DataGrid * mainGrid = nullptr;
+static ConsoleGrid * mainGrid = nullptr;
 static Entity * mainGridRoot = nullptr;
 static Mutator * mainGridRootMutator = nullptr;
 static DynacoeEvent((*commandCallback)) = nullptr;
@@ -521,27 +666,29 @@ void Console::Init() {
     mainGridRoot = Entity::Create<Entity>().Identify();
 
     
-    mainGrid = Entity::Create<DataGrid>().IdentifyAs<DataGrid>();
+    mainGrid = Entity::Create<ConsoleGrid>().IdentifyAs<ConsoleGrid>();
     mainGridRoot->Attach(mainGrid->GetID());
     mainGridRootMutator = mainGridRoot->AddComponent<Mutator>();
     mainGridRoot->Node().Position() = {-100000, -100000};
     
 
-    mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
-    mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
+    //mainGrid->backgroundEvenColor = {.0f, .0f, .0f, .8f};
+    //mainGrid->backgroundOddColor  = {.0f, .0f, .0f, .8f};
 
     Engine::AttachManager(mainGridRoot->GetID(), false);
     Entity * messageRoot = Entity::CreateReference<Entity>();
     messageRoot->Attach(messages->GetID());
     Engine::AttachManager(messages->GetID(), false);
     mainGrid->Attach(streamIn->GetID());
-    mainGrid->AddColumn("", 1, {.8f, 1.f, .9f, 1.f});
+    //mainGrid->AddColumn("", 1, {.8f, 1.f, .9f, 1.f});
 
     mainGrid->step = false;
     mainGrid->draw = false;
 
     streamIn->draw = false;
     streamIn->step = false;
+
+    inputActive = true;
 }
 
 void Console::InitAfter() {
@@ -553,8 +700,8 @@ void Console::RunBefore() {
     if (lastW != Graphics::GetRenderCamera().Width() ||
         lastH != Graphics::GetRenderCamera().Height()) {
 
-        mainGrid->SetColumnWidth(0, Graphics::GetRenderCamera().Width());
-        mainGrid->SetRowsVisible((Graphics::GetRenderCamera().Height())/12 - 1);
+        //mainGrid->SetColumnWidth(0, Graphics::GetRenderCamera().Width());
+        //mainGrid->SetRowsVisible((Graphics::GetRenderCamera().Height())/12 - 1);
 
         lastW = Graphics::GetRenderCamera().Width();
         lastH = Graphics::GetRenderCamera().Height();
@@ -613,16 +760,17 @@ void Console::RunAfter()  {
         
         
         if (Input::IsPressed(Keyboard::Key_enter)) {
-            inputActive = !inputActive;
 
             // halted input
-            if (!inputActive) {
-                std::string inputString = streamIn->Consume();
-                ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Normal <<  ">" << inputString << "\n";
-                if (!inputString.empty()) {
-                    if (!(commandCallback && !commandCallback(nullptr, nullptr, Entity::ID(), Entity::ID(), {inputString})))
-                        Console::Info() << interp->RunCommand(inputString) << '\n';
+            std::string inputString = streamIn->Consume();
+            ConsoleStream(AcquireStreamOutput, Color("white")) << ConsoleStream::MessageType::Normal <<  ">" << inputString << "\n";
+
+            if (commandCallback) {
+                if (commandCallback(nullptr, nullptr, Entity::ID(), Entity::ID(), {inputString})) {
+                    Console::Info() << interp->RunCommand(inputString) << '\n';
                 }
+            } else if (!inputString.empty()) {
+                Console::Info() << interp->RunCommand(inputString) << '\n';
             }
         }
 
@@ -639,14 +787,15 @@ Console::MessageMode Console::GetOverlayMessageMode() {
     return messageMode;
 }
 
-ConsoleStream::ConsoleStream(FinishedCallback cb) {
+ConsoleStream::ConsoleStream(FinishedCallback cb, const Color & color_) {
     finish = cb;
     str = "";
+    color = color_;
 }
 
 ConsoleStream::~ConsoleStream() {
     if (finish) {
-        finish(str, type);
+        finish(str, type, color);
     }
 }
 
@@ -659,13 +808,14 @@ ConsoleStream & ConsoleStream::operator=(const ConsoleStream & other) {
     str = "";
     finish = other.finish;
     type = other.type;
+    color = other.color;
     return *this;
 }
 
 
 
 ConsoleStream ConsoleStream::operator<<(const Chain & s) {
-    ConsoleStream out(finish);
+    ConsoleStream out(finish, color);
     out.str = str+s.ToString();
     str = "";
 
@@ -686,20 +836,26 @@ ConsoleStream  ConsoleStream::operator<<(MessageType t) {
 
 ConsoleStream  Console::System() {
     //return *this << system_color_c;
-    return ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Normal;
+    return ConsoleStream(AcquireStreamOutput, Color("pale goldenrod")) << ConsoleStream::MessageType::Normal;
 }
 ConsoleStream  Console::Info() {
     //return *this << info_color_c;
-    return ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Normal;
+    return ConsoleStream(AcquireStreamOutput, Color("#A6e5d5")) << ConsoleStream::MessageType::Normal;
 }
+
+ConsoleStream  Console::Info(const Color & c) {
+    //return *this << info_color_c;
+    return ConsoleStream(AcquireStreamOutput, c) << ConsoleStream::MessageType::Normal;
+}
+
 // TODO: decide whether to show consoles on errors.
 ConsoleStream  Console::Error() {
     //return *this << error_color_c;
-    return ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Fatal;
+    return ConsoleStream(AcquireStreamOutput, Color("red")) << ConsoleStream::MessageType::Fatal;
 }
 ConsoleStream  Console::Warning() {
     //return *this << warn_color_c;
-    return ConsoleStream(AcquireStreamOutput) << ConsoleStream::MessageType::Warning;
+    return ConsoleStream(AcquireStreamOutput, Color("orange")) << ConsoleStream::MessageType::Warning;
 }
 
 
@@ -758,12 +914,13 @@ std::string Console::GetLine(uint32_t i) {
     if (i < 0) i = 0;
     if (i >= GetNumLines()) i = GetNumLines()-1;
 
-    return mainGrid->Get(0, i);
+    return mainGrid->GetLine(i);
 }
 
 
 void Console::Clear() {
     mainGrid->Clear();
+    stream.clear();
 }
 
 
@@ -869,12 +1026,12 @@ void Console::DrawAfter() {
 
 
 // process expired ConsoleStream
-void AcquireStreamOutput(const std::string & str, ConsoleStream::MessageType type) {
+void AcquireStreamOutput(const std::string & str, ConsoleStream::MessageType type, const Color & color) {
     // last stream type overrides previous, so the actual used color in the line model is from the
     // streamType at the type a \n is inserted.
     std::cout << str;
     stream.push_back(
-        std::pair<std::string, ConsoleStream::MessageType>(str, type)
+        std::make_tuple(str, type, color)
     );
 
     if (!shown && str.size())
@@ -884,13 +1041,13 @@ void AcquireStreamOutput(const std::string & str, ConsoleStream::MessageType typ
 
 void ProcessStreamOutput() {
     for(uint32_t i = 0; i < stream.size(); ++i) {
-        ProcessStreamIteration(stream[i].first, stream[i].second);
+        ProcessStreamIteration(std::get<0>(stream[i]), std::get<1>(stream[i]), std::get<2>(stream[i]));
     }
     stream.clear();
 }
 
 
-void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageType message) {
+void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageType message, const Color & color) {
     std::string str = strSrc;
 
     // add newlines to lines of text that are too large to fit
@@ -906,34 +1063,32 @@ void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageTy
     }
     int markerIter = 0;
     */
-    
+    if (mainGrid->GetRowCount()==0) mainGrid->SetLine(0) = "";
     //if (!lines.size()) lines.push_back(new LineModel);
-    if (mainGrid->GetRowCount() == 0) mainGrid->AddRow();
-
     // its valid to have no string, but a color directive
 
     int newLineIndex = 0;
     int originalIndx = mainGrid->GetRowCount()-1;
-    bool console_overflow = (mainGrid->GetViewPosition() == mainGrid->GetMaxViewPosition());
 
     for(int i = 0; i < str.size(); ++i) {
-        if (mainGrid->Get(0, originalIndx+newLineIndex).size()> console_text_limit_line_c) {
+        if (mainGrid->GetLine(originalIndx+newLineIndex).size()> console_text_limit_line_c) {
             str.insert(i, "\n");
         }
         if (str[i] != '\n') {
-            mainGrid->Get(0, originalIndx+newLineIndex) += (Chain() << str[i]); //message);
+            mainGrid->SetLine(originalIndx+newLineIndex) += (Chain() << str[i]); //message);
+            mainGrid->SetLineColor(originalIndx+newLineIndex) = color;
         } else {
-            mainGrid->AddRow();
             // break up input with multiple lines into separate message calls
+            mainGrid->SetLine(originalIndx+newLineIndex+1) = "";
+            mainGrid->SetLineColor(originalIndx+newLineIndex+1) = color;
 
-
-            //if (lines.size()*fontHeight > Graphics::GetRenderResolutionHeight())            
-            if (console_overflow)
-                mainGrid->SetViewPosition(mainGrid->GetRowCount()-1);
 
             newLineIndex++;
         }
     }
+    //if (lines.size()*fontHeight > Graphics::GetRenderResolutionHeight())            
+    mainGrid->SetViewPosition(mainGrid->GetRowCount()-1);
+
     
 
 

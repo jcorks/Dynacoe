@@ -198,11 +198,6 @@ int Engine::Run() {
         return -2;
     }
 
-    Console::OverlayMessageMode(Console::MessageMode::Disabled);
-    Console::Info() << "Dynacoe " << Version() << "\n\n";
-    Console::Info() << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\n";
-    Console::Info() << "\n";
-    Console::OverlayMessageMode(Console::MessageMode::Standard);
 
 
 
@@ -353,7 +348,12 @@ int Engine::Startup() {
 
 
     
-    
+    Console::OverlayMessageMode(Console::MessageMode::Disabled);
+    Console::Info(Color("#557766")) << "Dynacoe " << Version() << "\n\n";
+    Console::Info(Color("#557766")) << "Johnathan Corkery, 2018\nhttps://jcorks.github.io/Dynacoe/\n_________________________\n\n";
+    Console::Info(Color("#557766")) << "\n";
+    Console::OverlayMessageMode(Console::MessageMode::Standard);
+
 
 
 

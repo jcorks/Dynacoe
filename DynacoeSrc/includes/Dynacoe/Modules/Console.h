@@ -62,10 +62,10 @@ class ConsoleStream {
 
     ConsoleStream & operator=(const ConsoleStream &);
 
-    using FinishedCallback = void (*)(const std::string & text, ConsoleStream::MessageType i); 
+    using FinishedCallback = void (*)(const std::string & text, ConsoleStream::MessageType i, const Color &); 
 
     ConsoleStream(const ConsoleStream &);
-    ConsoleStream(FinishedCallback);
+    ConsoleStream(FinishedCallback, const Color &);
     ~ConsoleStream(); // calls finished callback with the formatted string
     /// \name Stream Output
     /// 
@@ -79,6 +79,7 @@ class ConsoleStream {
     static MessageType type;
     std::string str;
     FinishedCallback finish;
+    Color color;
 };
 
 
@@ -113,6 +114,7 @@ namespace Console {
     ///\{
     ConsoleStream System();
     ConsoleStream Info  ();
+    ConsoleStream Info  (const Color &);
     ConsoleStream Error ();
     ConsoleStream Warning();
     ///\}

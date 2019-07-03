@@ -76,7 +76,7 @@ class ConsoleExample : public Entity {
 
 
         // there are other line types to try:
-        Console::Info()    << "This is system info." << Console::End(); 
+        Console::System()    << "This is system info." << Console::End(); 
         Console::Warning() << "This is a warning. Usually for things "
                            << "that are non-fatal." << Console::End();
         Console::Error()   << "This is an error. Usually for things "
