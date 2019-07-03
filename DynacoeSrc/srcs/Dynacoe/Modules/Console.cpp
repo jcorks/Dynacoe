@@ -92,11 +92,47 @@ static Interpreter * interp;
 
 class ConsoleGrid : public Dynacoe::Entity {
   public:
+    Dynacoe::Vector initial;
+    int initialIndex;
+    bool isGrabbed;    
+
+
+    static DynacoeEvent(on_press) {
+        ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
+        grid->initial.x = Dynacoe::Input::MouseX();
+        grid->initial.y = Dynacoe::Input::MouseY();
+        grid->initialIndex = grid->viewIndex;
+        grid->isGrabbed = true;
+    }
+
+    static DynacoeEvent(on_move) {
+        ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
+        if (grid->isGrabbed) {
+            grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
+            grid->needsUpdate = true;
+        }
+    }
+
+    static DynacoeEvent(on_release) {
+        ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
+        grid->isGrabbed = false;
+    }
+
     ConsoleGrid() {
+        isGrabbed = false;
         bg = AddComponent<Shape2D>();
         bg->color = {.0f, .0f, .0f, .8f};
-        
-    
+        gui = AddComponent<GUI>();
+
+        statusBg = AddComponent<Shape2D>();
+        statusBg->color = {.4f, .4f, .4f, 1.f};
+        status = AddComponent<Text2D>();
+        status->SetTextColor(Color("black"));
+
+        gui->InstallHook("on-press", on_press);    
+        gui->InstallHook("on-hover", on_move);    
+        gui->InstallHook("on-release", on_release);
+
         source = AddComponent<Text2D>();
         source->text = "TEST";
         textHeight = source->GetDimensions().y;
@@ -110,6 +146,7 @@ class ConsoleGrid : public Dynacoe::Entity {
     }
     void OnStep() {
         UpdateParams();
+        
     }    
 
     void OnDraw() {
@@ -158,12 +195,9 @@ class ConsoleGrid : public Dynacoe::Entity {
 
     void SetViewPosition(int i) {
         viewIndex = i;
-        if (text.size() < totalLines) {
-            viewIndex = 0;
-        } else if (viewIndex > text.size() - totalLines) {
-            viewIndex = text.size() - totalLines;
-        } else if (viewIndex < 0) viewIndex = 0;
+
         needsUpdate = true;
+        isGrabbed = false;
     }
 
     void Clear() {
@@ -191,7 +225,32 @@ class ConsoleGrid : public Dynacoe::Entity {
                 RemoveComponent(lines[lines.size()-1]);
             }
 
+            gui->DefineRegion(w, h);
+            
+            
+
             UpdateText();
+        }
+
+    }
+
+    void UpdateStatus() {
+        if (lines.size() >= text.size()) {
+            status->text = "";
+            statusBg->FormRectangle(0, 0);
+        } else {
+            status->text = Chain() << viewIndex << "/" << text.size() - lines.size();
+            float w = status->GetDimensions().x;
+            float h = status->GetDimensions().y;
+            float x = totalWidth - w;
+            float y = 0;
+
+            status->Node().Position().x = x;
+            status->Node().Position().y = y;
+
+            statusBg->Node().Position().x = x;
+            statusBg->Node().Position().y = y;
+            statusBg->FormRectangle(w, h);
         }
 
     }
@@ -200,6 +259,13 @@ class ConsoleGrid : public Dynacoe::Entity {
         uint32_t n = 0;
         std::string lineText = "";
         Color * c;
+
+        if (viewIndex < 0) viewIndex = 0;
+        else if (text.size() < totalLines) {
+            viewIndex = 0;
+        } else if (viewIndex > text.size() - totalLines) {
+            viewIndex = text.size() - totalLines;
+        }
 
         for(uint32_t i = viewIndex; i < text.size(); ++i, n++) {
             lineText = "";
@@ -218,9 +284,14 @@ class ConsoleGrid : public Dynacoe::Entity {
                 textGraphics->SetTextColor(*c);
             }
         }
+
+        UpdateStatus();
     }
     Text2D * source;
     Shape2D * bg;
+    GUI * gui;
+    Shape2D * statusBg;
+    Text2D * status;
     std::vector<std::string> text;
     std::vector<Color> textColor;
     std::vector<Text2D*> lines;
@@ -231,7 +302,7 @@ class ConsoleGrid : public Dynacoe::Entity {
     int totalHeight;
     bool needsUpdate;
 
-        
+
 };
 
 
