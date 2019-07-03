@@ -94,28 +94,40 @@ class ConsoleGrid : public Dynacoe::Entity {
   public:
     Dynacoe::Vector initial;
     int initialIndex;
-    bool isGrabbed;    
+    bool isGrabbed;
+    int numChars;    
 
+    float accel;
+    float accum;
 
     static DynacoeEvent(on_press) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         grid->initial.x = Dynacoe::Input::MouseX();
         grid->initial.y = Dynacoe::Input::MouseY();
         grid->initialIndex = grid->viewIndex;
+        grid->accel *= .70;
+        grid->accum = grid->viewIndex;
         grid->isGrabbed = true;
     }
 
     static DynacoeEvent(on_move) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         if (grid->isGrabbed) {
-            grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
-            grid->needsUpdate = true;
+            grid->accel += - (1.7*((Dynacoe::Input::MouseY() - grid->initial.y)/grid->textHeight));
+            grid->initial.y = Dynacoe::Input::MouseY();
+        
+            //grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
+            //grid->needsUpdate = true;
         }
     }
 
     static DynacoeEvent(on_release) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         grid->isGrabbed = false;
+    }
+
+    int GetCharactersPerLine() const {
+        return numChars-1;
     }
 
     ConsoleGrid() {
@@ -134,8 +146,9 @@ class ConsoleGrid : public Dynacoe::Entity {
         gui->InstallHook("on-release", on_release);
 
         source = AddComponent<Text2D>();
-        source->text = "TEST";
+        source->text = "T";
         textHeight = source->GetDimensions().y;
+        textWidth = source->GetDimensions().x;
         source->text = "";
 
 
@@ -143,8 +156,16 @@ class ConsoleGrid : public Dynacoe::Entity {
         totalHeight = 0;
         viewIndex = 0;
         needsUpdate = true;
+        numChars = Dynacoe::Graphics::GetRenderCamera().Width() / textWidth;
+        accel = 0;
     }
     void OnStep() {
+        if (fabs(accel) > 0.0001) {
+            accum += accel / textHeight;
+            accel *= .93;
+            viewIndex = (int)accum;
+            needsUpdate = true;
+        }
         UpdateParams();
         
     }    
@@ -226,7 +247,7 @@ class ConsoleGrid : public Dynacoe::Entity {
             }
 
             gui->DefineRegion(w, h);
-            
+            numChars = w / textWidth;
             
 
             UpdateText();
@@ -298,6 +319,7 @@ class ConsoleGrid : public Dynacoe::Entity {
     int viewIndex;
     int totalLines;
     int textHeight;
+    int textWidth;
     int totalWidth;
     int totalHeight;
     bool needsUpdate;
@@ -1142,7 +1164,7 @@ void ProcessStreamIteration(const std::string & strSrc, ConsoleStream::MessageTy
     int originalIndx = mainGrid->GetRowCount()-1;
 
     for(int i = 0; i < str.size(); ++i) {
-        if (mainGrid->GetLine(originalIndx+newLineIndex).size()> console_text_limit_line_c) {
+        if (mainGrid->GetLine(originalIndx+newLineIndex).size()> mainGrid->GetCharactersPerLine()) {
             str.insert(i, "\n");
         }
         if (str[i] != '\n') {
