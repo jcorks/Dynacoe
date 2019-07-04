@@ -108,6 +108,7 @@ class ConsoleGrid : public Dynacoe::Entity {
         grid->accel *= .70;
         grid->accum = grid->viewIndex;
         grid->isGrabbed = true;
+        return false;
     }
 
     static DynacoeEvent(on_move) {
@@ -119,11 +120,15 @@ class ConsoleGrid : public Dynacoe::Entity {
             //grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
             //grid->needsUpdate = true;
         }
+        return false;
+
     }
 
     static DynacoeEvent(on_release) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         grid->isGrabbed = false;
+        return false;
+
     }
 
     int GetCharactersPerLine() const {
@@ -223,6 +228,7 @@ class ConsoleGrid : public Dynacoe::Entity {
 
     void Clear() {
         text.clear();
+        textColor.clear();
         needsUpdate = true;
     }
   private:
@@ -279,7 +285,7 @@ class ConsoleGrid : public Dynacoe::Entity {
     void UpdateText() {
         uint32_t n = 0;
         std::string lineText = "";
-        Color * c;
+        Color * c = nullptr;
 
         if (viewIndex < 0) viewIndex = 0;
         else if (text.size() < totalLines) {
@@ -304,7 +310,7 @@ class ConsoleGrid : public Dynacoe::Entity {
 
             if (textGraphics) {
                 textGraphics->text = lineText;
-                textGraphics->SetTextColor(*c);
+                if (c) textGraphics->SetTextColor(*c);
             }
         }
 
@@ -963,12 +969,12 @@ void Console::Show(bool b) {
     if (pauseOnShow && (shown != true && b == true)) {
         Engine::Pause();
         mainGridRootMutator->Clear(0);
-        mainGridRootMutator->NewMutation(.2, 1.f, Mutator::Function::Logarithmic);
+        mainGridRootMutator->NewMutation(0, 1.f, Mutator::Function::Logarithmic);
         mainGridRootMutator->Start();
     } else if (shown == true && b != true) {
         Engine::Resume();
         mainGridRootMutator->Clear(1);
-        mainGridRootMutator->NewMutation(.2, 0, Mutator::Function::Quadratic);
+        mainGridRootMutator->NewMutation(0, 0, Mutator::Function::Quadratic);
         mainGridRootMutator->Start();
 
     }
