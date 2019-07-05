@@ -553,6 +553,7 @@ class ConsoleInputStream : public Entity {
         cursorStringAspect = AddComponent<Shape2D>();
         
         inputStringAspect->SetTextColor("white");
+        inputStringAspect->text = Chain() << "$  " << "";
 
 
         bg->color = "black";

@@ -97,7 +97,7 @@ Object2D::~Object2D() {
 void Object2D::OnAttach() {
     if (!manager.Valid()) {
         manager =  Entity::Create<CollisionManager>();
-        Engine::AttachManager(manager);
+        Engine::AttachManager(manager, true);
     }
     manager.IdentifyAs<CollisionManager>()->RegisterObject2D(this);
 }

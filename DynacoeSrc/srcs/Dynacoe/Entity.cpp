@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dynacoe/Util/Time.h>
 #include <Dynacoe/Component.h>
+#include <Dynacoe/Dynacoe.h>
 #include <Dynacoe/Modules/Console.h>
 #include <Dynacoe/Backends/Backend.h>
 #include <Dynacoe/Modules/Graphics.h>
@@ -48,7 +49,7 @@ using namespace std;
 using namespace Dynacoe;
 
 
-
+static int stepInLevel = 0;
 static std::unordered_map<void *, bool> * entityIDtableRef = nullptr;
 class EntityIDTable {
   public:
@@ -115,10 +116,21 @@ void Dynacoe::EntityErase(Entity * e) {
     delete e;
 }
 
+class EntityLimbo_Manager;
 
 class EntityLimbo {
   public:
+    bool addedManager;
+    EntityLimbo() {
+        addedManager = false;
+
+    }
     void SendToOblivion(Entity * e) {
+        if (!addedManager) {
+            Entity::ID id = Entity::Create<EntityLimbo_Manager>();
+            Engine::AttachManager(id, true);
+            addedManager = true;
+        }
         lostSouls.push(e);
     }
 
@@ -140,8 +152,16 @@ class EntityLimbo {
     std::stack<Entity *> lostSouls;
 };
 
-static EntityLimbo * limbo = nullptr;
+static EntityLimbo limbo;
 
+class EntityLimbo_Manager : public Entity {
+  public:
+    void OnStep() {
+        // safely unnested and normal garbage collection routine
+        if (stepInLevel <= 2) 
+            limbo.OnStep();
+    }
+};
 
 template<typename T>
 class Before {
@@ -157,16 +177,6 @@ class Before {
 
 
 
-void Entity::initBase(){
-    static bool spawned = false;
-
-    if (spawned) return;
-    spawned = true;
-
-
-    PriorityList.clear();
-
-}
 
 
 
@@ -302,12 +312,12 @@ void Entity::Step() {
     if (!step) return;
     Entity::ID idSelf = GetID();
 
-    OnPreStep();
-    if (!idSelf.Valid()) return;
+    stepInLevel++;
 
-    // take out the TRASH
-    if (limbo) {
-        limbo->OnStep();
+    OnPreStep();
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+        return;
     }
     Entity * curEnt;
 
@@ -320,7 +330,10 @@ void Entity::Step() {
     stepTime = 0;
     recordTime = Time::MsSinceStartup();
     for(n = 0; n < componentsBefore.size(); ++n) {
-        if (!idSelf.Valid()) return;
+        if (!idSelf.Valid()) {
+            stepInLevel--;
+            return;
+        }
         if (componentsBefore[n]->step)
             componentsBefore[n]->Step();
 
@@ -340,21 +353,30 @@ void Entity::Step() {
 
 
     }
-    if (!idSelf.Valid()) return;
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+        return;
+    }
     // actual running of self
     OnStep();
     for(n = 0; n < componentsAfter.size(); ++n) {
-        if (!idSelf.Valid()) return;
+        if (!idSelf.Valid()) {
+            stepInLevel--;
+            return;
+        }
         if (componentsAfter[n]->step)
             componentsAfter[n]->Step();
     }
 
-    if (!idSelf.Valid()) return;
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+        return;
+    }
     CheckUpdate();
 
     stepTime = Time::MsSinceStartup()-recordTime;
 
-
+    stepInLevel--;
 }
 
 
@@ -362,22 +384,26 @@ void Entity::Step() {
 void Entity::Draw() {
     if (!draw) return;
     Entity::ID idSelf = GetID();
+    stepInLevel++;
+
 
     OnPreDraw();
-    if (!idSelf.Valid()) return;
-
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+        return;
+    }
 
     size_t compInd;
 
     // take out the TRASH
-    if (limbo) {
-        limbo->OnStep();
-    }
 
     drawTime = 0;
     double recordTime = Time::MsSinceStartup();
     for(compInd = 0; compInd < componentsBefore.size(); ++compInd) {
-        if (!idSelf.Valid()) return;
+        if (!idSelf.Valid()) {
+            stepInLevel--;
+            return;
+        }
         if (componentsBefore[compInd]->draw)
             componentsBefore[compInd]->Draw();
     }
@@ -397,24 +423,37 @@ void Entity::Draw() {
 
 
         e->Draw();
-        if (!idSelf.Valid()) return;
+        if (!idSelf.Valid()) {
+            stepInLevel--;
+            return;
+        }
 
     }
-    if (!idSelf.Valid()) return;
-
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+        return;
+    }
 
 
     OnDraw();
     
     for(compInd = 0; compInd < componentsAfter.size(); ++compInd) {
-        if (!idSelf.Valid()) return;
+        if (!idSelf.Valid()) {
+            stepInLevel--;
+            return;
+        }
         if (componentsAfter[compInd]->draw)
             componentsAfter[compInd]->Draw();
 
     }
-    if (!idSelf.Valid()) return;
+    if (!idSelf.Valid()) {
+        stepInLevel--;
+
+        return;
+    }
     CheckUpdate();
 
+    stepInLevel--;
     drawTime = Time::MsSinceStartup()-recordTime;
 }
 
@@ -517,11 +556,6 @@ Entity::Entity(const std::string & str) : Entity(){
     SetName(str);
 }
 Entity::Entity() {
-    if (!limbo) {
-        limbo = new EntityLimbo();
-        masterEntIDMap[0] = nullptr;
-
-    }
 
 
     name = unused_name_c;
@@ -537,6 +571,7 @@ Entity::Entity() {
     idTable = (void*) table;
     id.id = (void*) table;
     masterEntIDMap[table] = this;
+    masterEntIDMap[0] = nullptr;
 
 
     Watch(Variable("draw", draw));
@@ -569,7 +604,7 @@ void Entity::Remove() {
     if (masterEntNameMap.find(name) != masterEntNameMap.end())
         masterEntNameMap.erase(name);
 
-    (limbo)->SendToOblivion(this);
+    limbo.SendToOblivion(this);
     world = nullptr; // hide limbo's existence from itself? this is getting weird
     removed = true;
 
@@ -770,9 +805,6 @@ bool Entity::IsDrawing() {
 
 
 std::vector<Entity::ID> Entity::GetAll() {
-    if (limbo) {
-        limbo->OnStep();
-    }
     std::vector<Entity::ID> out;
     Entity::ID id;
     for(auto it = masterEntIDMap.begin(); it != masterEntIDMap.end(); ++it) {
