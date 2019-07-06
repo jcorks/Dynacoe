@@ -93,6 +93,8 @@ static Interpreter * interp;
 class ConsoleGrid : public Dynacoe::Entity {
   public:
     Dynacoe::Vector initial;
+    Dynacoe::Vector last;
+
     int initialIndex;
     bool isGrabbed;
     int numChars;    
@@ -104,9 +106,12 @@ class ConsoleGrid : public Dynacoe::Entity {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         grid->initial.x = Dynacoe::Input::MouseX();
         grid->initial.y = Dynacoe::Input::MouseY();
+        grid->last.x = Dynacoe::Input::MouseX();
+        grid->last.y = Dynacoe::Input::MouseY();
+
         grid->initialIndex = grid->viewIndex;
-        grid->accel *= .70;
-        grid->accum = grid->viewIndex;
+        //grid->accel *= .70;
+        //grid->accum = grid->viewIndex;
         grid->isGrabbed = true;
         return false;
     }
@@ -114,11 +119,11 @@ class ConsoleGrid : public Dynacoe::Entity {
     static DynacoeEvent(on_move) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
         if (grid->isGrabbed) {
-            grid->accel += - (1.7*((Dynacoe::Input::MouseY() - grid->initial.y)/grid->textHeight));
-            grid->initial.y = Dynacoe::Input::MouseY();
+            grid->accel += - (1.7*((Dynacoe::Input::MouseY() - grid->last.y)/grid->textHeight));
+            grid->last.y = Dynacoe::Input::MouseY();
         
-            //grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
-            //grid->needsUpdate = true;
+            grid->viewIndex = grid->initialIndex + -(Dynacoe::Input::MouseY() - grid->initial.y) / grid->textHeight;
+            grid->needsUpdate = true;
         }
         return false;
 
@@ -126,6 +131,7 @@ class ConsoleGrid : public Dynacoe::Entity {
 
     static DynacoeEvent(on_release) {
         ConsoleGrid * grid = self.IdentifyAs<ConsoleGrid>();
+        grid->accum = grid->viewIndex;                        
         grid->isGrabbed = false;
         return false;
 
@@ -165,11 +171,13 @@ class ConsoleGrid : public Dynacoe::Entity {
         accel = 0;
     }
     void OnStep() {
-        if (fabs(accel) > 0.0001) {
+        if ((fabs(accel) > 0.0001)) {
             accum += accel / textHeight;
             accel *= .93;
-            viewIndex = (int)accum;
-            needsUpdate = true;
+            if (isGrabbed == false) {            
+                viewIndex = (int)accum;
+                needsUpdate = true;
+            }
         }
         UpdateParams();
         
@@ -266,7 +274,7 @@ class ConsoleGrid : public Dynacoe::Entity {
             status->text = "";
             statusBg->FormRectangle(0, 0);
         } else {
-            status->text = Chain() << viewIndex << "/" << text.size() - lines.size();
+            status->text = Chain() << (int)(100 * (viewIndex / ((float)(text.size() - lines.size()))))<< "% (drag to scroll)";
             float w = status->GetDimensions().x;
             float h = status->GetDimensions().y;
             float x = totalWidth - w;
