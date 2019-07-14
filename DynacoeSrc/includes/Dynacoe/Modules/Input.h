@@ -125,7 +125,7 @@ namespace Input {
     /// \brief Adds a UnicodeListener object to receive events when 
     /// incoming unicode characters are processed.
     ///
-    void AddUnicodeListener(UnicodeListener *);
+    void AddUnicodeListener(UnicodeListener *, bool pausable=true);
 
     /// \brief Removes an added unicode listener.
     ///

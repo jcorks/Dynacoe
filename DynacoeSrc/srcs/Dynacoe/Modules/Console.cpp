@@ -571,7 +571,7 @@ class ConsoleInputStream : public Entity {
         cursorIter = 0;
 
 
-        Input::AddUnicodeListener(new ConsoleUnicodeListener(this));
+        Input::AddUnicodeListener(new ConsoleUnicodeListener(this), false);
         changed = false;
         saturation = 0.f;
 

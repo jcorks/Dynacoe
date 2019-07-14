@@ -424,14 +424,26 @@ int Input::GetLastUnicode() {
 }
 
 static std::vector<UnicodeListener*> unicodeListeners;
-void Input::AddUnicodeListener(UnicodeListener * listener) {
-    unicodeListeners.push_back(listener);
+static std::vector<UnicodeListener*> unicodeListenersPausable;
+
+void Input::AddUnicodeListener(UnicodeListener * listener, bool pausable) {
+    if (pausable)
+        unicodeListenersPausable.push_back(listener);
+    else
+        unicodeListeners.push_back(listener);
 }
 
 void Input::RemoveUnicodeListener(UnicodeListener * listener) {
     for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
         if (unicodeListeners[i] == listener) {
             unicodeListeners.erase(unicodeListeners.begin()+i);
+            return;
+        }
+    }
+
+    for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+        if (unicodeListenersPausable[i] == listener) {
+            unicodeListenersPausable.erase(unicodeListenersPausable.begin()+i);
             return;
         }
     }
@@ -711,6 +723,12 @@ void getUnicode() {
         for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
             unicodeListeners[i]->OnNewUnicode(lastUnicode);
         }
+        
+        if (!Engine::IsPaused()) {
+            for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+                unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
+            }            
+        }
     } 
 
 
@@ -721,6 +739,12 @@ void getUnicode() {
                 
             for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
                 unicodeListeners[i]->OnRepeatUnicode(lastUnicode);
+            }
+            
+            if (!Engine::IsPaused()) {
+                for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+                    unicodeListenersPausable[i]->OnRepeatUnicode(lastUnicode);
+                }
             }
         }
     }
