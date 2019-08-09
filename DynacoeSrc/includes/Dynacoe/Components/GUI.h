@@ -138,6 +138,9 @@ class GUI : public Component, public Spatial {
     std::string tooltipText;
     bool hovered;
     int w, h;
+  public:
+    void Iterate();
+
 };
 
 

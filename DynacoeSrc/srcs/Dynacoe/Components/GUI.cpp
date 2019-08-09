@@ -46,6 +46,23 @@ GUI *       GUI::grabbed = nullptr;
 static GUI * clicked     = nullptr;
 
 static Entity::ID tooltipManager;
+class GUIManager;
+GUIManager * guiManager = nullptr;
+
+class GUIManager : public Entity {
+  public:
+    GUIManager() {
+        guiManager = this;
+    }
+    void OnStep() {
+        for(int i = guis.size()-1; i >= 0; --i) {
+            guis[i]->Iterate();
+        }
+        guis.clear();
+    }
+    std::vector<GUI *> guis;
+
+};
 
 
 class TooltipManager : public Entity {
@@ -115,9 +132,8 @@ void GUI::Initialize() {
     InstallEvent("on-unfocus");
     if (!tooltipManager.Valid()) {
         tooltipManager = Entity::Create<TooltipManager>();
-
-
         Engine::AttachManager(tooltipManager);
+        Engine::AttachManager(Entity::Create<GUIManager>());
     }
 }
 
@@ -199,12 +215,7 @@ int GUI::GetRegionH() {
 
 
 
-
-
-
-
-
-void GUI::OnStep() {
+void GUI::Iterate() {
     if (grabbed && grabbed != this) return;
 
     Vector pt = {0, 0};
@@ -250,6 +261,11 @@ void GUI::OnStep() {
 }
 
 
+void GUI::OnStep() {
+    guiManager->guis.push_back(this);
+}
+
+
 std::string GUI::GetInfo() {
     return (Chain() << "@" << Node().GetPosition() << " w/h:" << w << ", " << h << "\n"
                     << "Hovered? " << (IsHovered() ? "Yes" : "Nope") << "\n"
@@ -263,3 +279,5 @@ void GUI::SetTooltipText(const std::string & t) {
 const std::string & GUI::GetTooltipText() const {
     return tooltipText;
 }
+
+
