@@ -347,7 +347,7 @@ std::vector<uint8_t> DataTable::WriteState() {
 }
 
 bool DataTable::ReadState(const std::vector<uint8_t> & state) {
-    
+    if (state.size() < 8) return false;
         // Header
     if (state[0] != '\1' ||
         state[1] != 'C' ||
