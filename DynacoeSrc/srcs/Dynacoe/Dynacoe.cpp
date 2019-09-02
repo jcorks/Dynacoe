@@ -239,8 +239,8 @@ static Entity::ID placeholderID;
 
 void Engine::Pause() {
     paused = true;
-    placeholderID = Entity::Create<PlaceholderDisplay>();
-    Engine::AttachManager(placeholderID, false);
+    //placeholderID = Entity::Create<PlaceholderDisplay>();
+    //Engine::AttachManager(placeholderID, false);
     
 }
 
@@ -249,9 +249,9 @@ bool Engine::IsPaused() {
 }
 
 void Engine::Resume() {
-    if (placeholderID.Valid()) {
-        placeholderID.Identify()->Remove();
-    }
+    //if (placeholderID.Valid()) {
+    //    placeholderID.Identify()->Remove();
+    //}
     paused = false;
 }
 
