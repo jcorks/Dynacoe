@@ -815,6 +815,7 @@ void Console::RunBefore() {
 
         lastW = Graphics::GetRenderCamera().Width();
         lastH = Graphics::GetRenderCamera().Height();
+        mainGrid->OnStep();
     }
     /*
     if (inputActive && shown) {
