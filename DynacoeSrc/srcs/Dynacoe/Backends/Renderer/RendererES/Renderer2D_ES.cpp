@@ -49,14 +49,16 @@ using namespace Dynacoe;
 
 
 
-static int VBO_SLOT__POS;
-static int VBO_SLOT__COLOR;
-static int VBO_SLOT__UVS; // x, y, "z" (-1 if unused)
+enum GLES2D_LinkLocations{
+    VBO_SLOT__POS,
+    VBO_SLOT__COLOR,
+    VBO_SLOT__UVS, // x, y, "z" (-1 if unused)
 
-static int VBO_SLOT__OBJECT_A;
-static int VBO_SLOT__OBJECT_B;
-static int VBO_SLOT__OBJECT_C;
-static int VBO_SLOT__OBJECT_D;
+    VBO_SLOT__OBJECT_M,
+    VBO_SLOT__OBJECT_M1,
+    VBO_SLOT__OBJECT_M2,
+    VBO_SLOT__OBJECT_M3
+};
 
 static int UNIFORM_SLOT__CONTEXT_WIDTH_F;
 static int UNIFORM_SLOT__CONTEXT_HEIGHT_F;
@@ -82,10 +84,7 @@ static const char * vertShader_2D =
 "attribute highp  vec3  uvs;\n"
 
 
-"attribute highp  vec4  objectA;\n"
-"attribute highp  vec4  objectB;\n"
-"attribute highp  vec4  objectC;\n"
-"attribute highp  vec4  objectD;\n"
+"attribute highp  mat4  objectM;\n"
 
 
 
@@ -99,8 +98,7 @@ static const char * vertShader_2D =
 // applies a full transform for 2D coordinates
 
 "void main(void) {\n"
-"   highp mat4 m = mat4(objectA, objectB, objectC, objectD);\n"
-"   highp vec4 tfPos = m * vec4(pos.x, pos.y, 0.0, 1.0);\n"
+"   highp vec4 tfPos = objectM * vec4(pos.x, pos.y, 0.0, 1.0);\n"
 "   highp vec4 p = contextTransform * tfPos;\n"
 
 
@@ -109,7 +107,7 @@ static const char * vertShader_2D =
 
 "   gl_Position.x = (p.x / contextWidth) * 2.0 - 1.0;\n"
 "   gl_Position.y = -1.0*((p.y / contextHeight) * 2.0 - 1.0);\n"
-"   gl_Position.z = 0.0;\n"
+"   gl_Position.z = 0.0 ;//+(objectC.x+contextTransform[0][0])*.000001;\n"
 "   gl_Position.w = 1.0;\n"
 
 "   fragColor     = color;\n"
@@ -578,29 +576,27 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     glBindBuffer(GL_ARRAY_BUFFER, currentVbo);
     
 
-    // TODO find a way to not need to query every fram ewhether an attrib pointer is opted out
-    // TODO combine object into a single matrix    
 
 
-    if (VBO_SLOT__POS>=0)      glVertexAttribPointer(VBO_SLOT__POS,       2, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)0);
-    if (VBO_SLOT__COLOR>=0)    glVertexAttribPointer(VBO_SLOT__COLOR,     4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 2));
-    if (VBO_SLOT__UVS>=0)      glVertexAttribPointer(VBO_SLOT__UVS,       3, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 6));
-    if (VBO_SLOT__OBJECT_A>=0) glVertexAttribPointer(VBO_SLOT__OBJECT_A,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 9));
-    if (VBO_SLOT__OBJECT_B>=0) glVertexAttribPointer(VBO_SLOT__OBJECT_B,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 13));
-    if (VBO_SLOT__OBJECT_C>=0) glVertexAttribPointer(VBO_SLOT__OBJECT_C,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 17));
-    if (VBO_SLOT__OBJECT_D>=0) glVertexAttribPointer(VBO_SLOT__OBJECT_D,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 21));
+    glVertexAttribPointer(VBO_SLOT__POS,       2, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)0);
+    glVertexAttribPointer(VBO_SLOT__COLOR,     4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 2));
+    glVertexAttribPointer(VBO_SLOT__UVS,       3, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 6));
+    glVertexAttribPointer(VBO_SLOT__OBJECT_M,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 9));
+    glVertexAttribPointer(VBO_SLOT__OBJECT_M1,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 13));
+    glVertexAttribPointer(VBO_SLOT__OBJECT_M2,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 17));
+    glVertexAttribPointer(VBO_SLOT__OBJECT_M3,   4, GL_FLOAT, GL_FALSE, sizeof(float)*25, (void*)(sizeof(GLfloat) * 21));
     
 
 
     
     
-    if (VBO_SLOT__POS>=0)      glEnableVertexAttribArray(VBO_SLOT__POS);
-    if (VBO_SLOT__COLOR>=0)    glEnableVertexAttribArray(VBO_SLOT__COLOR);
-    if (VBO_SLOT__UVS>=0)      glEnableVertexAttribArray(VBO_SLOT__UVS);
-    if (VBO_SLOT__OBJECT_A>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_A);
-    if (VBO_SLOT__OBJECT_B>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_B);
-    if (VBO_SLOT__OBJECT_C>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_C);
-    if (VBO_SLOT__OBJECT_D>=0) glEnableVertexAttribArray(VBO_SLOT__OBJECT_D);
+    glEnableVertexAttribArray(VBO_SLOT__POS);
+    glEnableVertexAttribArray(VBO_SLOT__COLOR);
+    glEnableVertexAttribArray(VBO_SLOT__UVS);
+    glEnableVertexAttribArray(VBO_SLOT__OBJECT_M);
+    glEnableVertexAttribArray(VBO_SLOT__OBJECT_M1);
+    glEnableVertexAttribArray(VBO_SLOT__OBJECT_M2);
+    glEnableVertexAttribArray(VBO_SLOT__OBJECT_M3);
     
 
 
@@ -618,7 +614,7 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
     //if (!(oldParams == params)) {
         glUniform1f(UNIFORM_SLOT__CONTEXT_HEIGHT_F, params.contextHeight);
         glUniform1f(UNIFORM_SLOT__CONTEXT_WIDTH_F, params.contextWidth);
-        glUniformMatrix4fv(UNIFORM_SLOT__CONTEXT_TRANSFORM_MAT4, 1, true, params.contextTransform);    
+        glUniformMatrix4fv(UNIFORM_SLOT__CONTEXT_TRANSFORM_MAT4, 1, false, params.contextTransform);    
         oldParams = params;
     //}
     
@@ -649,13 +645,13 @@ uint32_t Renderer2D::Render2DVertices(GLenum drawMode, const Renderer::Render2DS
 
 
     
-    if (VBO_SLOT__POS>=0)      glDisableVertexAttribArray(VBO_SLOT__POS);
-    if (VBO_SLOT__COLOR>=0)    glDisableVertexAttribArray(VBO_SLOT__COLOR);
-    if (VBO_SLOT__UVS>=0)      glDisableVertexAttribArray(VBO_SLOT__UVS);
-    if (VBO_SLOT__OBJECT_A>=0) glDisableVertexAttribArray(VBO_SLOT__OBJECT_A);
-    if (VBO_SLOT__OBJECT_B>=0) glDisableVertexAttribArray(VBO_SLOT__OBJECT_B);
-    if (VBO_SLOT__OBJECT_C>=0) glDisableVertexAttribArray(VBO_SLOT__OBJECT_C);
-    if (VBO_SLOT__OBJECT_D>=0) glDisableVertexAttribArray(VBO_SLOT__OBJECT_D);
+    glDisableVertexAttribArray(VBO_SLOT__POS);
+    glDisableVertexAttribArray(VBO_SLOT__COLOR);
+    glDisableVertexAttribArray(VBO_SLOT__UVS);
+    glDisableVertexAttribArray(VBO_SLOT__OBJECT_M);
+    glDisableVertexAttribArray(VBO_SLOT__OBJECT_M1);
+    glDisableVertexAttribArray(VBO_SLOT__OBJECT_M2);
+    glDisableVertexAttribArray(VBO_SLOT__OBJECT_M3);
 
 
     glUseProgram(0);  
@@ -771,16 +767,20 @@ void Renderer2DData::CreateProgram() {
         assert(0);
     }
 
+    glBindAttribLocation(programHandle, VBO_SLOT__POS,   "pos");
+    glBindAttribLocation(programHandle, VBO_SLOT__COLOR, "color");
+    glBindAttribLocation(programHandle, VBO_SLOT__UVS,   "uvs");
+
+    glBindAttribLocation(programHandle, VBO_SLOT__OBJECT_M, "objectM");
+
+
     // Binding is always applied fo rth next link
     glLinkProgram(programHandle);
 
-    VBO_SLOT__POS   = glGetAttribLocation(programHandle, "pos");
-    VBO_SLOT__COLOR = glGetAttribLocation(programHandle, "color");
-    VBO_SLOT__UVS   = glGetAttribLocation(programHandle, "uvs");
-    VBO_SLOT__OBJECT_A = glGetAttribLocation(programHandle, "objectA");
-    VBO_SLOT__OBJECT_B = glGetAttribLocation(programHandle, "objectB");
-    VBO_SLOT__OBJECT_C = glGetAttribLocation(programHandle, "objectC");
-    VBO_SLOT__OBJECT_D = glGetAttribLocation(programHandle, "objectD");
+    assert(VBO_SLOT__POS   == glGetAttribLocation(programHandle, "pos"));
+    assert(VBO_SLOT__COLOR == glGetAttribLocation(programHandle, "color"));
+    assert(VBO_SLOT__UVS   == glGetAttribLocation(programHandle, "uvs"));
+    assert(VBO_SLOT__OBJECT_M == glGetAttribLocation(programHandle, "objectM"));
 
     UNIFORM_SLOT__CONTEXT_HEIGHT_F = glGetUniformLocation(programHandle, "contextHeight");
     UNIFORM_SLOT__CONTEXT_WIDTH_F  = glGetUniformLocation(programHandle, "contextWidth");

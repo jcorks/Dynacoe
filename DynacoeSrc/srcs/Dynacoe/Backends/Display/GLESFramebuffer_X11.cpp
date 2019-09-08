@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <cassert>
 #include <stack>
-
+#include <cstring>
 
 const int display_active_texture    =   5;
 const int display_default_w_c       =   640;
@@ -191,16 +191,68 @@ void Dynacoe::OpenGLFBDisplay::Update(Dynacoe::Framebuffer * framebuffer) {
     
     for(int i = 0; i < numEvs; ++i) {
         XNextEvent(dpy, &evt);
-        if (evt.type == ConfigureNotify) {
+        switch(evt.type) {
+          case ConfigureNotify: {
             updateDims();
             //cout << endl << "Resize event detected." << endl;
             for(ResizeCallback * r : resizeCBs) {
                 (*r)(winW, winH);
             }
-        }
-        lastEvents.push_back(evt);
-    }
+            break;
+          }
+          // handles giving X11 the owned clipboard contents
+          case SelectionRequest: {
 
+            // notify the server that we changed the selection
+            XSelectionRequestEvent event = evt.xselectionrequest;
+
+            // interned string for UTF8 string
+            Atom text_x11 = XInternAtom(dpy, "UTF8_STRING", True);
+
+            // only handle normal string requests
+            //if (event.target != text_x11) break;
+
+            // Alters the input property with the contents of the clipboard
+            // X11 essentially gives you a "bowl" from a foreign client 
+            // to "fill" with clipboard content. ("bowl" is the custom-named 
+            // property from the foreign client)
+            XChangeProperty(
+                dpy,                // display
+                event.requestor,    // foreign client window
+                event.property,     // foreign client "bowl"
+                text_x11,           // type 
+                8,                  // data format. We only export raw byte data.
+                PropModeReplace,    // replacing contents of the property
+
+                (const unsigned char *)&clipboardLocalSend[0],
+                clipboardLocalSend.size()
+            );
+
+
+            // Next we send out a selectionnotify event to 
+            // let the server know we changed the contents of selection.
+            XSelectionEvent send;
+            send.type = SelectionNotify;
+            send.selection = event.selection;
+            send.property = event.property;
+            send.target = event.target;
+            send.requestor = event.requestor;
+            send.time = CurrentTime;
+
+
+            XSendEvent(
+                dpy,
+                event.requestor,
+                True,
+                NoEventMask,
+                (XEvent *)&send
+            );
+            break;
+        }
+      }
+      lastEvents.push_back(evt);
+
+    }
 
 
 
@@ -646,6 +698,153 @@ void Dynacoe::OpenGLFBDisplay::QueueDump(const std::string & str, int wait) {
     dumpQueue.push(str);
     dumpWait.push(wait);
 }
+
+
+std::vector<uint8_t> Dynacoe::OpenGLFBDisplay::GetCurrentClipboard() {
+    // There seems to be very limited info on X11 clipboard interaction, seemingly largely because the standard
+    // for doing so has changed over time. 
+    // As i understand it, to get the clipbaord, the following needs to occur:
+    //
+    //  - Transfer clipboard contents from the server to the client
+    //  - Store the contents as a local property on the client side window
+    //  - Read the property.
+    //
+    // When retrieving data from the server, it actually interacts with the other client 
+    // that owns the clipboard content. See "SetCurrentClipboard" for more info.
+
+    // we need a custom property atom to serve as a target location for 
+    // storing the clipboard contents
+    Atom property      = XInternAtom(dpy, "DYNACOE_COPY_BUFFER", False);
+    Atom clipboard_x11 = XInternAtom(dpy, "CLIPBOARD", True);
+    Atom text_x11      = XInternAtom(dpy, "UTF8_STRING", True);
+    Atom text_x11_fallback = XA_STRING;
+
+    // transfer to client
+    XConvertSelection(
+        dpy,           // display 
+        clipboard_x11, // The selection atom, which shoul dbe clipboard.
+        text_x11,      // the target type, text
+        property,      // property? seems to be the "target" name for the property.
+        win,
+        CurrentTime
+    );   
+
+    // Apply commands. It blocks until all are processed, so at this point, 
+    // the property should be either written to or not.
+    XSync(dpy, False);  
+
+
+    // since we dont want to return until we have valid clipboard contents, we are going to 
+    // block and manually stalk the X11 event queue 
+    XEvent evt;
+    std::vector<XEvent> putback;
+    while(true) {
+        XNextEvent(dpy, &evt);
+
+        if (evt.type == SelectionNotify) {
+            break;  
+        } else {
+            // anhy irrelevant events, we want to put back in the event queue 
+            // after we're done waiting for the clipboard request.
+            putback.push_back(evt);
+        }
+    }
+    
+
+    // puts all other events back in the queue that we 
+    // consumed while waiting.
+    for(uint32_t i = 0; i < putback.size(); ++i) {
+        XPutBackEvent(
+            dpy,
+            &putback[i]  
+        );
+    }
+
+
+    Atom real_property_type;
+    unsigned long itemCount = 0; // in the mode we're using, itemCount should "always be" the byte count.
+    unsigned long remainingBytes = 0;
+    int actualFormat;
+    unsigned char * data = 0;
+
+    XGetWindowProperty(
+        dpy,           // display
+        win,           // window
+        property,      // named property
+        0, 1024*1024,  // Bytes (offset -> max length)
+        False,         // Remove property from window? (no)
+
+        AnyPropertyType,
+        &real_property_type,
+        &actualFormat,
+
+
+        &itemCount,
+        &remainingBytes,
+        &data
+    );
+
+
+    // If data wasn't retrievable from the selection, return empty
+    if (!(itemCount && data)) {
+        return {};
+    }
+
+
+    // convert data to pure bytes
+    std::vector<uint8_t> output;
+    output.resize(itemCount);
+    memcpy(&output[0], data, itemCount);
+
+
+    // cleanup and remove the property (is applied next X interaction)
+    XDeleteProperty(
+        dpy,
+        win,
+        property
+    );
+    return output;
+};
+
+
+void Dynacoe::OpenGLFBDisplay::SetCurrentClipboard(const std::vector<uint8_t> & data) {
+    // process:
+    // - Request X11 selection ownership!
+    // - Have the clipboard data ready to send if X11 requests itemCount
+    
+    // The important note is that the clipboard data is retrieved directly from 
+    // the program who "sets the clipboard contents". The use of quotes is to 
+    // highlight that the clipboard content is never copied to an intermediate 
+    // storage buffer for a long period of time.
+    // Instead, clipboard content requests are issued to the clipbaord owner as time goes on.
+    //
+    // As a result, if the last owner of the clipboard is terminated, the clipboard 
+    // contents are lost.   
+
+    Atom clipboard_x11 = XInternAtom(dpy, "CLIPBOARD", False);
+    Atom text_x11      = XInternAtom(dpy, "UTF8_STRING", False);
+
+    // Make this program the owner. of the clipboadrd.
+    // after this point, our X11 event queue should receive SelectionNotify events.
+    // If we are already the owner, no action should occur
+    XSetSelectionOwner(
+        dpy, 
+        clipboard_x11,
+        win,
+        CurrentTime
+    );
+
+    // Make sure the request went through.
+    XSync(dpy, False);
+
+    // When clipboard requests are made, this is the data that will be sent.
+    // See SelectionRequest handling in the X11 event queue
+    clipboardLocalSend = data;
+
+
+
+}
+
 
 
 #endif
