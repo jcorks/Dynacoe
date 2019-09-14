@@ -206,8 +206,6 @@ void Input::RunBefore() {
         }
     }
     
-    /*
-    // TODO: for pad support
     if (padCallbackMap.size()) {
         for(auto i = padCallbackMap.begin(); i != padCallbackMap.end(); ++i) {
             if (Input::IsPressed(i->second.first, i->second.second))
@@ -218,7 +216,8 @@ void Input::RunBefore() {
                 i->first->OnRelease();
         }
     }
-    */
+
+
 
     if (strCallbackMap.size()) {
         for(auto i = strCallbackMap.begin(); i != strCallbackMap.end(); ++i) {
@@ -264,6 +263,11 @@ bool Input::IsPressed(MouseButtons k) {
 }
 
 
+bool Input::IsPressed(PadID, PadButtons) {
+    return (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k] &&
+             thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
+}
+
 
 
 bool Input::IsPressed(const std::string & s) {
@@ -275,11 +279,11 @@ bool Input::IsPressed(const std::string & s) {
     if (mouseIter != stringMapMouse.end() &&
         IsPressed(mouseIter->second)) return true;
 
-    /*
+    
     auto padIter = stringMapPad.find(s);
     if (padIter != stringMapPad.end() &&
         IsPressed(padIter->second.first, padIter->second.second)) return true;
-    */
+    
 
     return false;
 }
@@ -308,11 +312,11 @@ bool Input::IsReleased(const std::string & s) {
     if (mouseIter != stringMapMouse.end() &&
         IsReleased(mouseIter->second)) return true;
 
-    /*
+    
     auto padIter = stringMapPad.find(s);
     if (padIter != stringMapPad.end() &&
         IsPressed(padIter->second.first, padIter->second.second)) return true;
-    */
+    
 
     return false;
 }
@@ -341,11 +345,11 @@ bool Input::GetState(const std::string & s) {
     if (mouseIter != stringMapMouse.end() &&
         GetState(mouseIter->second)) return true;
 
-    /*
+    
     auto padIter = stringMapPad.find(s);
     if (padIter != stringMapPad.end() &&
         GetState(padIter->second.first, padIter->second.second)) return true;
-    */
+    
 
     return false;
 }
@@ -366,6 +370,8 @@ bool Input::IsHeld(MouseButtons k) {
             thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
 }
 
+
+
 bool Input::IsHeld(const std::string & s) {
     auto keyboardIter = stringMapKeyboard.find(s);
     if (keyboardIter != stringMapKeyboard.end() &&
@@ -375,11 +381,11 @@ bool Input::IsHeld(const std::string & s) {
     if (mouseIter != stringMapMouse.end() &&
         IsHeld(mouseIter->second)) return true;
 
-    /*
+    
     auto padIter = stringMapPad.find(s);
     if (padIter != stringMapPad.end() &&
         IsHeld(padIter->second.first, padIter->second.second)) return true;
-    */
+    
 
     return false;
 }
@@ -515,7 +521,7 @@ void Input::RemoveListener(ButtonListener * b) {
 
 // Private methods
 
-
+/*
 void ButtonList::addButton(Keyboard k) {
     bool added = false;
     for(Keyboard key : keys) {
@@ -579,13 +585,13 @@ bool ButtonList::GetState() {
     for(MouseButtons k : mouseButtons) {
         out |= Input::GetState(k);
     }
-    /*
+    
     for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
         for(PadButtons p : pr.second) {
             out |= Input::GetState(pr.first, p);
         }
     }
-    */
+    
     return out;
 }
 
@@ -598,13 +604,13 @@ bool ButtonList::IsPressed() {
     for(MouseButtons k : mouseButtons) {
         out |= Input::IsPressed(k);
     }
-    /*
+    
     for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
         for(PadButtons p : pr.second) {
             out |= Input::IsPressed(pr.first, p);
         }
     }
-    */
+    
     return out;
 }
 
@@ -617,16 +623,16 @@ bool ButtonList::IsHeld() {
     for(MouseButtons k : mouseButtons) {
         out |= Input::IsHeld(k);
     }
-    /*
+    
     for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
         for(PadButtons p : pr.second) {
             out |= Input::IsHeld(pr.first, p);
         }
     }
-    */
+    
     return out;
 }
-
+*/
 
 
 

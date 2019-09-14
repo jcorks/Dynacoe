@@ -114,4 +114,9 @@ bool Filesys::CreateDir(const std::string & dir) {
 	return CreateDirectory(newDir.c_str(), NULL);
 }
 
+const std::string & Filesys::GetDirectorySeparator() const {
+    static std::string out = "\\";
+    return out;
+}
+
 #endif

@@ -36,9 +36,14 @@ DEALINGS IN THE SOFTWARE.
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
-
-
+#include <libevdev-1.0/libevdev/libevdev.h>
+#include <cassert>
 #include <map>
+#include <fcntl.h>
+
+#include <Dynacoe/Util/Time.h>
+#include <Dynacoe/Util/Filesys.h>
+
 
 
 static void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event);
@@ -50,7 +55,126 @@ static std::map<int, Dynacoe::MouseButtons> mbMapping;
 
 
 
+class InputPad {
+  public:
+    InputPad(std::string & nameIn) : state(nullptr) {
+        if (!pathMan) {
+            pathMan = new Dynacoe::Filesys;
+            assert(pathMan->ChangeDir("/dev/input/by-path"));
+        }
+        name = nameIn;
+        std::string path = pathMan->GetCWD()+pathMan->GetDirectorySeparator()+name;
+        fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
+        if (libevdev_new_from_fd(fd, &device) < 0) {
+            return;
+        }
 
+        printf("Detected %s (%d %d %d)\n", 
+            libevdev_get_name(device), 
+            libevdev_get_id_bustype(device),
+            libevdev_get_id_vendor(device),
+            libevdev_get_id_product(device)
+        );
+
+
+        // poll available buttons and axes to get count for the state pointer.
+        for(int i = BTN_MISC; i < KEY_OK; ++i) {
+            if (libevdev_has_event_code(device, EV_KEY, i)) {
+                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
+                buttons.push_back(i);
+                buttonMap[i] = buttons.size()-1;
+            } else {
+                buttonMap[i] = -1;
+            }
+        }
+
+        for(int i = ABS_X; i <= ABS_MISC; ++i) {
+            if (libevdev_has_event_code(device, EV_ABS, i)) {
+                printf("AXIS - %s\n", libevdev_event_code_get_name(EV_ABS, i));
+                axes.push_back(i);
+                axisMap[i] = axes.size()-1;
+            } else {
+                axisMap[i] = -1;
+            }
+        }
+
+        timeLast = Dynacoe::Time::MsSinceStartup();
+        state = new Dynacoe::InputDevice(buttons.size(), axes.size());
+    }
+
+    static const std::vector<std::string> & GetAllDevices() {
+        if (!pathMan) {
+            pathMan = new Dynacoe::Filesys;
+            assert(pathMan->ChangeDir("/dev/input/by-path"));
+        }
+
+        static std::vector<std::string> out;
+        static double lastTime = 0;
+
+        if (Dynacoe::Time::MsSinceStartup() - lastTime > 500) {
+            auto dir = pathMan->QueryDirectory();
+            out.clear();
+            while(!dir.AtEnd()) {
+                std::string name = dir.GetNextName();
+                if (name.find("event-joystick") != std::string::npos) {
+                    out.push_back(name);
+                }
+            }
+            lastTime = Dynacoe::Time::MsSinceStartup();
+            
+        }
+        return out;
+
+
+    }
+
+    Dynacoe::InputDevice * GetInputDevice() {
+        return state;
+    }
+
+    const std::string & GetName() {
+        return name;
+    }
+
+    void Update() {
+        // flush event queue update state with state
+        struct input_event ev;
+        if (libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &ev) < 0) {
+            return;
+        }
+
+        switch(ev.type) {
+          case EV_KEY:
+            state->buttons[buttonMap[ev.code]] = ev.value;
+            break;
+          case EV_ABS:
+            state->axes[axisMap[ev.code]] = ev.value;
+            break;
+            
+        }
+    }
+
+    bool IsValid() {
+        return device;
+    }
+
+  private:
+    static Dynacoe::Filesys * pathMan;
+    double timeLast;;
+
+    std::vector<int> buttons;
+    std::vector<int> axes;
+    int buttonMap[KEY_OK];
+    int axisMap[ABS_MISC+1];
+
+    std::string name;
+    int fd;
+    struct libevdev * device;
+    Dynacoe::InputDevice * state;    
+
+};
+
+Dynacoe::Filesys * InputPad::pathMan = nullptr;;
 
 std::string Dynacoe::X11InputManager::Name() { return "X11Input Manager";}
 std::string Dynacoe::X11InputManager::Version() { return "0.1";}
@@ -79,15 +203,98 @@ Dynacoe::X11InputManager::X11InputManager() {
 }
 
 bool Dynacoe::X11InputManager::IsSupported(InputType type) {
-    if (type == Touchpad || type == Gamepad) {
+    if (type == Touchpad) {
         return false;
     }
     return true;
 }
 
 
+static InputPad * physicalPads[4] = {};
+std::vector<std::string> lastPadState;
 
 bool Dynacoe::X11InputManager::HandleEvents() {
+    auto p = InputPad::GetAllDevices();
+
+    int changed = p.size() != lastPadState.size();
+    if (!changed) {
+        for(int i = 0; i < p.size() && i < lastPadState.size(); ++i) {
+            if (p[i] != lastPadState[i]) {
+                changed = true;
+                break;       
+            }
+        }
+    }
+
+    if (changed) {
+        // figure out what changed
+        std::vector<std::string> newNames;
+        std::vector<std::string> removedNames;
+        for(int i = 0; i < p.size(); ++i) {
+            int found = false;
+            for(int n = 0; n < lastPadState.size(); ++n) {
+                if (p[i] == lastPadState[n]) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                newNames.push_back(p[i]);
+            }
+        }
+        for(int i = 0; i < lastPadState.size(); ++i) {
+            int found = false;
+            for(int n = 0; n < p.size(); ++n) {
+                if (p[n] == lastPadState[i]) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                removedNames.push_back(lastPadState[i]);
+            }
+        }
+
+
+
+
+        // remove missing names
+        for(int n = 0; n < removedNames.size(); ++n) {
+            printf("untracking removed device %s\n", removedNames[n].c_str());
+
+            for(int i = 0; i < 4; ++i) {
+
+                // next empty slot
+                if (physicalPads[i] && physicalPads[i]->GetName() == removedNames[n]) {
+                    //delete devices[(int)DefaultDeviceSlots::Pad1+i];
+                    delete physicalPads[i];
+                    devices[(int)DefaultDeviceSlots::Pad1+i] = nullptr;
+                    physicalPads[i] = nullptr;
+                    break;
+                }
+            }
+        }
+        
+
+        // add new names
+        for(int n = 0; n < newNames.size(); ++n) {
+            printf("tracking added device %s\n", newNames[n].c_str());
+
+            for(int i = 0; i < 4; ++i) {
+                // next empty slot
+                if (!physicalPads[i]) {
+                    //delete devices[(int)DefaultDeviceSlots::Pad1+i];
+                    physicalPads[i] = new InputPad(newNames[n]);
+                    devices[(int)DefaultDeviceSlots::Pad1+i] = physicalPads[i]->GetInputDevice();
+                    break;
+                }
+            }
+        }
+        
+
+        lastPadState = p;
+    }
+
     if (!display) return false;
     std::vector<XEvent> * ev = (std::vector<XEvent>*)display->GetLastSystemEvent();
     if (!ev) return false;

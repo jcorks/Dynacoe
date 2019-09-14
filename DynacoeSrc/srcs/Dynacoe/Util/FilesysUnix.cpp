@@ -52,15 +52,17 @@ bool Filesys::ChangeDir(const std::string & dir) {
 
 
     currentPath = pathTemp;
+	QueryDirectory();
 
+	return true;
 
+}
+
+Filesys::Directory Filesys::QueryDirectory() {
 	// clear out old directory objects
 
 	int numFiles;
 	currentPathObjs.clear();
-
-
-
 
 	// gather new path objects
 	dirent **ls;
@@ -86,11 +88,6 @@ bool Filesys::ChangeDir(const std::string & dir) {
 		currentPathObjs.push_back(newObj);
 	}
 
-	return true;
-
-}
-
-Filesys::Directory Filesys::QueryDirectory() {
 	Directory out(currentPathObjs);
 	return out;
 }
@@ -122,5 +119,11 @@ bool Filesys::CreateDir(const std::string & dir) {
 	std::string newDir = GetCWD() + "/" + dir;
 	return mkdir(newDir.c_str(), 0777);
 }
+
+const std::string & Filesys::GetDirectorySeparator() const {
+    static std::string out = "/";
+    return out;
+}
+
 
 #endif

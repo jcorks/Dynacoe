@@ -201,7 +201,9 @@ class Filesys {
     ///	
     std::vector<std::string> FindAllFiles(const std::string & name);
 
-
+    /// \brief Returns the directory separator character
+    ///
+    const std::string & GetDirectorySeparator() const;
 
 
 
