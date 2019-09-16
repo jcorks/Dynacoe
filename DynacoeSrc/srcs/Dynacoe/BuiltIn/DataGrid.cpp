@@ -366,7 +366,7 @@ void Dynacoe::DataGrid::OnStep() {
 
 
     if (isDragging) {
-        if (!Input::GetState(MouseButtons::Left)) {
+        if (!Input::GetState(UserInput::Pointer_0)) {
             isDragging = false;
             return;
         }

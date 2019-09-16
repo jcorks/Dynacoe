@@ -33,53 +33,100 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/InputManager/InputDevice.h>
 #include <cstring>
 #include <cstdlib>  
-
-
 #include <iostream>
-using namespace std;
 
+
+using namespace std;
 using namespace Dynacoe;
 
+const int default_action_queue_size = 1024;
 
-InputDevice::InputDevice(int _nButtons, int _nAxes) :
-    numButtons(_nButtons),
-    numAxes(_nAxes),
-    axes(nullptr),
-    buttons(nullptr) {
-
-
-    if (_nButtons > 0) {
-        buttons = new bool[numButtons];
-        memset(buttons, 0, sizeof(bool)*numButtons);
+class InputDevice_Impl {
+  public:
+    InputDevice_Impl(InputDevice::Class type_) : 
+            allocated(0),
+            iterFront(0),
+            iterBack(0),
+            type(type_)
+        {
+        data = (AxisEvent*)calloc(sizeof(AxisEvent), default_action_queue_size);
+        allocated = default_action_queue_size;
     }
+
+    ~InputDevice_Impl() {
+        free(data);
+    }
+
+
+    void AddEvent(const InputDevice::Event & evt) {
+        if (iterBack >= allocated) {
+            // move to the front
+            if (iterFront > 0) {
+                memmove(data, data+iterFront, iterBack*sizeof(AxisEvent));
+                iterBack -= iterFront;
+                iterFront = 0;
+            }
+
+            if (iterBack >= allocated) {
+                allocated *= 1.4;
+                realloc(data, allocated*sizeof(AxisEvent));
+            }
+        }
+
+        data[iterBack++] = ev;
+    }
+
     
-    if (_nAxes > 0) {
-        axes = new float[numAxes];
-        memset(axes, 0, sizeof(float)*numAxes);
+    bool PopEvent(InputDevice::Event & ev) {
+        if (iterFront >= iterBack) return false;
+        ev = data[iterFront++];
+        return true;
     }
-            
+
+    InputDevice::Class GetType() const {
+        return type;
+    }
+
+    int GetEventCount() const {
+        return iterBack - iterFront;
+    }
+
+  private:
+    InputDevice::Event * data;
+    int allocated;
+    int iterFront;
+    int iterBack;
+    InputDevice::Class type;
+};
+
+
+InputDevice::InputDevice(InputDevice::Class t) {
+    self = new InputDevice_Impl(t);
 }
-
-
 
 InputDevice::~InputDevice() {
-    if (axes) delete[] axes;
-    if (buttons) delete[] buttons;
+    delete self;
+}
+
+void InputDevice::AddEvent(const InputDevice::Event & ev) {
+    self->AddEvent(ev);
+}
+
+bool InputDevice::PopEvent(InputDevice::Event & ev) {
+    return self->PopEvent(ev);
+}
+
+InputDevice::Class InputDevice::GetType() const {
+    return self->GetType();
+}
+
+int InputDevice::GetEventCount() const {
+    return self->GetEventCount();
 }
 
 
 
-InputDevice * InputDevice:: GetCopy() {
-    // TODO: this is pretty wasteful
-    InputDevice * out = new InputDevice(numButtons, numAxes);
-    memcpy(out->axes, axes, sizeof(float)*numAxes);
-    memcpy(out->buttons, buttons, sizeof(bool)*numButtons);
-    return out;
-}
 
-void InputDevice::CopyInto(InputDevice *& m) {
-    if (m)  delete m;
-    m = GetCopy();
-}
+
 
 

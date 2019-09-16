@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef H_DC_INPUT
 #define H_DC_INPUT  
 
-#include <Dynacoe/Backends/InputManager/InputTypes.h>
 #include <Dynacoe/Backends/InputManager/InputDevice.h>
 #include <Dynacoe/Backends/InputManager/InputManager.h>
 #include <Dynacoe/Util/Table.h>
@@ -48,12 +47,12 @@ namespace Dynacoe {
 
 /// \brief Identifies an input pad.
 ///
-using PadID = Dynacoe::LookupID;
+using PadID = int;
 
 /// \brief Callback functor base class.
 /// To implement a callback signal, create a class that
 /// inherits from this and give it to Input::AddListener()
-class ButtonListener {
+class InputListener {
   public:
     /// \brief Function called upon pressing of the button.
     ///
@@ -95,25 +94,14 @@ class UnicodeListener {
 namespace Input {
 
  
-    /// \name IsPressed()
-    /// Returns whether or not the input was pressed.
-    ///    
-    /// \{
-    bool IsPressed(Keyboard);
-    bool IsPressed(MouseButtons);
-    bool IsPressed(PadID, PadButtons);
-    bool IsPressed(const std::string &);
-    ///\}
-
     /// \name GetState()
     /// Returns the current state of the device button, where true means the 
     /// the button is activated and false returns if otherwise.
     /// 
     /// \{    
-    bool GetState(Keyboard);
-    bool GetState(MouseButtons);
-    bool GetState(PadID, PadButtons);
-    bool GetState(const std::string &);
+    float GetState(UserInput);
+    float GetState(PadID, UserInput);
+    float GetState(const std::string &);
     /// \}
 
     /// \brief Returns the last Ascii code from keyboard.
@@ -135,19 +123,11 @@ namespace Input {
     /// Returns whether or not the input is currently being held.
     ///
     /// \{
-    bool IsHeld(Keyboard);
-    bool IsHeld(MouseButtons);
-    bool IsHeld(PadID, PadButtons);
+    bool IsHeld(UserInput);
+    bool IsHeld(PadID, UserInput);
     bool IsHeld(const std::string &);
     /// \}
 
-    // \name  IsReleased
-    // Returns whether or not the input was released this update.
-    //
-    bool IsReleased(Keyboard);
-    bool IsReleased(MouseButtons);
-    bool IsReleased(PadID, PadButtons);
-    bool IsReleased(const std::string &);
 
     /// \brief Retrieves the a list of all valid Gamepads.
     ///
@@ -156,9 +136,8 @@ namespace Input {
     /// \name MapInput()
     /// Maps a data value to an input. The value may be queried to the specified input.
     /// \{    
-    void MapInput(const std::string & id, Keyboard);
-    void MapInput(const std::string & id, MouseButtons);
-    void MapInput(const std::string & id, PadID, PadButtons);
+    void MapInput(const std::string & id, UserInput);
+    void MapInput(const std::string & id, PadID, UserInput);
     ///\}
 
     /// \brief Disassociates a string with its corresponding InputID if any
@@ -169,15 +148,14 @@ namespace Input {
     /// 
     /// Only one InputCallback may be associated 
     /// with a given InputID.
-    void AddListener(ButtonListener *, Keyboard);
-    void AddListener(ButtonListener *, MouseButtons);
-    void AddListener(ButtonListener *, PadID, PadButtons);
-    void AddListener(ButtonListener *, const std::string &);
+    void AddListener(InputListener *, UserInput);
+    void AddListener(InputListener *, PadID, UserInput);
+    void AddListener(InputListener *, const std::string &);
     
 
     /// \brief Disassociates the corresponding InputCallback if any.
     ///
-    void RemoveListener(ButtonListener *);
+    void RemoveListener(InputListener *);
 
 
     /// \name Mouse Convenience Functions
@@ -205,10 +183,6 @@ namespace Input {
     ///\}
 
 
-    /// \brief Returns the axis tilt amount.
-    /// The range is from -1 to 1
-    ///
-    float GetPadAxis(PadID, PadAxes);
 
 
     /// \brief Prevents the updating of Input until the time expires

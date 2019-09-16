@@ -32,34 +32,50 @@ DEALINGS IN THE SOFTWARE.
 #ifndef H_DC_INPUTDEVICE
 #define H_DC_INPUTDEVICE
 
+#include <Dynacoe/Backends/InputManager/InputManager.h>
 
 
     /* Input devices are devies that the user interacts with via
        buttons (boolean input) or axes (ranged / discrete input) */
+
 namespace Dynacoe {
+class InputDevice_Impl;
+class InputDevice {
+  public:
+    enum class Class {
+        Keyboard,
+        Gamepad,
+        Pointer
+    };
 
-struct InputDevice {
-    InputDevice(int _nButtons, int _nAxes);
 
+    struct Event {
+        UserInput id;
+        float state;
+    };
+
+
+    InputDevice(Class);
     ~InputDevice();
 
-    // Returns an instance of this device. The
-    // instance must be freed by the client.
-    InputDevice * GetCopy();
+    // Adds a state change event for the given input within
+    // this device
+    void AddEvent(const Event &);
 
-    // Frees the reference if it points to anything and
-    // replaces it with a new instance that contains 
-    // the result from GetCopy.
-    // TODO: replace. This is weird.
-    void CopyInto(InputDevice *& m);
 
-    
-    int numButtons;
-    int numAxes;
+    // Gets the next state change for a device input
+    bool PopEvent(Event &);
 
-    float * axes;
-    bool  * buttons;
 
+    // Returns the device type
+    Class GetType() const;
+
+
+    // Returns the number of button events pending
+    int GetEventCount() const;
+
+  private:
+    InputDevice_Impl * self;
 };
 }
 

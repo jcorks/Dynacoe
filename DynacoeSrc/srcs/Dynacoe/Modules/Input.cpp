@@ -49,35 +49,16 @@ static bool IsShiftMod();
 
 static void getUnicode();
 
-struct InputState {
-    InputDevice ** devices;
-    int numDevices;
-};
+
+
 
 
 
 static InputManager * manager;
 static int lastUnicode;
 
-
-// Aggregate button state
-struct ButtonList {
-    std::vector<Keyboard> keys;
-    std::vector<MouseButtons> mouseButtons;
-    std::vector<std::pair<PadID, std::vector<PadButtons>>> padButtons;
-
-    void addButton(Keyboard);
-    void addButton(MouseButtons);
-    void addButton(PadID, PadButtons);
-    bool GetState();
-    bool IsPressed();
-    bool IsHeld();
-    bool IsReleased();
-};
-
 //static std::map<std::string, ButtonList*> stringMap;
-static std::map<std::string, Keyboard> stringMapKeyboard;
-static std::map<std::string, MouseButtons> stringMapMouse;
+static std::map<std::string, UserInput> stringMapInput;
 static std::map<std::string, std::pair<PadID, PadButtons>> stringMapPad;
 static std::vector<ButtonList*> buttonLists;
 
@@ -88,8 +69,6 @@ static std::vector<ButtonList*> buttonLists;
 
 static bool inputLocked;
 
-static InputState thisState;
-static InputState prevState;
 
 
 static int mouseX = 0;
@@ -97,13 +76,57 @@ static int mouseY = 0;
 
 
 static bool lockCallbackMaps = false;
-static std::map<ButtonListener*, Keyboard> keyCallbackMap;
-static std::map<ButtonListener*, MouseButtons> mouseCallbackMap;
-static std::map<ButtonListener*, std::pair<PadID, PadButtons>> padCallbackMap;
-static std::map<ButtonListener*, std::string> strCallbackMap;
-static std::vector<ButtonListener*> deletedListeners;
+static std::vector<InputListener*> deletedListeners;
 
 
+
+
+
+struct DeviceState {
+    DeviceState() {
+        thisState = calloc(sizeof(float), (int)UserInput::Count);
+        prevState = calloc(sizeof(float), (int)UserInput::Count);
+        memset(listeners, sizeof(void*)*((int)UserInput::Count), 0);
+        device = nullptr;
+    }
+
+    ~DeviceState() {
+        free(thisState);
+        free(prevState);
+    }
+
+    void Update() {
+        InputDevice::Event ev;
+        while(device->GetDeviceCount()) {
+            device->PopEvent(ev);
+            prevState[ev.id] = thisState[ev.id];
+            thisState[ev.id] = ev.state;
+
+            if (listeners.size()) {
+                auto inst = listeners[ev.id];
+                if (inst) {
+                    for(size_t i = 0; i < inst->size(); ++i) {
+                        if (!prevState[ev.id].state && thisState[ev.id].state) {
+                            (*inst)[i]->OnPress();
+                        } else if (prevState[ev.id].state && thisState[ev.id].state) {
+                            (*inst)[i]->OnHold();
+                        } else if (prevState[ev.id].state && !thisState[ev.id].state) {
+                            (*inst)[i]->OnRelease();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    
+    InputDevice * device;
+    float * prevState;
+    float * thisState;
+    std::vector<InputListener*> * listeners[(int)UserInput::Count];
+}
+
+static DeviceState devices[(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
 
 
 static int MouseXDeviceToWorld2D(int);
@@ -116,24 +139,14 @@ void Input::Init() {
     manager = (InputManager *)Backend::CreateDefaultInputManager();
     inputLocked = false;
 
-    thisState.devices = new InputDevice * [(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
-    thisState.numDevices = (int)InputManager::DefaultDeviceSlots::NumDefaultDevices;
-
-    prevState.devices = new InputDevice * [(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
-    prevState.numDevices = (int)InputManager::DefaultDeviceSlots::NumDefaultDevices;
-
 
     /* initialize devices */
-    for(int i = 0; i < thisState.numDevices; ++i) {
-        thisState.devices[i] = manager->QueryDevice(i);
-        prevState.devices[i] = (thisState.devices[i]?thisState.devices[i]->GetCopy():nullptr);
-    }
 
 
 }
 
-void Input::ShowVirtualKeyboard(bool b) {
-    manager->ShowVirtualKeyboard(b);
+void Input::ShowVirtualUserInput(bool b) {
+    manager->ShowVirtualUserInput(b);
 }
 
 
@@ -144,10 +157,6 @@ void Input::RunBefore() {
     if (inputLocked) return;
     lockCallbackMaps = true;
 
-    for(int i = 0; i < thisState.numDevices; ++i) {
-        if (thisState.devices[i])
-            thisState.devices[i]->CopyInto(prevState.devices[i]); //TODO
-    }
 
 
     // Set the focus to the display that has input focus (which
@@ -165,81 +174,44 @@ void Input::RunBefore() {
     }
     manager->SetFocus(focus);
 
+    
 
+    // pool raw events
     bool updated = manager->HandleEvents();
+
+
+    // process raw events
+    for(int i = 0; i < (int)InputManager::DefaultDeviceSlots::NumDefaultDevices; ++i) {
+        devices[i]->device = manager->QueryDevice(i);
+        devices[i]->Update();
+    }
+
+
     mouseY = MouseYDeviceToWorld2D(
-        thisState.devices[
+        devices[
             (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->axes[
+        ]->thisState[
             (int)MouseAxes::Y
         ]
     );
 
     mouseX = MouseXDeviceToWorld2D(
-        thisState.devices[
+        devices[
             (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->axes[
+        ]->thisState[
             (int)MouseAxes::X
         ]
     );
 
-    
-    if (keyCallbackMap.size()) {
-        for(auto i = keyCallbackMap.begin(); i != keyCallbackMap.end(); ++i) {
-            if (Input::IsPressed(i->second))
-                i->first->OnPress();
-            if (Input::IsHeld(i->second))
-                i->first->OnHold();
-            if (Input::IsReleased(i->second))
-                i->first->OnRelease();
-        }
-    }
-
-    if (mouseCallbackMap.size()) {
-        for(auto i = mouseCallbackMap.begin(); i != mouseCallbackMap.end(); ++i) {
-            if (Input::IsPressed(i->second))
-                i->first->OnPress();
-            if (Input::IsHeld(i->second))
-                i->first->OnHold();
-            if (Input::IsReleased(i->second))
-                i->first->OnRelease();
-        }
-    }
-    
-    if (padCallbackMap.size()) {
-        for(auto i = padCallbackMap.begin(); i != padCallbackMap.end(); ++i) {
-            if (Input::IsPressed(i->second.first, i->second.second))
-                i->first->OnPress();
-            if (Input::IsHeld(i->second.first, i->second.second))
-                i->first->OnHold();
-            if (Input::IsReleased(i->second.first, i->second.second))
-                i->first->OnRelease();
-        }
-    }
-
-
-
-    if (strCallbackMap.size()) {
-        for(auto i = strCallbackMap.begin(); i != strCallbackMap.end(); ++i) {
-            if (Input::IsPressed(i->second))
-                i->first->OnPress();
-            if (Input::IsHeld(i->second))
-                i->first->OnHold();
-            if (Input::IsReleased(i->second))
-                i->first->OnRelease();
-        }
-    }
     lockCallbackMaps = false;
     for(uint32_t i = 0; i < deletedListeners.size(); ++i) {
         auto b = deletedListeners[i];
         auto pFind = padCallbackMap.find(b);
         if (pFind != padCallbackMap.end()) padCallbackMap.erase(pFind);
 
-        auto mFind = mouseCallbackMap.find(b);
-        if (mFind != mouseCallbackMap.end()) mouseCallbackMap.erase(mFind);
 
-        auto kFind = keyCallbackMap.find(b);
-        if (kFind != keyCallbackMap.end()) keyCallbackMap.erase(kFind);
+        auto kFind = inputCallbackMap.find(b);
+        if (kFind != inputCallbackMap.end()) inputCallbackMap.erase(kFind);
 
         auto sFind = strCallbackMap.find(b);
         if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
@@ -251,135 +223,59 @@ void Input::RunBefore() {
     //}
 }
 
+std::vector<int> Input::QueryPads() {
+    std::vector<int> out;
+    for(int i = (int) InputManager::DefaultDeviceSlots::Pad1; 
+            i<= (int) InputManager::DefaultDeviceSlots::Pad4;
+            ++i) {
+        if (thisState.devices[i]->numButtons ||
+            thisState.devices[i]->numAxes) {
+            out.push_back(i);
+        }
+    }
 
-bool Input::IsPressed(Keyboard k) {
-    return (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k] &&
-             thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k]);
-}
-
-bool Input::IsPressed(MouseButtons k) {
-    return (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k] &&
-             thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
-}
-
-
-bool Input::IsPressed(PadID, PadButtons) {
-    return (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k] &&
-             thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
-}
-
-
-
-bool Input::IsPressed(const std::string & s) {
-    auto keyboardIter = stringMapKeyboard.find(s);
-    if (keyboardIter != stringMapKeyboard.end() &&
-        IsPressed(keyboardIter->second)) return true;
-
-    auto mouseIter = stringMapMouse.find(s);
-    if (mouseIter != stringMapMouse.end() &&
-        IsPressed(mouseIter->second)) return true;
-
-    
-    auto padIter = stringMapPad.find(s);
-    if (padIter != stringMapPad.end() &&
-        IsPressed(padIter->second.first, padIter->second.second)) return true;
-    
-
-    return false;
-}
-
-
-
-bool Input::IsReleased(Keyboard k) {
-    return ( prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k] &&
-            !thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k]);
-}
-
-bool Input::IsReleased(MouseButtons k) {
-    return ( prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k] &&
-            !thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
-}
-
-
-
-
-bool Input::IsReleased(const std::string & s) {
-    auto keyboardIter = stringMapKeyboard.find(s);
-    if (keyboardIter != stringMapKeyboard.end() &&
-        IsReleased(keyboardIter->second)) return true;
-
-    auto mouseIter = stringMapMouse.find(s);
-    if (mouseIter != stringMapMouse.end() &&
-        IsReleased(mouseIter->second)) return true;
-
-    
-    auto padIter = stringMapPad.find(s);
-    if (padIter != stringMapPad.end() &&
-        IsPressed(padIter->second.first, padIter->second.second)) return true;
-    
-
-    return false;
-}
-
-
-
-
-bool Input::GetState(Keyboard k) {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]) return false;
-    return (
-             thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k]);
-}
-
-bool Input::GetState(MouseButtons k) {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return false;
-    return (
-             thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
-}
-
-bool Input::GetState(const std::string & s) {
-    auto keyboardIter = stringMapKeyboard.find(s);
-    if (keyboardIter != stringMapKeyboard.end() &&
-        GetState(keyboardIter->second)) return true;
-
-    auto mouseIter = stringMapMouse.find(s);
-    if (mouseIter != stringMapMouse.end() &&
-        GetState(mouseIter->second)) return true;
-
-    
-    auto padIter = stringMapPad.find(s);
-    if (padIter != stringMapPad.end() &&
-        GetState(padIter->second.first, padIter->second.second)) return true;
-    
-
-    return false;
+    return out;
 }
 
 
 
 
 
-bool Input::IsHeld(Keyboard k) {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]) return false;
-    return (prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k] &&
-            thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)k]);
+
+
+
+
+
+
+
+bool Input::IsHeld(UserInput k) {
+    InputDevice * self = nullptr;
+    InputDevice * prev = nullptr;
+    if (k < UserInput::Pointer_0) {
+        prev = prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
+        self = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
+    } else {
+        prev = prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse];
+        self = thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse];
+    } 
+    if (!prev) return;
+    return (prev->buttons[(int)k] &&
+            self->buttons[(int)k]);
+
+
 }
 
-bool Input::IsHeld(MouseButtons k) {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return false;
-    return (prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k] &&
-            thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->buttons[(int)k]);
+bool Input::IsHeld(PadID b, UserInput k) {
+    if (!prevState.devices[b]) return false;
+    return (prevState.devices[b]->buttons[(int)k] &&
+            thisState.devices[b]->buttons[(int)k]);
 }
-
 
 
 bool Input::IsHeld(const std::string & s) {
-    auto keyboardIter = stringMapKeyboard.find(s);
-    if (keyboardIter != stringMapKeyboard.end() &&
+    auto keyboardIter = stringMapInput.find(s);
+    if (keyboardIter != stringMapInput.end() &&
         IsHeld(keyboardIter->second)) return true;
-
-    auto mouseIter = stringMapMouse.find(s);
-    if (mouseIter != stringMapMouse.end() &&
-        IsHeld(mouseIter->second)) return true;
 
     
     auto padIter = stringMapPad.find(s);
@@ -461,13 +357,10 @@ void Input::RemoveUnicodeListener(UnicodeListener * listener) {
 /* input mapping */
 
 
-void Input::MapInput(const std::string & id, Keyboard key) {
-    stringMapKeyboard[id] = key;
+void Input::MapInput(const std::string & id, UserInput key) {
+    stringMapInput[id] = key;
 }
 
-void Input::MapInput(const std::string & id, MouseButtons key) {
-    stringMapMouse[id] = key;
-}
 
 void Input::MapInput(const std::string & id, PadID idpad, PadButtons key) {
     stringMapPad[id] = {idpad, key};
@@ -487,31 +380,27 @@ void Input::MapInput(const std::string & id, PadID idpad, PadButtons key) {
 
 
 void Input::UnmapInput(const std::string & id) {
-    stringMapKeyboard.erase(id);
-    stringMapMouse.erase(id);
+    stringMapInput.erase(id);
     stringMapPad.erase(id);
 }
 
 
 
-void Input::AddListener(ButtonListener * b, Keyboard i) {
-    keyCallbackMap[b] = i;
+void Input::AddListener(InputListener * b, UserInput i) {
+    inputCallbackMap[b] = i;
 }
 
-void Input::AddListener(ButtonListener * b, MouseButtons i) {
-    mouseCallbackMap[b] = i;
-}
 
-void Input::AddListener(ButtonListener * b, PadID id, PadButtons i) {
+void Input::AddListener(InputListener * b, PadID id, PadButtons i) {
     padCallbackMap[b] = {id, i};
 }
 
-void Input::AddListener(ButtonListener * b, const std::string & i) {
+void Input::AddListener(InputListener * b, const std::string & i) {
     strCallbackMap[b] = i;
 }
 
 
-void Input::RemoveListener(ButtonListener * b) {
+void Input::RemoveListener(InputListener * b) {
     deletedListeners.push_back(b);
 }
 
@@ -522,9 +411,9 @@ void Input::RemoveListener(ButtonListener * b) {
 // Private methods
 
 /*
-void ButtonList::addButton(Keyboard k) {
+void ButtonList::addButton(UserInput k) {
     bool added = false;
-    for(Keyboard key : keys) {
+    for(UserInput key : keys) {
         if (k == key) {
             added = true;
             break;
@@ -534,16 +423,16 @@ void ButtonList::addButton(Keyboard k) {
     if (!added) keys.push_back(k);
 }
 
-void ButtonList::addButton(MouseButtons k) {
+void ButtonList::addButton(UserInput k) {
     bool added = false;
-    for(MouseButtons key : mouseButtons) {
+    for(UserInput key : UserInput) {
         if (k == key) {
             added = true;
             break;
         }
     }
 
-    if (!added) mouseButtons.push_back(k);
+    if (!added) UserInput.push_back(k);
 }
 
 void ButtonList::addButton(PadID id, PadButtons k) {
@@ -579,10 +468,10 @@ void ButtonList::addButton(PadID id, PadButtons k) {
 
 bool ButtonList::GetState() {
     bool out = false;
-    for(Keyboard k : keys) {
+    for(UserInput k : keys) {
         out |= Input::GetState(k);
     }
-    for(MouseButtons k : mouseButtons) {
+    for(UserInput k : UserInput) {
         out |= Input::GetState(k);
     }
     
@@ -598,10 +487,10 @@ bool ButtonList::GetState() {
 
 bool ButtonList::IsPressed() {
     bool out = false;
-    for(Keyboard k : keys) {
+    for(UserInput k : keys) {
         out |= Input::IsPressed(k);
     }
-    for(MouseButtons k : mouseButtons) {
+    for(UserInput k : UserInput) {
         out |= Input::IsPressed(k);
     }
     
@@ -617,10 +506,10 @@ bool ButtonList::IsPressed() {
 
 bool ButtonList::IsHeld() {
     bool out = false;
-    for(Keyboard k : keys) {
+    for(UserInput k : keys) {
         out |= Input::IsHeld(k);
     }
-    for(MouseButtons k : mouseButtons) {
+    for(UserInput k : UserInput) {
         out |= Input::IsHeld(k);
     }
     
@@ -642,8 +531,8 @@ bool ButtonList::IsHeld() {
 
 
 bool IsShiftMod() {
-    return thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)Keyboard::Key_lshift] ||
-           thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)Keyboard::Key_rshift];
+    return thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)UserInput::Key_lshift] ||
+           thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)UserInput::Key_rshift];
 }
 
 void getUnicode() {
@@ -651,16 +540,16 @@ void getUnicode() {
     static int previousUnicode = 0;
     InputDevice * kb = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
     lastUnicode = 0;
-    for(int i = (int)Keyboard::Key_a; i < (int)Keyboard::Key_z + 1; ++i) {
-        if (Input::GetState((Keyboard)i)) {
-            lastUnicode = i - (int)Keyboard::Key_a + 'a';
+    for(int i = (int)UserInput::Key_a; i < (int)UserInput::Key_z + 1; ++i) {
+        if (Input::GetState((UserInput)i)) {
+            lastUnicode = i - (int)UserInput::Key_a + 'a';
             if (IsShiftMod()) { lastUnicode += 'A' - 'a'; }
         }
     }
-    for(int i = (int)Keyboard::Key_0; i < (int)Keyboard::Key_9 + 1; ++i) {
+    for(int i = (int)UserInput::Key_0; i < (int)UserInput::Key_9 + 1; ++i) {
 
-        if (Input::GetState((Keyboard)i)) {
-            lastUnicode = i - (int)Keyboard::Key_0 + '0';
+        if (Input::GetState((UserInput)i)) {
+            lastUnicode = i - (int)UserInput::Key_0 + '0';
             if (IsShiftMod()) {
                      if (lastUnicode == '1') lastUnicode = '!';
                 else if (lastUnicode == '2') lastUnicode = '@';
@@ -680,41 +569,41 @@ void getUnicode() {
     }
 
     if (!IsShiftMod()) {
-         if (Input::GetState(Keyboard::Key_comma))     lastUnicode = ',';
-    else if (Input::GetState(Keyboard::Key_period))    lastUnicode = '.';
-    else if (Input::GetState(Keyboard::Key_semicolon)) lastUnicode = ';';
-    else if (Input::GetState(Keyboard::Key_apostrophe))lastUnicode = '\'';
-    else if (Input::GetState(Keyboard::Key_lbracket))  lastUnicode = '[';
-    else if (Input::GetState(Keyboard::Key_rbracket))  lastUnicode = ']';
-    else if (Input::GetState(Keyboard::Key_minus))     lastUnicode = '-';
-    else if (Input::GetState(Keyboard::Key_equal))     lastUnicode = '=';
-    else if (Input::GetState(Keyboard::Key_backslash)) lastUnicode = '\\';
-    else if (Input::GetState(Keyboard::Key_frontslash))lastUnicode = '/';
-    else if (Input::GetState(Keyboard::Key_grave))     lastUnicode = '`';
+         if (Input::GetState(UserInput::Key_comma))     lastUnicode = ',';
+    else if (Input::GetState(UserInput::Key_period))    lastUnicode = '.';
+    else if (Input::GetState(UserInput::Key_semicolon)) lastUnicode = ';';
+    else if (Input::GetState(UserInput::Key_apostrophe))lastUnicode = '\'';
+    else if (Input::GetState(UserInput::Key_lbracket))  lastUnicode = '[';
+    else if (Input::GetState(UserInput::Key_rbracket))  lastUnicode = ']';
+    else if (Input::GetState(UserInput::Key_minus))     lastUnicode = '-';
+    else if (Input::GetState(UserInput::Key_equal))     lastUnicode = '=';
+    else if (Input::GetState(UserInput::Key_backslash)) lastUnicode = '\\';
+    else if (Input::GetState(UserInput::Key_frontslash))lastUnicode = '/';
+    else if (Input::GetState(UserInput::Key_grave))     lastUnicode = '`';
 
     } else {
-         if (Input::GetState(Keyboard::Key_comma))     lastUnicode = '<';
-    else if (Input::GetState(Keyboard::Key_period))    lastUnicode = '>';
-    else if (Input::GetState(Keyboard::Key_semicolon)) lastUnicode = ':';
-    else if (Input::GetState(Keyboard::Key_apostrophe))lastUnicode = '"';
-    else if (Input::GetState(Keyboard::Key_lbracket))  lastUnicode = '{';
-    else if (Input::GetState(Keyboard::Key_rbracket))  lastUnicode = '}';
-    else if (Input::GetState(Keyboard::Key_minus))     lastUnicode = '_';
-    else if (Input::GetState(Keyboard::Key_equal))     lastUnicode = '+';
-    else if (Input::GetState(Keyboard::Key_backslash)) lastUnicode = '|';
-    else if (Input::GetState(Keyboard::Key_frontslash))lastUnicode = '?';
-    else if (Input::GetState(Keyboard::Key_grave))     lastUnicode = '~';
+         if (Input::GetState(UserInput::Key_comma))     lastUnicode = '<';
+    else if (Input::GetState(UserInput::Key_period))    lastUnicode = '>';
+    else if (Input::GetState(UserInput::Key_semicolon)) lastUnicode = ':';
+    else if (Input::GetState(UserInput::Key_apostrophe))lastUnicode = '"';
+    else if (Input::GetState(UserInput::Key_lbracket))  lastUnicode = '{';
+    else if (Input::GetState(UserInput::Key_rbracket))  lastUnicode = '}';
+    else if (Input::GetState(UserInput::Key_minus))     lastUnicode = '_';
+    else if (Input::GetState(UserInput::Key_equal))     lastUnicode = '+';
+    else if (Input::GetState(UserInput::Key_backslash)) lastUnicode = '|';
+    else if (Input::GetState(UserInput::Key_frontslash))lastUnicode = '?';
+    else if (Input::GetState(UserInput::Key_grave))     lastUnicode = '~';
     }
 
-    if (Input::GetState(Keyboard::Key_enter)) lastUnicode = '\n';
-    if (Input::GetState(Keyboard::Key_backspace)) lastUnicode = '\b';
-    if (Input::GetState(Keyboard::Key_space)) lastUnicode = ' ';
-    if (Input::GetState(Keyboard::Key_tab)) lastUnicode = '\t';
+    if (Input::GetState(UserInput::Key_enter)) lastUnicode = '\n';
+    if (Input::GetState(UserInput::Key_backspace)) lastUnicode = '\b';
+    if (Input::GetState(UserInput::Key_space)) lastUnicode = ' ';
+    if (Input::GetState(UserInput::Key_tab)) lastUnicode = '\t';
 
-    if (Input::GetState(Keyboard::Key_left))  lastUnicode = 17;
-    if (Input::GetState(Keyboard::Key_up))    lastUnicode = 18;
-    if (Input::GetState(Keyboard::Key_right)) lastUnicode = 19;
-    if (Input::GetState(Keyboard::Key_down))  lastUnicode = 20;
+    if (Input::GetState(UserInput::Key_left))  lastUnicode = 17;
+    if (Input::GetState(UserInput::Key_up))    lastUnicode = 18;
+    if (Input::GetState(UserInput::Key_right)) lastUnicode = 19;
+    if (Input::GetState(UserInput::Key_down))  lastUnicode = 20;
 
 
     static int counter = 0;

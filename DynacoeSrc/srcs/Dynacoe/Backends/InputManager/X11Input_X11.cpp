@@ -81,25 +81,46 @@ class InputPad {
         for(int i = BTN_MISC; i < KEY_OK; ++i) {
             if (libevdev_has_event_code(device, EV_KEY, i)) {
                 printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
-                buttons.push_back(i);
-                buttonMap[i] = buttons.size()-1;
+                switch(i) {
+                  case BTN_A: inputMap[i] = Dynacoe::UserInput::Pad_a; break;
+                  case BTN_B: inputMap[i] = Dynacoe::UserInput::Pad_b; break;
+                  case BTN_Y: inputMap[i] = Dynacoe::UserInput::Pad_x; break;
+                  case BTN_X: inputMap[i] = Dynacoe::UserInput::Pad_y; break;
+
+                  case BTN_SELECT: inputMap[i] = Dynacoe::UserInput::Pad_start; break;
+                  case BTN_START:  inputMap[i] = Dynacoe::UserInput::Pad_select; break;
+
+
+
+                  default:
+                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
+                }
+
+
+                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
             } else {
-                buttonMap[i] = -1;
+                inputMap[i] = Dynacoe::UserInput::NotAnInput;
             }
         }
 
         for(int i = ABS_X; i <= ABS_MISC; ++i) {
             if (libevdev_has_event_code(device, EV_ABS, i)) {
-                printf("AXIS - %s\n", libevdev_event_code_get_name(EV_ABS, i));
-                axes.push_back(i);
-                axisMap[i] = axes.size()-1;
+                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
+                switch(i) {
+
+                  default:
+                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
+                }
+
+
+                printf("AXIS - %s\n", libevdev_event_code_get_name(EV_KEY, i));
             } else {
-                axisMap[i] = -1;
+                inputMap[i] = Dynacoe::UserInput::NotAnInput;
             }
         }
 
         timeLast = Dynacoe::Time::MsSinceStartup();
-        state = new Dynacoe::InputDevice(buttons.size(), axes.size());
+        state = new Dynacoe::InputDevice(InputDevice::Class::Gamepad);
     }
 
     static const std::vector<std::string> & GetAllDevices() {
@@ -142,15 +163,17 @@ class InputPad {
         if (libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &ev) < 0) {
             return;
         }
-
+        
+        InputDevice::Event event;
+        event.id = inputMap[ev.code];
+        event.state = ev.value;
         switch(ev.type) {
           case EV_KEY:
-            state->buttons[buttonMap[ev.code]] = ev.value;
-            break;
           case EV_ABS:
-            state->axes[axisMap[ev.code]] = ev.value;
+            state->PushEvent(event);
             break;
-            
+
+          default:;            
         }
     }
 
@@ -162,10 +185,8 @@ class InputPad {
     static Dynacoe::Filesys * pathMan;
     double timeLast;;
 
-    std::vector<int> buttons;
-    std::vector<int> axes;
-    int buttonMap[KEY_OK];
-    int axisMap[ABS_MISC+1];
+    std::vector<int> inputs;
+    Dynacoe::UserInput inputMap[ABS_MISC+1];
 
     std::string name;
     int fd;
@@ -191,15 +212,20 @@ Dynacoe::X11InputManager::X11InputManager() {
 
     // initialize default devices.
     devices.resize((int)DefaultDeviceSlots::NumDefaultDevices);
-    devices[(int)DefaultDeviceSlots::Keyboard] = new Dynacoe::InputDevice((int)Dynacoe::Keyboard::NumButtons, 0);
-    devices[(int)DefaultDeviceSlots::Mouse] = new Dynacoe::InputDevice((int)Dynacoe::MouseButtons::NumButtons, (int)Dynacoe::MouseAxes::NumAxes);
+    devices[(int)DefaultDeviceSlots::Keyboard] = new Dynacoe::InputDevice((int)Dynacoe::UserInput::NumButtons, 0);
+    devices[(int)DefaultDeviceSlots::Mouse] = new Dynacoe::InputDevice((int)Dynacoe::UserInput::NumButtons, (int)Dynacoe::MouseAxes::NumAxes);
+
+
+    devices[(int)DefaultDeviceSlots::Pad1] = nullptr;
+    devices[(int)DefaultDeviceSlots::Pad2] = nullptr;
+    devices[(int)DefaultDeviceSlots::Pad3] = nullptr;
+    devices[(int)DefaultDeviceSlots::Pad4] = nullptr;
+
+
+
 
     // these devices are just not supported yet
-    devices[(int)DefaultDeviceSlots::Touchpad] = new Dynacoe::InputDevice(0, 0);
-    devices[(int)DefaultDeviceSlots::Pad1] = new Dynacoe::InputDevice(0, 0);
-    devices[(int)DefaultDeviceSlots::Pad2] = new Dynacoe::InputDevice(0, 0);
-    devices[(int)DefaultDeviceSlots::Pad3] = new Dynacoe::InputDevice(0, 0);
-    devices[(int)DefaultDeviceSlots::Pad4] = new Dynacoe::InputDevice(0, 0);
+    devices[(int)DefaultDeviceSlots::Touchpad] = nullptr;
 }
 
 bool Dynacoe::X11InputManager::IsSupported(InputType type) {
@@ -267,7 +293,7 @@ bool Dynacoe::X11InputManager::HandleEvents() {
                 // next empty slot
                 if (physicalPads[i] && physicalPads[i]->GetName() == removedNames[n]) {
                     //delete devices[(int)DefaultDeviceSlots::Pad1+i];
-                    delete physicalPads[i];
+                    if (physicalPads) delete physicalPads[i];
                     devices[(int)DefaultDeviceSlots::Pad1+i] = nullptr;
                     physicalPads[i] = nullptr;
                     break;
@@ -293,6 +319,11 @@ bool Dynacoe::X11InputManager::HandleEvents() {
         
 
         lastPadState = p;
+    }
+
+    for(int i = 0; i < 4; ++i) {
+        if (!physicalPads[i]) continue;
+        physicalPads[i]->Update();
     }
 
     if (!display) return false;
@@ -340,89 +371,89 @@ Dynacoe::Display * Dynacoe::X11InputManager::GetFocus() {
 
 
 
-// key sym to Dynacoe::Keyboard:: mappings:
+// key sym to Dynacoe::UserInput:: mappings:
 void initKeysymMappings() {
-    symMapping[XK_0] = Dynacoe::Keyboard::Key_0;
-    symMapping[XK_1] = Dynacoe::Keyboard::Key_1;
-    symMapping[XK_2] = Dynacoe::Keyboard::Key_2;
-    symMapping[XK_3] = Dynacoe::Keyboard::Key_3;
-    symMapping[XK_4] = Dynacoe::Keyboard::Key_4;
-    symMapping[XK_5] = Dynacoe::Keyboard::Key_5;
-    symMapping[XK_6] = Dynacoe::Keyboard::Key_6;
-    symMapping[XK_7] = Dynacoe::Keyboard::Key_7;
-    symMapping[XK_8] = Dynacoe::Keyboard::Key_8;
-    symMapping[XK_9] = Dynacoe::Keyboard::Key_9;
+    symMapping[XK_0] = Dynacoe::UserInput::Key_0;
+    symMapping[XK_1] = Dynacoe::UserInput::Key_1;
+    symMapping[XK_2] = Dynacoe::UserInput::Key_2;
+    symMapping[XK_3] = Dynacoe::UserInput::Key_3;
+    symMapping[XK_4] = Dynacoe::UserInput::Key_4;
+    symMapping[XK_5] = Dynacoe::UserInput::Key_5;
+    symMapping[XK_6] = Dynacoe::UserInput::Key_6;
+    symMapping[XK_7] = Dynacoe::UserInput::Key_7;
+    symMapping[XK_8] = Dynacoe::UserInput::Key_8;
+    symMapping[XK_9] = Dynacoe::UserInput::Key_9;
 
-    symMapping[XK_parenright] = Dynacoe::Keyboard::Key_0;
-    symMapping[XK_exclam] = Dynacoe::Keyboard::Key_1;
-    symMapping[XK_at] = Dynacoe::Keyboard::Key_2;
-    symMapping[XK_numbersign] = Dynacoe::Keyboard::Key_3;
-    symMapping[XK_dollar] = Dynacoe::Keyboard::Key_4;
-    symMapping[XK_percent] = Dynacoe::Keyboard::Key_5;
-    symMapping[XK_asciicircum] = Dynacoe::Keyboard::Key_6;
-    symMapping[XK_ampersand] = Dynacoe::Keyboard::Key_7;
-    symMapping[XK_asterisk] = Dynacoe::Keyboard::Key_8;
-    symMapping[XK_parenleft] = Dynacoe::Keyboard::Key_9;
+    symMapping[XK_parenright] = Dynacoe::UserInput::Key_0;
+    symMapping[XK_exclam] = Dynacoe::UserInput::Key_1;
+    symMapping[XK_at] = Dynacoe::UserInput::Key_2;
+    symMapping[XK_numbersign] = Dynacoe::UserInput::Key_3;
+    symMapping[XK_dollar] = Dynacoe::UserInput::Key_4;
+    symMapping[XK_percent] = Dynacoe::UserInput::Key_5;
+    symMapping[XK_asciicircum] = Dynacoe::UserInput::Key_6;
+    symMapping[XK_ampersand] = Dynacoe::UserInput::Key_7;
+    symMapping[XK_asterisk] = Dynacoe::UserInput::Key_8;
+    symMapping[XK_parenleft] = Dynacoe::UserInput::Key_9;
 
     
 
-    symMapping[XK_a] = Dynacoe::Keyboard::Key_a;
-    symMapping[XK_b] = Dynacoe::Keyboard::Key_b;
-    symMapping[XK_c] = Dynacoe::Keyboard::Key_c;
-    symMapping[XK_d] = Dynacoe::Keyboard::Key_d;
-    symMapping[XK_e] = Dynacoe::Keyboard::Key_e;
-    symMapping[XK_f] = Dynacoe::Keyboard::Key_f;
-    symMapping[XK_g] = Dynacoe::Keyboard::Key_g;
-    symMapping[XK_h] = Dynacoe::Keyboard::Key_h;
-    symMapping[XK_i] = Dynacoe::Keyboard::Key_i;
-    symMapping[XK_j] = Dynacoe::Keyboard::Key_j;
+    symMapping[XK_a] = Dynacoe::UserInput::Key_a;
+    symMapping[XK_b] = Dynacoe::UserInput::Key_b;
+    symMapping[XK_c] = Dynacoe::UserInput::Key_c;
+    symMapping[XK_d] = Dynacoe::UserInput::Key_d;
+    symMapping[XK_e] = Dynacoe::UserInput::Key_e;
+    symMapping[XK_f] = Dynacoe::UserInput::Key_f;
+    symMapping[XK_g] = Dynacoe::UserInput::Key_g;
+    symMapping[XK_h] = Dynacoe::UserInput::Key_h;
+    symMapping[XK_i] = Dynacoe::UserInput::Key_i;
+    symMapping[XK_j] = Dynacoe::UserInput::Key_j;
 
-    symMapping[XK_k] = Dynacoe::Keyboard::Key_k;
-    symMapping[XK_l] = Dynacoe::Keyboard::Key_l;
-    symMapping[XK_m] = Dynacoe::Keyboard::Key_m;
-    symMapping[XK_n] = Dynacoe::Keyboard::Key_n;
-    symMapping[XK_o] = Dynacoe::Keyboard::Key_o;
-    symMapping[XK_p] = Dynacoe::Keyboard::Key_p;
-    symMapping[XK_q] = Dynacoe::Keyboard::Key_q;
-    symMapping[XK_r] = Dynacoe::Keyboard::Key_r;
-    symMapping[XK_s] = Dynacoe::Keyboard::Key_s;
-    symMapping[XK_t] = Dynacoe::Keyboard::Key_t;
+    symMapping[XK_k] = Dynacoe::UserInput::Key_k;
+    symMapping[XK_l] = Dynacoe::UserInput::Key_l;
+    symMapping[XK_m] = Dynacoe::UserInput::Key_m;
+    symMapping[XK_n] = Dynacoe::UserInput::Key_n;
+    symMapping[XK_o] = Dynacoe::UserInput::Key_o;
+    symMapping[XK_p] = Dynacoe::UserInput::Key_p;
+    symMapping[XK_q] = Dynacoe::UserInput::Key_q;
+    symMapping[XK_r] = Dynacoe::UserInput::Key_r;
+    symMapping[XK_s] = Dynacoe::UserInput::Key_s;
+    symMapping[XK_t] = Dynacoe::UserInput::Key_t;
 
-    symMapping[XK_u] = Dynacoe::Keyboard::Key_u;
-    symMapping[XK_v] = Dynacoe::Keyboard::Key_v;
-    symMapping[XK_w] = Dynacoe::Keyboard::Key_w;
-    symMapping[XK_x] = Dynacoe::Keyboard::Key_x;
-    symMapping[XK_y] = Dynacoe::Keyboard::Key_y;
-    symMapping[XK_z] = Dynacoe::Keyboard::Key_z;
+    symMapping[XK_u] = Dynacoe::UserInput::Key_u;
+    symMapping[XK_v] = Dynacoe::UserInput::Key_v;
+    symMapping[XK_w] = Dynacoe::UserInput::Key_w;
+    symMapping[XK_x] = Dynacoe::UserInput::Key_x;
+    symMapping[XK_y] = Dynacoe::UserInput::Key_y;
+    symMapping[XK_z] = Dynacoe::UserInput::Key_z;
 
-    symMapping[XK_A] = Dynacoe::Keyboard::Key_a;
-    symMapping[XK_B] = Dynacoe::Keyboard::Key_b;
-    symMapping[XK_C] = Dynacoe::Keyboard::Key_c;
-    symMapping[XK_D] = Dynacoe::Keyboard::Key_d;
-    symMapping[XK_E] = Dynacoe::Keyboard::Key_e;
-    symMapping[XK_F] = Dynacoe::Keyboard::Key_f;
-    symMapping[XK_G] = Dynacoe::Keyboard::Key_g;
-    symMapping[XK_H] = Dynacoe::Keyboard::Key_h;
-    symMapping[XK_I] = Dynacoe::Keyboard::Key_i;
-    symMapping[XK_J] = Dynacoe::Keyboard::Key_j;
+    symMapping[XK_A] = Dynacoe::UserInput::Key_a;
+    symMapping[XK_B] = Dynacoe::UserInput::Key_b;
+    symMapping[XK_C] = Dynacoe::UserInput::Key_c;
+    symMapping[XK_D] = Dynacoe::UserInput::Key_d;
+    symMapping[XK_E] = Dynacoe::UserInput::Key_e;
+    symMapping[XK_F] = Dynacoe::UserInput::Key_f;
+    symMapping[XK_G] = Dynacoe::UserInput::Key_g;
+    symMapping[XK_H] = Dynacoe::UserInput::Key_h;
+    symMapping[XK_I] = Dynacoe::UserInput::Key_i;
+    symMapping[XK_J] = Dynacoe::UserInput::Key_j;
 
-    symMapping[XK_K] = Dynacoe::Keyboard::Key_k;
-    symMapping[XK_L] = Dynacoe::Keyboard::Key_l;
-    symMapping[XK_M] = Dynacoe::Keyboard::Key_m;
-    symMapping[XK_N] = Dynacoe::Keyboard::Key_n;
-    symMapping[XK_O] = Dynacoe::Keyboard::Key_o;
-    symMapping[XK_P] = Dynacoe::Keyboard::Key_p;
-    symMapping[XK_Q] = Dynacoe::Keyboard::Key_q;
-    symMapping[XK_R] = Dynacoe::Keyboard::Key_r;
-    symMapping[XK_S] = Dynacoe::Keyboard::Key_s;
-    symMapping[XK_T] = Dynacoe::Keyboard::Key_t;
+    symMapping[XK_K] = Dynacoe::UserInput::Key_k;
+    symMapping[XK_L] = Dynacoe::UserInput::Key_l;
+    symMapping[XK_M] = Dynacoe::UserInput::Key_m;
+    symMapping[XK_N] = Dynacoe::UserInput::Key_n;
+    symMapping[XK_O] = Dynacoe::UserInput::Key_o;
+    symMapping[XK_P] = Dynacoe::UserInput::Key_p;
+    symMapping[XK_Q] = Dynacoe::UserInput::Key_q;
+    symMapping[XK_R] = Dynacoe::UserInput::Key_r;
+    symMapping[XK_S] = Dynacoe::UserInput::Key_s;
+    symMapping[XK_T] = Dynacoe::UserInput::Key_t;
 
-    symMapping[XK_U] = Dynacoe::Keyboard::Key_u;
-    symMapping[XK_V] = Dynacoe::Keyboard::Key_v;
-    symMapping[XK_W] = Dynacoe::Keyboard::Key_w;
-    symMapping[XK_X] = Dynacoe::Keyboard::Key_x;
-    symMapping[XK_Y] = Dynacoe::Keyboard::Key_y;
-    symMapping[XK_Z] = Dynacoe::Keyboard::Key_z;
+    symMapping[XK_U] = Dynacoe::UserInput::Key_u;
+    symMapping[XK_V] = Dynacoe::UserInput::Key_v;
+    symMapping[XK_W] = Dynacoe::UserInput::Key_w;
+    symMapping[XK_X] = Dynacoe::UserInput::Key_x;
+    symMapping[XK_Y] = Dynacoe::UserInput::Key_y;
+    symMapping[XK_Z] = Dynacoe::UserInput::Key_z;
 
 
 
@@ -431,91 +462,91 @@ void initKeysymMappings() {
 
 
 
-    symMapping[XK_Shift_L] = Dynacoe::Keyboard::Key_lshift;
-    symMapping[XK_Shift_R] = Dynacoe::Keyboard::Key_rshift;
-    symMapping[XK_Control_L] = Dynacoe::Keyboard::Key_lctrl;
-    symMapping[XK_Control_R] = Dynacoe::Keyboard::Key_rctrl;
-    symMapping[XK_Alt_L] = Dynacoe::Keyboard::Key_lalt;
-    symMapping[XK_Alt_R] = Dynacoe::Keyboard::Key_ralt;
-    symMapping[XK_Tab] = Dynacoe::Keyboard::Key_tab;
-    symMapping[XK_ISO_Left_Tab] = Dynacoe::Keyboard::Key_tab;
+    symMapping[XK_Shift_L] = Dynacoe::UserInput::Key_lshift;
+    symMapping[XK_Shift_R] = Dynacoe::UserInput::Key_rshift;
+    symMapping[XK_Control_L] = Dynacoe::UserInput::Key_lctrl;
+    symMapping[XK_Control_R] = Dynacoe::UserInput::Key_rctrl;
+    symMapping[XK_Alt_L] = Dynacoe::UserInput::Key_lalt;
+    symMapping[XK_Alt_R] = Dynacoe::UserInput::Key_ralt;
+    symMapping[XK_Tab] = Dynacoe::UserInput::Key_tab;
+    symMapping[XK_ISO_Left_Tab] = Dynacoe::UserInput::Key_tab;
 
 
-    symMapping[XK_F1] = Dynacoe::Keyboard::Key_F1;
-    symMapping[XK_F2] = Dynacoe::Keyboard::Key_F2;
-    symMapping[XK_F3] = Dynacoe::Keyboard::Key_F3;
-    symMapping[XK_F4] = Dynacoe::Keyboard::Key_F4;
-    symMapping[XK_F5] = Dynacoe::Keyboard::Key_F5;
-    symMapping[XK_F6] = Dynacoe::Keyboard::Key_F6;
-    symMapping[XK_F7] = Dynacoe::Keyboard::Key_F7;
-    symMapping[XK_F8] = Dynacoe::Keyboard::Key_F8;
-    symMapping[XK_F9] = Dynacoe::Keyboard::Key_F9;
+    symMapping[XK_F1] = Dynacoe::UserInput::Key_F1;
+    symMapping[XK_F2] = Dynacoe::UserInput::Key_F2;
+    symMapping[XK_F3] = Dynacoe::UserInput::Key_F3;
+    symMapping[XK_F4] = Dynacoe::UserInput::Key_F4;
+    symMapping[XK_F5] = Dynacoe::UserInput::Key_F5;
+    symMapping[XK_F6] = Dynacoe::UserInput::Key_F6;
+    symMapping[XK_F7] = Dynacoe::UserInput::Key_F7;
+    symMapping[XK_F8] = Dynacoe::UserInput::Key_F8;
+    symMapping[XK_F9] = Dynacoe::UserInput::Key_F9;
 
-    symMapping[XK_F10] = Dynacoe::Keyboard::Key_F10;
-    symMapping[XK_F11] = Dynacoe::Keyboard::Key_F11;
-    symMapping[XK_F12] = Dynacoe::Keyboard::Key_F12;
-    symMapping[XK_Up] = Dynacoe::Keyboard::Key_up;
-    symMapping[XK_Down] = Dynacoe::Keyboard::Key_down;
-    symMapping[XK_Left] = Dynacoe::Keyboard::Key_left;
-    symMapping[XK_Right] = Dynacoe::Keyboard::Key_right;
-    symMapping[XK_minus] = Dynacoe::Keyboard::Key_minus;
-    symMapping[XK_underscore] = Dynacoe::Keyboard::Key_minus;    
-    symMapping[XK_equal] = Dynacoe::Keyboard::Key_equal;
-    symMapping[XK_plus] = Dynacoe::Keyboard::Key_equal;
+    symMapping[XK_F10] = Dynacoe::UserInput::Key_F10;
+    symMapping[XK_F11] = Dynacoe::UserInput::Key_F11;
+    symMapping[XK_F12] = Dynacoe::UserInput::Key_F12;
+    symMapping[XK_Up] = Dynacoe::UserInput::Key_up;
+    symMapping[XK_Down] = Dynacoe::UserInput::Key_down;
+    symMapping[XK_Left] = Dynacoe::UserInput::Key_left;
+    symMapping[XK_Right] = Dynacoe::UserInput::Key_right;
+    symMapping[XK_minus] = Dynacoe::UserInput::Key_minus;
+    symMapping[XK_underscore] = Dynacoe::UserInput::Key_minus;    
+    symMapping[XK_equal] = Dynacoe::UserInput::Key_equal;
+    symMapping[XK_plus] = Dynacoe::UserInput::Key_equal;
 
-    symMapping[XK_BackSpace] = Dynacoe::Keyboard::Key_backspace;
-    symMapping[XK_grave] = Dynacoe::Keyboard::Key_grave;
-    symMapping[XK_asciitilde] = Dynacoe::Keyboard::Key_apostrophe;
-    symMapping[XK_Escape] = Dynacoe::Keyboard::Key_esc;
-    symMapping[XK_Home] = Dynacoe::Keyboard::Key_home;
-    symMapping[XK_Page_Up] = Dynacoe::Keyboard::Key_pageUp;
-    symMapping[XK_Page_Down] = Dynacoe::Keyboard::Key_pageDown;
-    symMapping[XK_End] = Dynacoe::Keyboard::Key_end;
-    symMapping[XK_backslash] = Dynacoe::Keyboard::Key_backslash;
-    symMapping[XK_bar] = Dynacoe::Keyboard::Key_backslash;
-    symMapping[XK_bracketleft] = Dynacoe::Keyboard::Key_lbracket;
-    symMapping[XK_bracketright] = Dynacoe::Keyboard::Key_rbracket;
-    symMapping[XK_braceleft] = Dynacoe::Keyboard::Key_lbracket;
-    symMapping[XK_braceright] = Dynacoe::Keyboard::Key_rbracket;
+    symMapping[XK_BackSpace] = Dynacoe::UserInput::Key_backspace;
+    symMapping[XK_grave] = Dynacoe::UserInput::Key_grave;
+    symMapping[XK_asciitilde] = Dynacoe::UserInput::Key_apostrophe;
+    symMapping[XK_Escape] = Dynacoe::UserInput::Key_esc;
+    symMapping[XK_Home] = Dynacoe::UserInput::Key_home;
+    symMapping[XK_Page_Up] = Dynacoe::UserInput::Key_pageUp;
+    symMapping[XK_Page_Down] = Dynacoe::UserInput::Key_pageDown;
+    symMapping[XK_End] = Dynacoe::UserInput::Key_end;
+    symMapping[XK_backslash] = Dynacoe::UserInput::Key_backslash;
+    symMapping[XK_bar] = Dynacoe::UserInput::Key_backslash;
+    symMapping[XK_bracketleft] = Dynacoe::UserInput::Key_lbracket;
+    symMapping[XK_bracketright] = Dynacoe::UserInput::Key_rbracket;
+    symMapping[XK_braceleft] = Dynacoe::UserInput::Key_lbracket;
+    symMapping[XK_braceright] = Dynacoe::UserInput::Key_rbracket;
 
 
-    symMapping[XK_semicolon] = Dynacoe::Keyboard::Key_semicolon;
-    symMapping[XK_colon] = Dynacoe::Keyboard::Key_semicolon;
-    symMapping[XK_apostrophe] = Dynacoe::Keyboard::Key_apostrophe;
-    symMapping[XK_quotedbl] = Dynacoe::Keyboard::Key_apostrophe;
-    symMapping[XK_slash] = Dynacoe::Keyboard::Key_frontslash;
-    symMapping[XK_question] = Dynacoe::Keyboard::Key_frontslash;
-    symMapping[XK_Return] = Dynacoe::Keyboard::Key_enter;
-    symMapping[XK_Delete] = Dynacoe::Keyboard::Key_delete;
+    symMapping[XK_semicolon] = Dynacoe::UserInput::Key_semicolon;
+    symMapping[XK_colon] = Dynacoe::UserInput::Key_semicolon;
+    symMapping[XK_apostrophe] = Dynacoe::UserInput::Key_apostrophe;
+    symMapping[XK_quotedbl] = Dynacoe::UserInput::Key_apostrophe;
+    symMapping[XK_slash] = Dynacoe::UserInput::Key_frontslash;
+    symMapping[XK_question] = Dynacoe::UserInput::Key_frontslash;
+    symMapping[XK_Return] = Dynacoe::UserInput::Key_enter;
+    symMapping[XK_Delete] = Dynacoe::UserInput::Key_delete;
 
-    symMapping[XK_KP_0] = Dynacoe::Keyboard::Key_numpad0;
-    symMapping[XK_KP_1] = Dynacoe::Keyboard::Key_numpad1;
-    symMapping[XK_KP_2] = Dynacoe::Keyboard::Key_numpad2;
-    symMapping[XK_KP_3] = Dynacoe::Keyboard::Key_numpad3;
-    symMapping[XK_KP_4] = Dynacoe::Keyboard::Key_numpad4;
-    symMapping[XK_KP_5] = Dynacoe::Keyboard::Key_numpad5;
-    symMapping[XK_KP_6] = Dynacoe::Keyboard::Key_numpad6;
-    symMapping[XK_KP_7] = Dynacoe::Keyboard::Key_numpad7;
-    symMapping[XK_KP_8] = Dynacoe::Keyboard::Key_numpad8;
-    symMapping[XK_KP_9] = Dynacoe::Keyboard::Key_numpad9;
+    symMapping[XK_KP_0] = Dynacoe::UserInput::Key_numpad0;
+    symMapping[XK_KP_1] = Dynacoe::UserInput::Key_numpad1;
+    symMapping[XK_KP_2] = Dynacoe::UserInput::Key_numpad2;
+    symMapping[XK_KP_3] = Dynacoe::UserInput::Key_numpad3;
+    symMapping[XK_KP_4] = Dynacoe::UserInput::Key_numpad4;
+    symMapping[XK_KP_5] = Dynacoe::UserInput::Key_numpad5;
+    symMapping[XK_KP_6] = Dynacoe::UserInput::Key_numpad6;
+    symMapping[XK_KP_7] = Dynacoe::UserInput::Key_numpad7;
+    symMapping[XK_KP_8] = Dynacoe::UserInput::Key_numpad8;
+    symMapping[XK_KP_9] = Dynacoe::UserInput::Key_numpad9;
 
     //TODO: missing printscreen!
-    //symMapping[XK_0] = Dynacoe::Keyboard::Key_prtscr;
-    symMapping[XK_Super_L] = Dynacoe::Keyboard::Key_lsuper;
-    symMapping[XK_Super_R] = Dynacoe::Keyboard::Key_rsuper;
-    symMapping[XK_space] = Dynacoe::Keyboard::Key_space;
-    symMapping[XK_Insert] = Dynacoe::Keyboard::Key_insert;
-    symMapping[XK_comma] = Dynacoe::Keyboard::Key_comma;
-    symMapping[XK_less] = Dynacoe::Keyboard::Key_comma;
-    symMapping[XK_period] = Dynacoe::Keyboard::Key_period;
-    symMapping[XK_greater] = Dynacoe::Keyboard::Key_period;
+    //symMapping[XK_0] = Dynacoe::UserInput::Key_prtscr;
+    symMapping[XK_Super_L] = Dynacoe::UserInput::Key_lsuper;
+    symMapping[XK_Super_R] = Dynacoe::UserInput::Key_rsuper;
+    symMapping[XK_space] = Dynacoe::UserInput::Key_space;
+    symMapping[XK_Insert] = Dynacoe::UserInput::Key_insert;
+    symMapping[XK_comma] = Dynacoe::UserInput::Key_comma;
+    symMapping[XK_less] = Dynacoe::UserInput::Key_comma;
+    symMapping[XK_period] = Dynacoe::UserInput::Key_period;
+    symMapping[XK_greater] = Dynacoe::UserInput::Key_period;
 
 
 
 
-    mbMapping[1] = Dynacoe::MouseButtons::Left;
-    mbMapping[2] = Dynacoe::MouseButtons::Middle;
-    mbMapping[3] = Dynacoe::MouseButtons::Right;
+    mbMapping[1] = Dynacoe::UserInput::Left;
+    mbMapping[2] = Dynacoe::UserInput::Middle;
+    mbMapping[3] = Dynacoe::UserInput::Right;
     
 
 }
@@ -526,6 +557,8 @@ void initKeysymMappings() {
 void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
     devices[1]->axes[(int)Dynacoe::MouseAxes::Wheel] = 0;
 
+    InputDevice::Event ie;
+    
     switch(event.type) {
       case KeyPress:
       case KeyRelease: {
@@ -533,8 +566,10 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
         XKeyEvent * ev = (XKeyEvent*)&event;
         XLookupString(ev, (char*)"", 0, &key, nullptr);
 
-        // update keyboard        
-        devices[0]->buttons[(int)symMapping[key]] = event.type == KeyPress;
+        // update keyboard    
+        ie.id = symMapping[key];
+        ie.state = (event.type == KeyPress);    
+        devices[0]->PushEvent(ie);
       } break;
 
 
@@ -546,21 +581,29 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
             case 1:
             case 2:
             case 3:
-                devices[1]->buttons[(int)mbMapping[ev->button]] = event.type == ButtonPress;
+                ie.id = mbMapping[ev->button];
+                ie.state = event.type == ButtonPress;
+                devices[1]->PushEvent(ie);
                 break;
             
             case 4:
             case 5:
-                devices[1]->axes[(int)Dynacoe::MouseAxes::Wheel] = (ev->button == 4 ? 1 : -1);
+                ie.id = mbMapping[Dynacoe::MouseAxes::Wheel];
+                ie.state = (ev->button == 4 ? 1 : -1);
+                devices[1]->PushEvent(ie);
                 break;
         }
       } break;
 
       case MotionNotify: {
         XMotionEvent * ev = (XMotionEvent*)&event;
-        
-        devices[1]->axes[(int)Dynacoe::MouseAxes::X] = ev->x;
-        devices[1]->axes[(int)Dynacoe::MouseAxes::Y] = ev->y;
+        ie.id = Dynacoe::MouseAxes::X;
+        ie.state = ev->x;
+        devices[1]->PushEvent(ie);
+
+        ie.id = Dynacoe::MouseAxes::Y;
+        ie.state = ev->y;
+        devices[1]->PushEvent(ie);
         
         
       } break;
