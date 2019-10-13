@@ -50,8 +50,9 @@ class InputDevice {
 
 
     struct Event {
-        UserInput id;
-        float state;
+        UserInput id;         // input mapping
+        float state;          // state
+        int utf8; // unicode mapping to the key, if any
     };
 
 
@@ -60,7 +61,7 @@ class InputDevice {
 
     // Adds a state change event for the given input within
     // this device
-    void AddEvent(const Event &);
+    void PushEvent(const Event &);
 
 
     // Gets the next state change for a device input

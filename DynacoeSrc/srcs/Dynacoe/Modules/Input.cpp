@@ -47,7 +47,7 @@ using namespace std;
 
 static bool IsShiftMod();
 
-static void getUnicode();
+static void getUnicode(float prevState, const InputDevice::Event &);
 
 
 
@@ -57,10 +57,8 @@ static void getUnicode();
 static InputManager * manager;
 static int lastUnicode;
 
-//static std::map<std::string, ButtonList*> stringMap;
 static std::map<std::string, UserInput> stringMapInput;
-static std::map<std::string, std::pair<PadID, PadButtons>> stringMapPad;
-static std::vector<ButtonList*> buttonLists;
+static std::map<std::string, std::pair<PadID, UserInput>> stringMapPad;
 
 
 
@@ -84,8 +82,8 @@ static std::vector<InputListener*> deletedListeners;
 
 struct DeviceState {
     DeviceState() {
-        thisState = calloc(sizeof(float), (int)UserInput::Count);
-        prevState = calloc(sizeof(float), (int)UserInput::Count);
+        thisState = (float*)calloc(sizeof(float), (int)UserInput::Count);
+        prevState = (float*)calloc(sizeof(float), (int)UserInput::Count);
         memset(listeners, sizeof(void*)*((int)UserInput::Count), 0);
         device = nullptr;
     }
@@ -97,24 +95,32 @@ struct DeviceState {
 
     void Update() {
         InputDevice::Event ev;
-        while(device->GetDeviceCount()) {
+        if (!device) return;
+        while(device->GetEventCount()) {
             device->PopEvent(ev);
-            prevState[ev.id] = thisState[ev.id];
-            thisState[ev.id] = ev.state;
+            int index = (int)ev.id;
+            prevState[index] = thisState[index];
+            thisState[index] = ev.state;
 
-            if (listeners.size()) {
-                auto inst = listeners[ev.id];
+            
+
+            if (listeners[index] && listeners[index]->size()) {
+                auto inst = listeners[index];
                 if (inst) {
                     for(size_t i = 0; i < inst->size(); ++i) {
-                        if (!prevState[ev.id].state && thisState[ev.id].state) {
+                        if (!prevState[index] && thisState[index]) {
                             (*inst)[i]->OnPress();
-                        } else if (prevState[ev.id].state && thisState[ev.id].state) {
+                        } else if (prevState[index] && thisState[index]) {
                             (*inst)[i]->OnHold();
-                        } else if (prevState[ev.id].state && !thisState[ev.id].state) {
+                        } else if (prevState[index] && !thisState[index]) {
                             (*inst)[i]->OnRelease();
                         }
                     }
                 }
+            }
+
+            if (device->GetType() == InputDevice::Class::Keyboard) {                
+                getUnicode(prevState[index], ev);
             }
         }
     }
@@ -124,7 +130,7 @@ struct DeviceState {
     float * prevState;
     float * thisState;
     std::vector<InputListener*> * listeners[(int)UserInput::Count];
-}
+};
 
 static DeviceState devices[(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
 
@@ -145,8 +151,8 @@ void Input::Init() {
 
 }
 
-void Input::ShowVirtualUserInput(bool b) {
-    manager->ShowVirtualUserInput(b);
+void Input::ShowVirtualKeyboard(bool b) {
+    manager->ShowVirtualKeyboard(b);
 }
 
 
@@ -182,28 +188,30 @@ void Input::RunBefore() {
 
     // process raw events
     for(int i = 0; i < (int)InputManager::DefaultDeviceSlots::NumDefaultDevices; ++i) {
-        devices[i]->device = manager->QueryDevice(i);
-        devices[i]->Update();
+        devices[i].device = manager->QueryDevice(i);
+        devices[i].Update();
     }
 
 
     mouseY = MouseYDeviceToWorld2D(
         devices[
             (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->thisState[
-            (int)MouseAxes::Y
+        ].thisState[
+            (int)UserInput::Pointer_Y
         ]
     );
 
     mouseX = MouseXDeviceToWorld2D(
         devices[
             (int)InputManager::DefaultDeviceSlots::Mouse
-        ]->thisState[
-            (int)MouseAxes::X
+        ].thisState[
+            (int)UserInput::Pointer_X
         ]
     );
 
     lockCallbackMaps = false;
+
+    /*
     for(uint32_t i = 0; i < deletedListeners.size(); ++i) {
         auto b = deletedListeners[i];
         auto pFind = padCallbackMap.find(b);
@@ -216,11 +224,9 @@ void Input::RunBefore() {
         auto sFind = strCallbackMap.find(b);
         if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
     }
+    */
     deletedListeners.clear();
 
-    //if (updated) {
-        getUnicode();
-    //}
 }
 
 std::vector<int> Input::QueryPads() {
@@ -228,8 +234,7 @@ std::vector<int> Input::QueryPads() {
     for(int i = (int) InputManager::DefaultDeviceSlots::Pad1; 
             i<= (int) InputManager::DefaultDeviceSlots::Pad4;
             ++i) {
-        if (thisState.devices[i]->numButtons ||
-            thisState.devices[i]->numAxes) {
+        if (devices[i].device) {
             out.push_back(i);
         }
     }
@@ -249,26 +254,27 @@ std::vector<int> Input::QueryPads() {
 
 
 bool Input::IsHeld(UserInput k) {
-    InputDevice * self = nullptr;
-    InputDevice * prev = nullptr;
+    float prev;
+    float self;
     if (k < UserInput::Pointer_0) {
-        prev = prevState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
-        self = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
+        prev = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].prevState[(int)k];
+        self = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].thisState[(int)k];
+
     } else {
-        prev = prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse];
-        self = thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse];
+        prev = devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)k];
+        self = devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)k];
     } 
-    if (!prev) return;
-    return (prev->buttons[(int)k] &&
-            self->buttons[(int)k]);
+    if (!prev) return false;
+    return (prev &&
+            self);
 
 
 }
 
 bool Input::IsHeld(PadID b, UserInput k) {
-    if (!prevState.devices[b]) return false;
-    return (prevState.devices[b]->buttons[(int)k] &&
-            thisState.devices[b]->buttons[(int)k]);
+    if (!devices[b].prevState[(int)k]) return false;
+    return (devices[b].thisState[(int)k] &&
+            devices[b].prevState[(int)k]);
 }
 
 
@@ -286,7 +292,35 @@ bool Input::IsHeld(const std::string & s) {
     return false;
 }
 
+float Input::GetState(UserInput k) {
+    if (k < UserInput::Pointer_0) {
+        return devices[(int)InputManager::DefaultDeviceSlots::Keyboard].thisState[(int)k];
 
+    } else {
+        return devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)k];
+    } 
+
+}
+
+float Input::GetState(PadID b, UserInput k) {
+    if (!devices[b].prevState[(int)k]) return false;
+    return (devices[b].thisState[(int)k]);
+}
+
+
+float Input::GetState(const std::string & s) {
+    auto keyboardIter = stringMapInput.find(s);
+    if (keyboardIter != stringMapInput.end() &&
+        GetState(keyboardIter->second)) return true;
+
+    
+    auto padIter = stringMapPad.find(s);
+    if (padIter != stringMapPad.end() &&
+        GetState(padIter->second.first, padIter->second.second)) return true;
+    
+
+    return false;
+}
 
 
 
@@ -301,22 +335,19 @@ int Input::MouseY() {
 }
 
 int Input::MouseXDelta() {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return false;
-    return MouseXDeviceToWorld2D(thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->axes[(int)MouseAxes::X]) -
-           MouseXDeviceToWorld2D(prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->axes[(int)MouseAxes::X]);
+    return MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_X]) -
+           MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)UserInput::Pointer_X]);
 
 
 }
 
 int Input::MouseYDelta() {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return false;
-    return MouseYDeviceToWorld2D(thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->axes[(int)MouseAxes::Y]) -
-           MouseYDeviceToWorld2D(prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->axes[(int)MouseAxes::Y]);
+    return MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_Y]) -
+           MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)UserInput::Pointer_Y]);
 }
 
 int Input::MouseWheel() {
-    if (!prevState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]) return false;
-    return thisState.devices[(int)InputManager::DefaultDeviceSlots::Mouse]->axes[(int)MouseAxes::Wheel];
+    return (int)devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_Wheel];
 }
 
 int Input::GetLastUnicode() {
@@ -362,7 +393,7 @@ void Input::MapInput(const std::string & id, UserInput key) {
 }
 
 
-void Input::MapInput(const std::string & id, PadID idpad, PadButtons key) {
+void Input::MapInput(const std::string & id, PadID idpad, UserInput key) {
     stringMapPad[id] = {idpad, key};
 }
 
@@ -387,16 +418,30 @@ void Input::UnmapInput(const std::string & id) {
 
 
 void Input::AddListener(InputListener * b, UserInput i) {
-    inputCallbackMap[b] = i;
+    if (i < UserInput::Pointer_0) {
+        if (!devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i]) {
+            devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i] = new std::vector<InputListener*>;
+        }
+        devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i]->push_back(b);
+    } else {
+        if (!devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i]) {
+            devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i] = new std::vector<InputListener*>;
+        }
+        devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i]->push_back(b);
+    } 
 }
 
 
-void Input::AddListener(InputListener * b, PadID id, PadButtons i) {
-    padCallbackMap[b] = {id, i};
+void Input::AddListener(InputListener * b, PadID id, UserInput i) {
+    if (!devices[id].listeners[(int)i]) {
+        devices[id].listeners[(int)i] = new std::vector<InputListener*>;
+    }
+    devices[id].listeners[(int)i]->push_back(b);
 }
 
 void Input::AddListener(InputListener * b, const std::string & i) {
-    strCallbackMap[b] = i;
+    //strCallbackMap[b] = i;
+    // TODO
 }
 
 
@@ -408,121 +453,6 @@ void Input::RemoveListener(InputListener * b) {
 
 
 
-// Private methods
-
-/*
-void ButtonList::addButton(UserInput k) {
-    bool added = false;
-    for(UserInput key : keys) {
-        if (k == key) {
-            added = true;
-            break;
-        }
-    }
-
-    if (!added) keys.push_back(k);
-}
-
-void ButtonList::addButton(UserInput k) {
-    bool added = false;
-    for(UserInput key : UserInput) {
-        if (k == key) {
-            added = true;
-            break;
-        }
-    }
-
-    if (!added) UserInput.push_back(k);
-}
-
-void ButtonList::addButton(PadID id, PadButtons k) {
-    bool added = false;
-
-    vector<PadButtons> * vec = nullptr;
-    for(std::pair<PadID, vector<PadButtons>> & p : padButtons) { // TODO: could be yucky since it scales with controller count. Though, count is usually 4 max
-        if (p.first == id) {
-            vec = &p.second;
-            for(PadButtons key : *vec) {
-                if (k == key) {
-                    added = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (!vec) {
-        padButtons.push_back(make_pair(id, std::vector<PadButtons>(0)));
-    }
-
-
-    if (!added) vec->push_back(k);
-}
-
-
-
-
-
-
-
-
-bool ButtonList::GetState() {
-    bool out = false;
-    for(UserInput k : keys) {
-        out |= Input::GetState(k);
-    }
-    for(UserInput k : UserInput) {
-        out |= Input::GetState(k);
-    }
-    
-    for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
-        for(PadButtons p : pr.second) {
-            out |= Input::GetState(pr.first, p);
-        }
-    }
-    
-    return out;
-}
-
-
-bool ButtonList::IsPressed() {
-    bool out = false;
-    for(UserInput k : keys) {
-        out |= Input::IsPressed(k);
-    }
-    for(UserInput k : UserInput) {
-        out |= Input::IsPressed(k);
-    }
-    
-    for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
-        for(PadButtons p : pr.second) {
-            out |= Input::IsPressed(pr.first, p);
-        }
-    }
-    
-    return out;
-}
-
-
-bool ButtonList::IsHeld() {
-    bool out = false;
-    for(UserInput k : keys) {
-        out |= Input::IsHeld(k);
-    }
-    for(UserInput k : UserInput) {
-        out |= Input::IsHeld(k);
-    }
-    
-    for(std::pair<PadID, vector<PadButtons>> pr : padButtons) {
-        for(PadButtons p : pr.second) {
-            out |= Input::IsHeld(pr.first, p);
-        }
-    }
-    
-    return out;
-}
-*/
-
 
 
 
@@ -531,100 +461,34 @@ bool ButtonList::IsHeld() {
 
 
 bool IsShiftMod() {
-    return thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)UserInput::Key_lshift] ||
-           thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard]->buttons[(int)UserInput::Key_rshift];
+    return Input::GetState(UserInput::Key_lshift) ||
+           Input::GetState(UserInput::Key_rshift);
 }
 
-void getUnicode() {
-    // Go through a - z
-    static int previousUnicode = 0;
-    InputDevice * kb = thisState.devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
-    lastUnicode = 0;
-    for(int i = (int)UserInput::Key_a; i < (int)UserInput::Key_z + 1; ++i) {
-        if (Input::GetState((UserInput)i)) {
-            lastUnicode = i - (int)UserInput::Key_a + 'a';
-            if (IsShiftMod()) { lastUnicode += 'A' - 'a'; }
-        }
-    }
-    for(int i = (int)UserInput::Key_0; i < (int)UserInput::Key_9 + 1; ++i) {
-
-        if (Input::GetState((UserInput)i)) {
-            lastUnicode = i - (int)UserInput::Key_0 + '0';
-            if (IsShiftMod()) {
-                     if (lastUnicode == '1') lastUnicode = '!';
-                else if (lastUnicode == '2') lastUnicode = '@';
-                else if (lastUnicode == '3') lastUnicode = '#';
-                else if (lastUnicode == '4') lastUnicode = '$';
-                else if (lastUnicode == '5') lastUnicode = '%';
-                else if (lastUnicode == '6') lastUnicode = '^';
-                else if (lastUnicode == '7') lastUnicode = '&';
-                else if (lastUnicode == '8') lastUnicode = '*';
-                else if (lastUnicode == '9') lastUnicode = '(';
-                else if (lastUnicode == '0') lastUnicode = ')';
-
-
-
-            }
-        }
-    }
-
-    if (!IsShiftMod()) {
-         if (Input::GetState(UserInput::Key_comma))     lastUnicode = ',';
-    else if (Input::GetState(UserInput::Key_period))    lastUnicode = '.';
-    else if (Input::GetState(UserInput::Key_semicolon)) lastUnicode = ';';
-    else if (Input::GetState(UserInput::Key_apostrophe))lastUnicode = '\'';
-    else if (Input::GetState(UserInput::Key_lbracket))  lastUnicode = '[';
-    else if (Input::GetState(UserInput::Key_rbracket))  lastUnicode = ']';
-    else if (Input::GetState(UserInput::Key_minus))     lastUnicode = '-';
-    else if (Input::GetState(UserInput::Key_equal))     lastUnicode = '=';
-    else if (Input::GetState(UserInput::Key_backslash)) lastUnicode = '\\';
-    else if (Input::GetState(UserInput::Key_frontslash))lastUnicode = '/';
-    else if (Input::GetState(UserInput::Key_grave))     lastUnicode = '`';
-
-    } else {
-         if (Input::GetState(UserInput::Key_comma))     lastUnicode = '<';
-    else if (Input::GetState(UserInput::Key_period))    lastUnicode = '>';
-    else if (Input::GetState(UserInput::Key_semicolon)) lastUnicode = ':';
-    else if (Input::GetState(UserInput::Key_apostrophe))lastUnicode = '"';
-    else if (Input::GetState(UserInput::Key_lbracket))  lastUnicode = '{';
-    else if (Input::GetState(UserInput::Key_rbracket))  lastUnicode = '}';
-    else if (Input::GetState(UserInput::Key_minus))     lastUnicode = '_';
-    else if (Input::GetState(UserInput::Key_equal))     lastUnicode = '+';
-    else if (Input::GetState(UserInput::Key_backslash)) lastUnicode = '|';
-    else if (Input::GetState(UserInput::Key_frontslash))lastUnicode = '?';
-    else if (Input::GetState(UserInput::Key_grave))     lastUnicode = '~';
-    }
-
-    if (Input::GetState(UserInput::Key_enter)) lastUnicode = '\n';
-    if (Input::GetState(UserInput::Key_backspace)) lastUnicode = '\b';
-    if (Input::GetState(UserInput::Key_space)) lastUnicode = ' ';
-    if (Input::GetState(UserInput::Key_tab)) lastUnicode = '\t';
-
-    if (Input::GetState(UserInput::Key_left))  lastUnicode = 17;
-    if (Input::GetState(UserInput::Key_up))    lastUnicode = 18;
-    if (Input::GetState(UserInput::Key_right)) lastUnicode = 19;
-    if (Input::GetState(UserInput::Key_down))  lastUnicode = 20;
-
-
-    static int counter = 0;
-    if (!lastUnicode) {
-        counter = 0;
-    }
+void getUnicode(float prevState, const InputDevice::Event & event) {
     
 
+    // Go through a - z
+    static int previousUnicode = 0;
+    lastUnicode = event.utf8;
+
+
+    if (!lastUnicode) return;
+
     // New press is detected
-    if (lastUnicode != previousUnicode && lastUnicode) {
-        counter = 0;
-        for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
-            unicodeListeners[i]->OnNewUnicode(lastUnicode);
-        }
-        
-        if (!Engine::IsPaused()) {
-            for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
-                unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
-            }            
-        }
-    } 
+    static int counter = 0;
+    if (lastUnicode != previousUnicode) counter = 0;
+
+
+    for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+        unicodeListeners[i]->OnNewUnicode(lastUnicode);
+    }
+    
+    if (!Engine::IsPaused()) {
+        for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+            unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
+        }            
+    }
 
 
     // Key has been held, implying a multiple key request (for us / latin keyboards)

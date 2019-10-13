@@ -41,7 +41,7 @@ using namespace Dynacoe;
 
 const int default_action_queue_size = 1024;
 
-class InputDevice_Impl {
+class Dynacoe::InputDevice_Impl {
   public:
     InputDevice_Impl(InputDevice::Class type_) : 
             allocated(0),
@@ -49,7 +49,7 @@ class InputDevice_Impl {
             iterBack(0),
             type(type_)
         {
-        data = (AxisEvent*)calloc(sizeof(AxisEvent), default_action_queue_size);
+        data = (InputDevice::Event*)calloc(sizeof(InputDevice::Event), default_action_queue_size);
         allocated = default_action_queue_size;
     }
 
@@ -58,22 +58,22 @@ class InputDevice_Impl {
     }
 
 
-    void AddEvent(const InputDevice::Event & evt) {
+    void PushEvent(const InputDevice::Event & evt) {
         if (iterBack >= allocated) {
             // move to the front
             if (iterFront > 0) {
-                memmove(data, data+iterFront, iterBack*sizeof(AxisEvent));
+                memmove(data, data+iterFront, iterBack*sizeof(InputDevice::Event));
                 iterBack -= iterFront;
                 iterFront = 0;
             }
 
             if (iterBack >= allocated) {
                 allocated *= 1.4;
-                realloc(data, allocated*sizeof(AxisEvent));
+                realloc(data, allocated*sizeof(InputDevice::Event));
             }
         }
 
-        data[iterBack++] = ev;
+        data[iterBack++] = evt;
     }
 
     
@@ -108,8 +108,8 @@ InputDevice::~InputDevice() {
     delete self;
 }
 
-void InputDevice::AddEvent(const InputDevice::Event & ev) {
-    self->AddEvent(ev);
+void InputDevice::PushEvent(const InputDevice::Event & ev) {
+    self->PushEvent(ev);
 }
 
 bool InputDevice::PopEvent(InputDevice::Event & ev) {

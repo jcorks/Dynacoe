@@ -39,6 +39,31 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Library.h>
 using namespace Dynacoe;
 
+
+class InputListener_PlaySound : public InputListener {
+  public:
+    InputListener_PlaySound(AssetID sample_) : sample(sample_){}
+
+    // First, lets check to see if the designated key is pressed.
+    void OnPress() {
+        // If it is, play the sound sample assigned to this instrument.
+        // Any time a sample is played, a special ActiveSound object is created.
+        // ActiveSounds can be used to manipulate and track the sound 
+        // while its playing. This allows for features like active volume,
+        // panning, and halting.
+
+        lastSound = Sound::PlayAudio(sample);
+    }
+
+
+    // Playback sound of the sample asset
+    ActiveSound lastSound;
+
+  private:
+    // Asset reference
+    AssetID sample;
+};
+
 // This is the first example that will employ the use of multiple entities.
 // This helper entity will, when setup, play a sound 
 // when the given key is pressed.
@@ -46,6 +71,7 @@ using namespace Dynacoe;
 // When the sound is playing, the visual will be active
 class Instrument : public Entity {
   public:
+
       
     Instrument() {
         // each instrument will have a Shape2D visual associated with it
@@ -66,7 +92,7 @@ class Instrument : public Entity {
     // specific information, such as the sample to play and the key to use.
     void Setup(
         const std::string & samplePath, 
-        Keyboard keyIn,
+        UserInput keyIn,
         Color color) {
             
         // We also delay setting the name until we have the info that 
@@ -80,7 +106,10 @@ class Instrument : public Entity {
         // This loads the given sound file path as a file asset, much like in 
         // the Image example. The asset is used to play sounds later. Playing sounds 
         // does not require an component, though.
-        sample = Assets::Load("wav", samplePath);
+        auto sample = Assets::Load("wav", samplePath);
+
+        inputListener = new InputListener_PlaySound(sample);
+        Input::AddListener(inputListener, keyIn);
 
         // We save this key to detect whether it's pressed later.
         key = keyIn;
@@ -93,25 +122,16 @@ class Instrument : public Entity {
         
         
     }
+
+    
     
     void OnStep() {
-        // First, lets check to see if the designated key is pressed.
-        if (Input::IsPressed(key)) {
-            
-            // If it is, play the sound sample assigned to this instrument.
-            // Any time a sample is played, a special ActiveSound object is created.
-            // ActiveSounds can be used to manipulate and track the sound 
-            // while its playing. This allows for features like active volume,
-            // panning, and halting.
-            lastSound = Sound::PlayAudio(sample);
-        }
-        
         
         
         // If an active sound is around and currently playing,
         // make the scale of the visual larger than normal, else 
         // revert the scale back to normal (1.0).
-        if (lastSound.Valid()) {
+        if (inputListener->lastSound.Valid()) {
             scaleTarget = 2.0;
         } else {
             scaleTarget = 1.0;
@@ -137,12 +157,8 @@ class Instrument : public Entity {
     // Reference to the circle
     Shape2D * shape;
 
-    // Asset reference
-    AssetID sample;
-
-    // Playback sound of the sample asset
-    ActiveSound lastSound;
-
+    // Instance that reacts to button presses
+    InputListener_PlaySound * inputListener;
 
     // Desired scale of the visual itself
     float scaleTarget;
@@ -151,7 +167,7 @@ class Instrument : public Entity {
     float scaleReal;
     
     // Key to listen for to see if we should take action
-    Keyboard key;
+    UserInput key;
 };
 
 
@@ -180,8 +196,8 @@ int main() {
     Instrument * kick   = Entity::CreateReference<Instrument>();
 
     // Setup each entity with its own sample, key trigger, and color
-    snare->Setup("snare.wav", Keyboard::Key_q, Color("violet"));
-    kick ->Setup("kick.wav",  Keyboard::Key_w, Color("green"));
+    snare->Setup("snare.wav", UserInput::Key_q, Color("violet"));
+    kick ->Setup("kick.wav",  UserInput::Key_w, Color("green"));
 
 
     // Position them on the screep. The snare is a 1/4 of the screen 

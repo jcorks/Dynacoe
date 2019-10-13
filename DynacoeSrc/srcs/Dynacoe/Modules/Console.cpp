@@ -825,13 +825,13 @@ void Console::RunBefore() {
 
 
 
-    if (Input::MouseWheel() == -1 || Input::GetState(Keyboard::Key_pageDown)) {
+    if (Input::MouseWheel() == -1 || Input::GetState(UserInput::Key_pageDown)) {
         //if (saturator < 0) saturator = 0;
         saturator += .5f;
     }
 
 
-    if (Input::MouseWheel() == 1 || Input::GetState(Keyboard::Key_pageUp)) {
+    if (Input::MouseWheel() == 1 || Input::GetState(UserInput::Key_pageUp)) {
         //if (saturator > 0) saturator = 0;
         saturator -= .5f;
     }
@@ -851,9 +851,9 @@ void Console::RunAfter()  {
 
 
     if (enableKey && (
-        (Input::IsHeld(Keyboard::Key_lshift) ||
-         Input::IsHeld(Keyboard::Key_rshift)) &&
-        Input::IsPressed(Keyboard::Key_tab)))
+        (Input::IsHeld(UserInput::Key_lshift) ||
+         Input::IsHeld(UserInput::Key_rshift)) &&
+        Input::GetState(UserInput::Key_tab)))
         Console::Show(!shown);
 
 
@@ -862,7 +862,7 @@ void Console::RunAfter()  {
     
     if (shown) {
         static bool openVK = false;
-        if (Input::IsPressed(MouseButtons::Left)) {
+        if (Input::GetState(UserInput::Pointer_0)) {
             Input::ShowVirtualKeyboard(!openVK);
             openVK = !openVK;
         }
@@ -870,7 +870,7 @@ void Console::RunAfter()  {
             
         
         
-        if (Input::IsPressed(Keyboard::Key_enter)) {
+        if (Input::GetState(UserInput::Key_enter)) {
 
             // halted input
             std::string inputString = streamIn->Consume();

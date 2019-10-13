@@ -50,8 +50,8 @@ static void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent ev
 static void initKeysymMappings();
 
 
-static std::map<int, Dynacoe::Keyboard> symMapping;
-static std::map<int, Dynacoe::MouseButtons> mbMapping;
+static std::map<int, Dynacoe::UserInput> symMapping;
+static std::map<int, Dynacoe::UserInput> mbMapping;
 
 
 
@@ -120,7 +120,7 @@ class InputPad {
         }
 
         timeLast = Dynacoe::Time::MsSinceStartup();
-        state = new Dynacoe::InputDevice(InputDevice::Class::Gamepad);
+        state = new Dynacoe::InputDevice(Dynacoe::InputDevice::Class::Gamepad);
     }
 
     static const std::vector<std::string> & GetAllDevices() {
@@ -164,9 +164,10 @@ class InputPad {
             return;
         }
         
-        InputDevice::Event event;
+        Dynacoe::InputDevice::Event event;
         event.id = inputMap[ev.code];
         event.state = ev.value;
+        event.utf8 = 0;
         switch(ev.type) {
           case EV_KEY:
           case EV_ABS:
@@ -212,8 +213,8 @@ Dynacoe::X11InputManager::X11InputManager() {
 
     // initialize default devices.
     devices.resize((int)DefaultDeviceSlots::NumDefaultDevices);
-    devices[(int)DefaultDeviceSlots::Keyboard] = new Dynacoe::InputDevice((int)Dynacoe::UserInput::NumButtons, 0);
-    devices[(int)DefaultDeviceSlots::Mouse] = new Dynacoe::InputDevice((int)Dynacoe::UserInput::NumButtons, (int)Dynacoe::MouseAxes::NumAxes);
+    devices[(int)DefaultDeviceSlots::Keyboard] = new Dynacoe::InputDevice(Dynacoe::InputDevice::Class::Keyboard);
+    devices[(int)DefaultDeviceSlots::Mouse] = new Dynacoe::InputDevice(Dynacoe::InputDevice::Class::Pointer);
 
 
     devices[(int)DefaultDeviceSlots::Pad1] = nullptr;
@@ -329,7 +330,6 @@ bool Dynacoe::X11InputManager::HandleEvents() {
     if (!display) return false;
     std::vector<XEvent> * ev = (std::vector<XEvent>*)display->GetLastSystemEvent();
     if (!ev) return false;
-    devices[1]->axes[(int)Dynacoe::MouseAxes::Wheel] = 0;
 
     for(uint32_t i = 0; i < ev->size(); ++i) {
         handleEvent(devices, (*ev)[i]);            
@@ -544,9 +544,9 @@ void initKeysymMappings() {
 
 
 
-    mbMapping[1] = Dynacoe::UserInput::Left;
-    mbMapping[2] = Dynacoe::UserInput::Middle;
-    mbMapping[3] = Dynacoe::UserInput::Right;
+    mbMapping[1] = Dynacoe::UserInput::Pointer_0;
+    mbMapping[2] = Dynacoe::UserInput::Pointer_2;
+    mbMapping[3] = Dynacoe::UserInput::Pointer_1;
     
 
 }
@@ -555,20 +555,22 @@ void initKeysymMappings() {
 #include <iostream>
 #include <cstdio>
 void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
-    devices[1]->axes[(int)Dynacoe::MouseAxes::Wheel] = 0;
 
-    InputDevice::Event ie;
+    Dynacoe::InputDevice::Event ie;
     
     switch(event.type) {
       case KeyPress:
       case KeyRelease: {
         KeySym key;
         XKeyEvent * ev = (XKeyEvent*)&event;
-        XLookupString(ev, (char*)"", 0, &key, nullptr);
+        ie.utf8 = 0;
+        XLookupString(ev, (char*)&ie.utf8, 4, &key, nullptr);
 
         // update keyboard    
         ie.id = symMapping[key];
         ie.state = (event.type == KeyPress);    
+        
+        printf("%c - %f\n", ie.utf8, ie.state);
         devices[0]->PushEvent(ie);
       } break;
 
@@ -583,13 +585,19 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
             case 3:
                 ie.id = mbMapping[ev->button];
                 ie.state = event.type == ButtonPress;
+                ie.utf8 = 0;
                 devices[1]->PushEvent(ie);
                 break;
             
             case 4:
             case 5:
-                ie.id = mbMapping[Dynacoe::MouseAxes::Wheel];
-                ie.state = (ev->button == 4 ? 1 : -1);
+                ie.id = mbMapping[(int)Dynacoe::UserInput::Pointer_Wheel];
+                //ie.state = (ev->state == 4 ? 1 : -1);
+                if      (ev->state > 4) ie.state = 1;
+                else if (ev->state < -4) ie.state = -1;
+                else    ie.state = 0;
+
+                ie.utf8 = 0;
                 devices[1]->PushEvent(ie);
                 break;
         }
@@ -597,12 +605,14 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
 
       case MotionNotify: {
         XMotionEvent * ev = (XMotionEvent*)&event;
-        ie.id = Dynacoe::MouseAxes::X;
+        ie.id = Dynacoe::UserInput::Pointer_X;
         ie.state = ev->x;
+        ie.utf8 = 0;
         devices[1]->PushEvent(ie);
 
-        ie.id = Dynacoe::MouseAxes::Y;
+        ie.id = Dynacoe::UserInput::Pointer_Y;
         ie.state = ev->y;
+        ie.utf8 = 0;
         devices[1]->PushEvent(ie);
         
         

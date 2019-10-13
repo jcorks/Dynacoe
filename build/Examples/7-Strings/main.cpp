@@ -147,7 +147,7 @@ class StringExample : public Dynacoe::Entity {
 
 
     void OnStep() {
-
+        /*
         // Text rendering with Dynacoe gives you a few options to 
         // display character spacings. 'Kerned' text draws the text 
         // using the natural spacing determined by the font. This is the 
@@ -173,7 +173,7 @@ class StringExample : public Dynacoe::Entity {
             textObject->SetSpacingMode(Text2D::SpacingMode::Monospace);
             Console::Info() << "Changed spacing mode to: Monospace\n";
 
-        } 
+        } */
         
      
 

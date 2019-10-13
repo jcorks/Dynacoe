@@ -77,26 +77,26 @@ class InputExample : public Entity {
         // Using seperate if-statements allows us to have directional
         // movement
 
-        if (Input::GetState(Keyboard::Key_w)) {
+        if (Input::GetState(UserInput::Key_w)) {
             Node().Position().y -= 2;
         }
 
-        if (Input::GetState(Keyboard::Key_a)) {
+        if (Input::GetState(UserInput::Key_a)) {
             Node().Position().x -= 2;
         }
 
-        if (Input::GetState(Keyboard::Key_s)) {
+        if (Input::GetState(UserInput::Key_s)) {
             Node().Position().y += 2;
         }
 
-        if (Input::GetState(Keyboard::Key_d)) {
+        if (Input::GetState(UserInput::Key_d)) {
             Node().Position().x += 2;
         }
 
 
         // Lets have the Entity teleport to where the mouse clicks.
         // IsPressed() will return true only when the press is registered.
-        if (Input::IsPressed(MouseButtons::Left)) {
+        if (Input::GetState(UserInput::Pointer_0)) {
             Node().Position() = {
                 Input::MouseX(),
                 Input::MouseY()

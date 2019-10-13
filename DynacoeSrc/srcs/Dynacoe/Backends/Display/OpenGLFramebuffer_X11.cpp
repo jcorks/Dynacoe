@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Interpreter.h>
 
 #include <X11/Xatom.h>
+#include <X11/XKBlib.h>
 
 
 #include <iostream>
@@ -410,6 +411,7 @@ bool Dynacoe::OpenGLFBDisplay::createContext() {
     } else {
         dpy = XOpenDisplay(NULL);
     }
+    XkbSetDetectableAutoRepeat(dpy, True, NULL);
 
     GLint att[] = {
 

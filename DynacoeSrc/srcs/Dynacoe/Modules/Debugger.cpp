@@ -749,7 +749,7 @@ DynacoeEvent(DebugWindow::event_update_info) {
 
 void DebugWindow::OnStep() {
     if (isBeingDragged) {
-        if (!Input::GetState(MouseButtons::Left)) {
+        if (!Input::GetState(UserInput::Pointer_0)) {
             isBeingDragged = false;
             return;
         }
@@ -1494,7 +1494,7 @@ void Debugger::InitAfter() {
 
 void Debugger::RunBefore() {
     debuggerBase.Identify()->GetParent().Node().Position() = Graphics::GetCamera2D().Node().GetPosition();
-    if (Input::IsPressed(Keyboard::Key_F3)) {
+    if (Input::GetState(UserInput::Key_F3)) {
         debuggerBase.IdentifyAs<DebuggerBase>()->Toggle();
     }
 }

@@ -49,6 +49,10 @@ static Entity::ID tooltipManager;
 class GUIManager;
 GUIManager * guiManager = nullptr;
 
+static int selfMState = 0;
+static int prevMState = 0;
+
+
 class GUIManager : public Entity {
   public:
     GUIManager() {
@@ -168,7 +172,7 @@ bool GUI::IsHovered() {
 
 
 bool GUI::IsBeingDragged() {
-    return IsHovered() && Input::IsHeld(MouseButtons::Left);
+    return IsHovered() && Input::IsHeld(UserInput::Pointer_0);
 }
 
 
@@ -214,9 +218,15 @@ int GUI::GetRegionH() {
 
 
 
-
 void GUI::Iterate() {
     if (grabbed && grabbed != this) return;
+    prevMState = selfMState;
+    selfMState = Input::GetState(UserInput::Pointer_0);
+
+    int isPressed  = (!prevMState && selfMState);
+    int isReleased = (prevMState && !selfMState);
+
+
 
     Vector pt = {0, 0};
     pt = GetGlobalTransform().Transform(pt);
@@ -241,12 +251,12 @@ void GUI::Iterate() {
     hovered = newHovered;
     if (hovered) {
         EmitEvent("on-hover");
-        if (Input::IsPressed(MouseButtons::Left)) {
+        if (isPressed) {
             clicked = this;
             EmitEvent("on-press");
         }
     
-        if (Input::IsReleased(MouseButtons::Left)) {
+        if (isReleased) {
             if (clicked == this) {
                 EmitEvent("on-click");
             }
