@@ -467,11 +467,21 @@ bool IsShiftMod() {
 
 void getUnicode(float prevState, const InputDevice::Event & event) {
     
+    int unicode = event.utf8;
 
-    // Go through a - z
+    // Filter newline
+    switch(unicode) {
+      case 12:
+      case 13:
+        unicode = 10;
+        break;
+      default:;
+    }    
+
+
     static int previousUnicode = 0;
-    lastUnicode = event.utf8;
-
+    if (event.state > 0) return;
+    lastUnicode = unicode;
 
     if (!lastUnicode) return;
 

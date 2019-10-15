@@ -48,7 +48,10 @@ class InputDevice;
 /// @{
 
 ///  Enum containing all valid device inputs recognized by the engine
-enum class UserInput {
+/// It's important to note that this is only the list of standard inputs, 
+/// and that systems will be able to generate events outside of this 
+/// list.
+enum UserInput {
     NotAnInput,
     Key_0, ///< 0
     Key_1, ///< 1

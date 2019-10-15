@@ -50,8 +50,8 @@ static void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent ev
 static void initKeysymMappings();
 
 
-static std::map<int, Dynacoe::UserInput> symMapping;
-static std::map<int, Dynacoe::UserInput> mbMapping;
+static std::map<int, int> symMapping;
+static std::map<int, int> mbMapping;
 
 
 
@@ -165,7 +165,7 @@ class InputPad {
         }
         
         Dynacoe::InputDevice::Event event;
-        event.id = inputMap[ev.code];
+        event.id = getInput(ev.code);
         event.state = ev.value;
         event.utf8 = 0;
         switch(ev.type) {
@@ -183,11 +183,22 @@ class InputPad {
     }
 
   private:
+
+    int getInput(int code) {
+        auto iter = inputMap.find(code);
+        if (iter == inputMap.end()) {
+            printf("Unrecognized input %d, registering as %d", code, code + Dynacoe::UserInput::Count);
+            inputMap[code] = code + Dynacoe::UserInput::Count;
+        }
+
+        return iter->second();
+    }
+
     static Dynacoe::Filesys * pathMan;
     double timeLast;;
 
     std::vector<int> inputs;
-    Dynacoe::UserInput inputMap[ABS_MISC+1];
+    std::unordered_map<int, int> inputMap;
 
     std::string name;
     int fd;
@@ -570,7 +581,7 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
         ie.id = symMapping[key];
         ie.state = (event.type == KeyPress);    
         
-        printf("%c - %f\n", ie.utf8, ie.state);
+        printf("%c(%d) - %f (%d)\n", ie.utf8, ie.utf8, ie.state, '\n');
         devices[0]->PushEvent(ie);
       } break;
 
