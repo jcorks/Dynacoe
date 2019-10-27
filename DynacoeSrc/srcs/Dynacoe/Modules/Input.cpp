@@ -36,6 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Modules/Graphics.h>
 #include <Dynacoe/Modules/ViewManager.h>
 #include <Dynacoe/Dynacoe.h>
+#include <Dynacoe/Util/Time.h>
+
 #include <algorithm>
 #include <cstring>
 
@@ -80,18 +82,41 @@ static std::vector<InputListener*> deletedListeners;
 
 
 
-struct DeviceState {
+class DeviceState {
+  public:
+    struct InputState {
+        float prev;
+        float current;
+        std::vector<InputListener*> listeners;
+    };
+
     DeviceState() {
-        thisState = (float*)calloc(sizeof(float), (int)UserInput::Count);
-        prevState = (float*)calloc(sizeof(float), (int)UserInput::Count);
-        memset(listeners, sizeof(void*)*((int)UserInput::Count), 0);
         device = nullptr;
+        
     }
 
     ~DeviceState() {
-        free(thisState);
-        free(prevState);
+        auto iter = inputs.begin();
+        while(iter != inputs.end()) {
+            delete iter->second; iter++;
+        }
     }
+
+    InputState * GetInput(int index) {
+        InputState * input = nullptr;
+        auto iter = inputs.find(index);
+        if (iter == inputs.end()) {
+            InputState * state = new InputState;
+            state->prev = 0.f;
+            state->current = 0.f;
+
+            inputs[index] = state;
+            input = state;
+            return input;
+        } else {
+            return iter->second;
+        }
+    }    
 
     void Update() {
         InputDevice::Event ev;
@@ -99,37 +124,35 @@ struct DeviceState {
         while(device->GetEventCount()) {
             device->PopEvent(ev);
             int index = (int)ev.id;
-            prevState[index] = thisState[index];
-            thisState[index] = ev.state;
+
+            InputState * input = GetInput(index);
+            input->prev = input->current;
+            input->current = ev.state;
 
             
 
-            if (listeners[index] && listeners[index]->size()) {
-                auto inst = listeners[index];
-                if (inst) {
-                    for(size_t i = 0; i < inst->size(); ++i) {
-                        if (!prevState[index] && thisState[index]) {
-                            (*inst)[i]->OnPress();
-                        } else if (prevState[index] && thisState[index]) {
-                            (*inst)[i]->OnHold();
-                        } else if (prevState[index] && !thisState[index]) {
-                            (*inst)[i]->OnRelease();
-                        }
+            if (input->listeners.size()) {
+                auto inst = &input->listeners;
+                for(size_t i = 0; i < inst->size(); ++i) {
+                    if (!input->prev && input->current) {
+                        (*inst)[i]->OnPress();
+                    } else if (input->prev && input->current) {
+                        (*inst)[i]->OnHold();
+                    } else if (input->prev && !input->current) {
+                        (*inst)[i]->OnRelease();
                     }
                 }
             }
 
             if (device->GetType() == InputDevice::Class::Keyboard) {                
-                getUnicode(prevState[index], ev);
+                getUnicode(input->current, ev);
             }
         }
     }
-
-    
     InputDevice * device;
-    float * prevState;
-    float * thisState;
-    std::vector<InputListener*> * listeners[(int)UserInput::Count];
+
+  private:
+    std::unordered_map<int, InputState*> inputs;
 };
 
 static DeviceState devices[(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
@@ -192,22 +215,14 @@ void Input::RunBefore() {
         devices[i].Update();
     }
 
+    DeviceState::InputState * inputY = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)UserInput::Pointer_Y);
+    DeviceState::InputState * inputX = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)UserInput::Pointer_X);
 
-    mouseY = MouseYDeviceToWorld2D(
-        devices[
-            (int)InputManager::DefaultDeviceSlots::Mouse
-        ].thisState[
-            (int)UserInput::Pointer_Y
-        ]
-    );
+    
 
-    mouseX = MouseXDeviceToWorld2D(
-        devices[
-            (int)InputManager::DefaultDeviceSlots::Mouse
-        ].thisState[
-            (int)UserInput::Pointer_X
-        ]
-    );
+    mouseY = inputY->current;
+    mouseX = inputX->current;
+
 
     lockCallbackMaps = false;
 
@@ -256,14 +271,15 @@ std::vector<int> Input::QueryPads() {
 bool Input::IsHeld(UserInput k) {
     float prev;
     float self;
+    DeviceState::InputState * input = nullptr;
     if (k < UserInput::Pointer_0) {
-        prev = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].prevState[(int)k];
-        self = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].thisState[(int)k];
-
+        input = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].GetInput((int)k);
     } else {
-        prev = devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)k];
-        self = devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)k];
+        input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)k);
     } 
+
+    prev = input->prev;
+    self = input->current;
     if (!prev) return false;
     return (prev &&
             self);
@@ -272,9 +288,12 @@ bool Input::IsHeld(UserInput k) {
 }
 
 bool Input::IsHeld(PadID b, UserInput k) {
-    if (!devices[b].prevState[(int)k]) return false;
-    return (devices[b].thisState[(int)k] &&
-            devices[b].prevState[(int)k]);
+
+    DeviceState::InputState * input = devices[b].GetInput((int)k);
+
+    if (!input->prev) return false;
+    return (input->current &&
+            input->prev);
 }
 
 
@@ -293,18 +312,23 @@ bool Input::IsHeld(const std::string & s) {
 }
 
 float Input::GetState(UserInput k) {
-    if (k < UserInput::Pointer_0) {
-        return devices[(int)InputManager::DefaultDeviceSlots::Keyboard].thisState[(int)k];
 
+    DeviceState::InputState * input = nullptr;
+    if (k < UserInput::Pointer_0) {
+        input = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].GetInput((int)k);
     } else {
-        return devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)k];
+        input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)k);
     } 
 
+    return input->current;
 }
 
 float Input::GetState(PadID b, UserInput k) {
-    if (!devices[b].prevState[(int)k]) return false;
-    return (devices[b].thisState[(int)k]);
+
+    DeviceState::InputState * input = devices[b].GetInput((int)k);
+
+    if (!input->prev) return false;
+    return (input->current);
 }
 
 
@@ -335,19 +359,26 @@ int Input::MouseY() {
 }
 
 int Input::MouseXDelta() {
-    return MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_X]) -
-           MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)UserInput::Pointer_X]);
+    DeviceState::InputState * input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)UserInput::Pointer_X);
+
+    
+    return MouseXDeviceToWorld2D(input->current) -
+           MouseXDeviceToWorld2D(input->prev);
 
 
 }
 
 int Input::MouseYDelta() {
-    return MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_Y]) -
-           MouseXDeviceToWorld2D(devices[(int)InputManager::DefaultDeviceSlots::Mouse].prevState[(int)UserInput::Pointer_Y]);
+    DeviceState::InputState * input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)UserInput::Pointer_Y);
+
+    
+    return MouseYDeviceToWorld2D(input->current) -
+           MouseYDeviceToWorld2D(input->prev);
 }
 
 int Input::MouseWheel() {
-    return (int)devices[(int)InputManager::DefaultDeviceSlots::Mouse].thisState[(int)UserInput::Pointer_Wheel];
+    DeviceState::InputState * input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)UserInput::Pointer_Wheel);
+    return input->current;
 }
 
 int Input::GetLastUnicode() {
@@ -417,26 +448,23 @@ void Input::UnmapInput(const std::string & id) {
 
 
 
-void Input::AddListener(InputListener * b, UserInput i) {
-    if (i < UserInput::Pointer_0) {
-        if (!devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i]) {
-            devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i] = new std::vector<InputListener*>;
-        }
-        devices[(int)InputManager::DefaultDeviceSlots::Keyboard].listeners[(int)i]->push_back(b);
+void Input::AddListener(InputListener * b, UserInput k) {
+    DeviceState::InputState * input = nullptr;
+
+    if (k < UserInput::Pointer_0) {
+        input = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].GetInput((int)k);
     } else {
-        if (!devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i]) {
-            devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i] = new std::vector<InputListener*>;
-        }
-        devices[(int)InputManager::DefaultDeviceSlots::Mouse].listeners[(int)i]->push_back(b);
+        input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)k);
     } 
+
+    input->listeners.push_back(b);
 }
 
 
-void Input::AddListener(InputListener * b, PadID id, UserInput i) {
-    if (!devices[id].listeners[(int)i]) {
-        devices[id].listeners[(int)i] = new std::vector<InputListener*>;
-    }
-    devices[id].listeners[(int)i]->push_back(b);
+void Input::AddListener(InputListener * b, PadID id, UserInput k) {
+    DeviceState::InputState * input = devices[id].GetInput((int)k);
+
+    input->listeners.push_back(b);
 }
 
 void Input::AddListener(InputListener * b, const std::string & i) {
@@ -480,44 +508,47 @@ void getUnicode(float prevState, const InputDevice::Event & event) {
 
 
     static int previousUnicode = 0;
-    if (event.state > 0) return;
-    lastUnicode = unicode;
+    static double time = 0;
+    static double startTime = 0;
 
+    lastUnicode = unicode;
     if (!lastUnicode) return;
 
-    // New press is detected
-    static int counter = 0;
-    if (lastUnicode != previousUnicode) counter = 0;
 
 
-    for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
-        unicodeListeners[i]->OnNewUnicode(lastUnicode);
-    }
-    
-    if (!Engine::IsPaused()) {
-        for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
-            unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
-        }            
-    }
+    if (lastUnicode != previousUnicode) startTime = Dynacoe::Time::MsSinceStartup();
 
+    if (!(event.state > 0)) {
+        for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+            unicodeListeners[i]->OnNewUnicode(lastUnicode);
+        }
+        
+        if (!Engine::IsPaused()) {
+            for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+                unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
+            }            
+        }
+    } else {
+        printf("aaa %d vs %d\n", lastUnicode, previousUnicode);
 
-    // Key has been held, implying a multiple key request (for us / latin keyboards)
-    if (lastUnicode == previousUnicode && lastUnicode) {
-        counter++;
-        if ((counter > Dynacoe::Engine::GetMaxFPS() / 2) && counter % 3 == 0) {
-                
-            for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
-                unicodeListeners[i]->OnRepeatUnicode(lastUnicode);
-            }
-            
-            if (!Engine::IsPaused()) {
-                for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
-                    unicodeListenersPausable[i]->OnRepeatUnicode(lastUnicode);
+        // Key has been held, implying a multiple key request (for us / latin keyboards)
+        if (lastUnicode == previousUnicode && lastUnicode) {
+            if ((Dynacoe::Time::MsSinceStartup() - startTime > 500) && 
+                (Dynacoe::Time::MsSinceStartup() - time > 100)) {
+                    
+                for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
+                    unicodeListeners[i]->OnRepeatUnicode(lastUnicode);
                 }
+                
+                if (!Engine::IsPaused()) {
+                    for(uint32_t i = 0; i < unicodeListenersPausable.size(); ++i) {
+                        unicodeListenersPausable[i]->OnRepeatUnicode(lastUnicode);
+                    }
+                }
+                time = Time::MsSinceStartup();
             }
         }
     }
-
     previousUnicode = lastUnicode;
 }
 

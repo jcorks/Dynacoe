@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cassert>
 #include <map>
 #include <fcntl.h>
-
+#include <unordered_map>
 #include <Dynacoe/Util/Time.h>
 #include <Dynacoe/Util/Filesys.h>
 
@@ -92,8 +92,7 @@ class InputPad {
 
 
 
-                  default:
-                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
+                  default:;
                 }
 
 
@@ -105,15 +104,12 @@ class InputPad {
 
         for(int i = ABS_X; i <= ABS_MISC; ++i) {
             if (libevdev_has_event_code(device, EV_ABS, i)) {
-                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
-                switch(i) {
-
-                  default:
-                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
-                }
-
-
                 printf("AXIS - %s\n", libevdev_event_code_get_name(EV_KEY, i));
+
+                // get clipped bounds for axis. axes are meant to be -1 to 1 
+                // except the pointer
+                //absMin =
+
             } else {
                 inputMap[i] = Dynacoe::UserInput::NotAnInput;
             }
@@ -160,22 +156,28 @@ class InputPad {
     void Update() {
         // flush event queue update state with state
         struct input_event ev;
-        if (libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &ev) < 0) {
-            return;
-        }
-        
-        Dynacoe::InputDevice::Event event;
-        event.id = getInput(ev.code);
-        event.state = ev.value;
-        event.utf8 = 0;
-        switch(ev.type) {
-          case EV_KEY:
-          case EV_ABS:
-            state->PushEvent(event);
-            break;
+        while(libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &ev) == LIBEVDEV_READ_STATUS_SUCCESS) {
+            
+            Dynacoe::InputDevice::Event event;
+            event.id = getInput(ev.code);
+            event.state = ev.value;
+            event.utf8 = 0;
+            switch(ev.type) {
+              case EV_KEY:
+                printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
+                state->PushEvent(event);
+                break;
 
-          default:;            
+
+              case EV_ABS:
+                printf("DEVICE_axis: (%d) %d %f\n", ev.code, event.id, event.state);
+                state->PushEvent(event);
+                break;
+
+              default:;            
+            }
         }
+
     }
 
     bool IsValid() {
@@ -187,11 +189,12 @@ class InputPad {
     int getInput(int code) {
         auto iter = inputMap.find(code);
         if (iter == inputMap.end()) {
-            printf("Unrecognized input %d, registering as %d", code, code + Dynacoe::UserInput::Count);
+            printf("Unrecognized input %d, registering as %d\n", code, code + Dynacoe::UserInput::Count);
             inputMap[code] = code + Dynacoe::UserInput::Count;
+            iter = inputMap.find(code);
         }
 
-        return iter->second();
+        return iter->second;
     }
 
     static Dynacoe::Filesys * pathMan;
@@ -199,6 +202,10 @@ class InputPad {
 
     std::vector<int> inputs;
     std::unordered_map<int, int> inputMap;
+
+    float absMin[ABS_MISC+1];
+    float absMax[ABS_MISC+1];
+
 
     std::string name;
     int fd;

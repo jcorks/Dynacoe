@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Interpreter.h>
 
 #include <X11/Xatom.h>
+#include <X11/XKBlib.h>
 
 
 #include <iostream>
@@ -343,6 +344,8 @@ bool Dynacoe::OpenGLFBDisplay::spawnWindow(const char * name, int _w, int _h) {
             dpy = XOpenDisplay(NULL);
             mainDisplay = dpy;
         }
+        XkbSetDetectableAutoRepeat(dpy, True, NULL);
+
         XSetErrorHandler(xlibErrHandler);
 
         root = DefaultRootWindow(dpy);
