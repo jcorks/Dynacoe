@@ -49,11 +49,90 @@ DEALINGS IN THE SOFTWARE.
 using namespace Dynacoe;
 
 
+class InputExample;
+
+
+
 
 // This entity responds to mouse input and pushing the 
 // WASD keys for movement.
 class InputExample : public Entity {
   public:
+
+    class InputDetector : public Dynacoe::InputListener {
+      public:
+        InputDetector(InputExample * ex) {
+            object = ex;
+        }
+
+
+        void OnChange(int button, float val) {
+            if (fabs(val) > .8) {
+                object->lastInput = button;
+                
+                Console::Info() << "detected input" << button << "\n";
+            }
+        }
+        InputExample * object;
+    };
+
+
+    class ControllerListener : public Dynacoe::InputListener {
+      public:
+        ControllerListener(InputExample * ex) {
+            object = ex;
+        }
+
+
+        void OnPress(int button) {
+        }
+
+        void OnActive(int button, float val) {
+            switch(button) {
+
+                case UserInput::Pad_y:
+                    object->Node().Position().y -= 5;
+                    break;
+
+                case UserInput::Pad_x:
+                    object->Node().Position().x -= 5;
+                    break;
+
+                case UserInput::Pad_a:
+                    object->Node().Position().y += 5;
+                    break;
+
+                case UserInput::Pad_b:
+                    object->Node().Position().x += 5;
+                    break;
+
+
+
+
+                case UserInput::Pad_l:
+                    object->Node().Position().x -= 4;
+                    break;
+
+                case UserInput::Pad_r:
+                    object->Node().Position().x += 4;
+                    break;
+
+                case UserInput::Pad_l2:
+                    object->Node().Position().x -= 4;
+                    break;
+
+                case UserInput::Pad_r2:
+                    object->Node().Position().x += 4;
+                    break;
+
+                
+            }
+        }
+
+
+        InputExample * object;
+
+    };
 
     InputExample() {
         SetName("InputEx");
@@ -67,6 +146,10 @@ class InputExample : public Entity {
 
         mouseSquare->FormRectangle(4, 4);
         mouseSquare->color = "yellow";
+
+        Input::AddPadListener(new ControllerListener(this), 0);
+        Input::AddPadListener(new InputDetector(this), 0);
+
     }
 
     void OnStep() {
@@ -77,31 +160,11 @@ class InputExample : public Entity {
         // Using seperate if-statements allows us to have directional
         // movement
 
-        if (Input::GetState(0, UserInput::Pad_y)) {
-            Node().Position().y -= 2;
-        }
-
-        if (Input::GetState(0, UserInput::Pad_x)) {
-            Node().Position().x -= 2;
-        }
-
-        if (Input::GetState(0, UserInput::Pad_a)) {
-            Node().Position().y += 2;
-        }
-
-        if (Input::GetState(0, UserInput::Pad_b)) {
-            Node().Position().x += 2;
-        }
 
         Node().Position().x += Input::GetState(0, UserInput::Pad_axisX);
         Node().Position().y += Input::GetState(0, UserInput::Pad_axisY);
 
 
-        if (Input::GetState(0, UserInput::Pad_l)) Node().Position().x -= 4;
-        if (Input::GetState(0, UserInput::Pad_r)) Node().Position().x += 4;
-
-        if (Input::GetState(0, UserInput::Pad_l2)) Node().Position().x -= 4;
-        if (Input::GetState(0, UserInput::Pad_r2)) Node().Position().x += 4;
 
         float triggerL = Input::GetState(0, UserInput::Pad_axisL)+1;
         float triggerR = Input::GetState(0, UserInput::Pad_axisR)+1;
@@ -136,12 +199,15 @@ class InputExample : public Entity {
         }
     }
 
-
+    int lastInput;
   private:
     // A square to show where our little entity is
     Shape2D * mouseSquare;
 
 };
+
+
+
 
 
 

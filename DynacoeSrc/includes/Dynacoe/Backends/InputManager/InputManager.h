@@ -190,7 +190,7 @@ enum UserInput {
     Pad_b32,///< Button 32
 
     Pad_axisX, ///< X button
-    Pad_axisy, ///< Y button
+    Pad_axisY, ///< Y button
     Pad_axisZ, ///< Z button
     Pad_axisX2,///< X2 button 
     Pad_axisY2,///< Y2 button
@@ -201,6 +201,23 @@ enum UserInput {
     Pad_axisX4,///< X4 button
     Pad_axisY4,///< Y4 button
     Pad_axisZ4,///< Z4 button
+    Pad_axisX5,///< X4 button
+    Pad_axisY5,///< Y4 button
+    Pad_axisZ5,///< Z4 button
+    Pad_axisX6,///< X4 button
+    Pad_axisY6,///< Y4 button
+    Pad_axisZ6,///< Z4 button
+
+    Pad_axisR,    
+    Pad_axisL,    
+    Pad_axisR2,    
+    Pad_axisL2,    
+    Pad_axisR3,    
+    Pad_axisL3,    
+    Pad_axisR4,    
+    Pad_axisL4,    
+
+    Pad_options,
     
     Count
 };

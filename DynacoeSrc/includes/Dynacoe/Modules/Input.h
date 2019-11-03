@@ -51,20 +51,46 @@ using PadID = int;
 
 /// \brief Callback functor base class.
 /// To implement a callback signal, create a class that
-/// inherits from this and give it to Input::AddListener()
+/// inherits from this and give it to Input::Add*Listener()
 class InputListener {
   public:
+
+
     /// \brief Function called upon pressing of the button.
     ///
-    virtual void OnPress(){};
+    virtual void OnPress(int){};
     
-    /// \brief Function called upon holding the button.
-    virtual void OnHold(){};
+    /// \brief Function called upon every frame the input is non-zero, independent of if new inputs were recieved.
+    virtual void OnActive(int, float){};
 
     /// \brief Function called upon releasing the button.
     ///
-    virtual void OnRelease(){};
+    virtual void OnRelease(int){};
+        
+    /// \brief Function called for every value change of the input state.
+    ///
+    virtual void OnChange(int, float) {}
 };
+
+
+
+
+/// \brief Callback functor base class for mapped inputs
+///
+/// To implement a callback signal, create a class that
+/// inherits from this and give it to Input::AddMappedListener()
+class InputMappedListener {
+  public:
+    virtual void OnPress(const std::string &){};
+
+    virtual void OnActive(const std::string &){};
+
+    virtual void OnRelease(const std::string &){};
+
+    virtual void OnChange(const std::string &, float val){}
+
+};
+
 
 /// \brief Callbacck functor for unicode values from a user's keyboard.
 /// On a US keyboard, the following special key signals exist:
@@ -99,10 +125,12 @@ namespace Input {
     /// the button is activated and false returns if otherwise.
     /// 
     /// \{    
-    float GetState(UserInput);
-    float GetState(PadID, UserInput);
+    float GetState(int);
+    float GetState(PadID, int);
     float GetState(const std::string &);
     /// \}
+
+    void SetDeadzone(PadID, float);
 
     /// \brief Returns the last Ascii code from keyboard.
     ///
@@ -119,14 +147,6 @@ namespace Input {
     ///
     void RemoveUnicodeListener(UnicodeListener *);
 
-    /// \name  IsHeld
-    /// Returns whether or not the input is currently being held.
-    ///
-    /// \{
-    bool IsHeld(UserInput);
-    bool IsHeld(PadID, UserInput);
-    bool IsHeld(const std::string &);
-    /// \}
 
 
     /// \brief Retrieves the a list of all valid Gamepads.
@@ -136,8 +156,8 @@ namespace Input {
     /// \name MapInput()
     /// Maps a data value to an input. The value may be queried to the specified input.
     /// \{    
-    void MapInput(const std::string & id, UserInput);
-    void MapInput(const std::string & id, PadID, UserInput);
+    void MapInput(const std::string & id, int);
+    void MapInput(const std::string & id, PadID, int);
     ///\}
 
     /// \brief Disassociates a string with its corresponding InputID if any
@@ -148,9 +168,10 @@ namespace Input {
     /// 
     /// Only one InputCallback may be associated 
     /// with a given InputID.
-    void AddListener(InputListener *, UserInput);
-    void AddListener(InputListener *, PadID, UserInput);
-    void AddListener(InputListener *, const std::string &);
+    void AddKeyboardListener(InputListener *);
+    void AddMouseListener(InputListener *);
+    void AddPadListener(InputListener *, PadID);
+    void AddMappedListener(InputListener *, const std::string &);
     
 
     /// \brief Disassociates the corresponding InputCallback if any.

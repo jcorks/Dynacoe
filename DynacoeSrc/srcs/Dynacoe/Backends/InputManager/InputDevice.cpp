@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 #include <cstdlib>  
 #include <iostream>
+#include <unordered_map>
 
 
 using namespace std;
@@ -62,7 +63,7 @@ class Dynacoe::InputDevice_Impl {
         if (iterBack >= allocated) {
             // move to the front
             if (iterFront > 0) {
-                memmove(data, data+iterFront, iterBack*sizeof(InputDevice::Event));
+                memmove(data, data+iterFront, (iterBack-iterFront)*sizeof(InputDevice::Event));
                 iterBack -= iterFront;
                 iterFront = 0;
             }
@@ -74,6 +75,23 @@ class Dynacoe::InputDevice_Impl {
         }
 
         data[iterBack++] = evt;
+
+        // deadzone calculation
+        float deadz = deadzone[evt.id];
+        if (deadz > .001) {
+            float val = data[iterBack-1].state; 
+            if (val > deadz) {
+                val = (val - deadz) / (1 - deadz);
+                data[iterBack-1].state = val;
+
+            } else if (val < -deadz) {
+
+                val = (val + 1) / (-deadz + 1);
+                data[iterBack-1].state = val-1;
+            } else {
+                data[iterBack-1].state = 0;
+            }
+        }
     }
 
     
@@ -91,7 +109,12 @@ class Dynacoe::InputDevice_Impl {
         return iterBack - iterFront;
     }
 
+    void SetDeadzone(int id, float zone) {
+        deadzone[id] = zone;
+    }
+
   private:
+    std::unordered_map<int, float> deadzone;
     InputDevice::Event * data;
     int allocated;
     int iterFront;
@@ -114,6 +137,10 @@ void InputDevice::PushEvent(const InputDevice::Event & ev) {
 
 bool InputDevice::PopEvent(InputDevice::Event & ev) {
     return self->PopEvent(ev);
+}
+
+void InputDevice::SetDeadzone(int id, float zone) {
+    self->SetDeadzone(id, zone);
 }
 
 InputDevice::Class InputDevice::GetType() const {

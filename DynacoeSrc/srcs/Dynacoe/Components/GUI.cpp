@@ -172,7 +172,7 @@ bool GUI::IsHovered() {
 
 
 bool GUI::IsBeingDragged() {
-    return IsHovered() && Input::IsHeld(UserInput::Pointer_0);
+    return IsHovered() && Input::GetState(UserInput::Pointer_0);
 }
 
 

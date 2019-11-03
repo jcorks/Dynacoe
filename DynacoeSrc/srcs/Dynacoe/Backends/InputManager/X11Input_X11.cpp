@@ -77,46 +77,29 @@ class InputPad {
         );
 
 
-        // poll available buttons and axes to get count for the state pointer.
-        for(int i = BTN_MISC; i < KEY_OK; ++i) {
-            if (libevdev_has_event_code(device, EV_KEY, i)) {
-                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
-                switch(i) {
-                  case BTN_A: inputMap[i] = Dynacoe::UserInput::Pad_a; break;
-                  case BTN_B: inputMap[i] = Dynacoe::UserInput::Pad_b; break;
-                  case BTN_Y: inputMap[i] = Dynacoe::UserInput::Pad_x; break;
-                  case BTN_X: inputMap[i] = Dynacoe::UserInput::Pad_y; break;
-
-                  case BTN_SELECT: inputMap[i] = Dynacoe::UserInput::Pad_start; break;
-                  case BTN_START:  inputMap[i] = Dynacoe::UserInput::Pad_select; break;
-
-
-
-                  default:;
-                }
-
-
-                printf("BUTTON - %s\n", libevdev_event_code_get_name(EV_KEY, i));
-            } else {
-                inputMap[i] = Dynacoe::UserInput::NotAnInput;
-            }
-        }
+        
 
         for(int i = ABS_X; i <= ABS_MISC; ++i) {
             if (libevdev_has_event_code(device, EV_ABS, i)) {
-                printf("AXIS - %s\n", libevdev_event_code_get_name(EV_KEY, i));
+                printf("AXIS - %s\n", libevdev_event_code_get_name(EV_ABS, i));
 
                 // get clipped bounds for axis. axes are meant to be -1 to 1 
                 // except the pointer
-                //absMin =
+                absMin[i] = libevdev_get_abs_minimum(device, i);
+                absMax[i] = libevdev_get_abs_maximum(device, i);
 
-            } else {
-                inputMap[i] = Dynacoe::UserInput::NotAnInput;
-            }
+            } 
         }
+
+
+
+
 
         timeLast = Dynacoe::Time::MsSinceStartup();
         state = new Dynacoe::InputDevice(Dynacoe::InputDevice::Class::Gamepad);
+
+        AssignMappings();
+
     }
 
     static const std::vector<std::string> & GetAllDevices() {
@@ -159,17 +142,19 @@ class InputPad {
         while(libevdev_next_event(device, LIBEVDEV_READ_FLAG_NORMAL, &ev) == LIBEVDEV_READ_STATUS_SUCCESS) {
             
             Dynacoe::InputDevice::Event event;
-            event.id = getInput(ev.code);
             event.state = ev.value;
             event.utf8 = 0;
             switch(ev.type) {
               case EV_KEY:
+                event.id = getInput(ev.code);
                 printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
-
+    
               case EV_ABS:
+                event.id = getInput(ev.code+KEY_OK);
+                event.state = 2*((event.state - absMin[ev.code]) / (absMax[ev.code] - absMin[ev.code])) - 1;
                 printf("DEVICE_axis: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
@@ -185,6 +170,89 @@ class InputPad {
     }
 
   private:
+
+    void AssignMappings() {
+        const char * name = libevdev_get_name(device);
+
+        // overrides for xbox 360 pad.    
+        if (strstr(name, "Microsoft X-Box 360")) {
+            printf("Adding tweaks for XBox 360 compatibility...\n");
+
+            // ABYX
+            inputMap[BTN_SOUTH] = Dynacoe::UserInput::Pad_a;
+            inputMap[BTN_EAST]  = Dynacoe::UserInput::Pad_b;
+            inputMap[BTN_WEST]  = Dynacoe::UserInput::Pad_y;
+            inputMap[BTN_NORTH] = Dynacoe::UserInput::Pad_x;
+
+            // directional pad
+            inputMap[ABS_HAT0X+KEY_OK] = Dynacoe::UserInput::Pad_axisX;
+            inputMap[ABS_HAT0Y+KEY_OK] = Dynacoe::UserInput::Pad_axisY;
+
+
+            // RL buttons
+            inputMap[BTN_TL] = Dynacoe::UserInput::Pad_l;
+            inputMap[BTN_TR] = Dynacoe::UserInput::Pad_r;
+
+            // stick buttons
+            inputMap[BTN_THUMBL] = Dynacoe::UserInput::Pad_l2;
+            inputMap[BTN_THUMBR] = Dynacoe::UserInput::Pad_r2;
+
+            // stick buttons
+            inputMap[BTN_THUMBL] = Dynacoe::UserInput::Pad_l2;
+            inputMap[BTN_THUMBR] = Dynacoe::UserInput::Pad_r2;
+
+            // rl bumpers
+            inputMap[ABS_Z +KEY_OK] = Dynacoe::UserInput::Pad_axisL;
+            inputMap[ABS_RZ+KEY_OK] = Dynacoe::UserInput::Pad_axisR;
+
+            // left stick
+            inputMap[ABS_Y+KEY_OK] = Dynacoe::UserInput::Pad_axisY2; 
+            inputMap[ABS_X+KEY_OK] = Dynacoe::UserInput::Pad_axisX2; 
+            state->SetDeadzone(Dynacoe::UserInput::Pad_axisY2, .3);
+            state->SetDeadzone(Dynacoe::UserInput::Pad_axisX2, .3);
+
+            // right stick
+            inputMap[ABS_RY+KEY_OK] = Dynacoe::UserInput::Pad_axisY3; 
+            inputMap[ABS_RX+KEY_OK] = Dynacoe::UserInput::Pad_axisX3; 
+            state->SetDeadzone(Dynacoe::UserInput::Pad_axisY3, .3);
+            state->SetDeadzone(Dynacoe::UserInput::Pad_axisX3, .3);
+
+            // start select
+            inputMap[BTN_START] = Dynacoe::UserInput::Pad_start;
+            inputMap[BTN_SELECT] = Dynacoe::UserInput::Pad_select;
+            inputMap[BTN_MODE] = Dynacoe::UserInput::Pad_options;
+
+
+        } else {
+            // poll available buttons and axes to get count for the state pointer.
+            for(int i = BTN_MISC; i < KEY_OK; ++i) {
+                if (libevdev_has_event_code(device, EV_KEY, i)) {
+                    switch(i) {
+                      case BTN_A: inputMap[i] = Dynacoe::UserInput::Pad_a; break;
+                      case BTN_B: inputMap[i] = Dynacoe::UserInput::Pad_b; break;
+                      case BTN_Y: inputMap[i] = Dynacoe::UserInput::Pad_x; break;
+                      case BTN_X: inputMap[i] = Dynacoe::UserInput::Pad_y; break;
+
+                      case BTN_SELECT: inputMap[i] = Dynacoe::UserInput::Pad_start; break;
+                      case BTN_START:  inputMap[i] = Dynacoe::UserInput::Pad_select; break;
+
+
+
+                      default:;
+                    }
+
+                    printf("BUTTON - %s -> %d \n", libevdev_event_code_get_name(EV_KEY, i), inputMap[i]);
+                } else {
+                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
+                }
+            }
+
+
+
+        }
+
+    }
+
 
     int getInput(int code) {
         auto iter = inputMap.find(code);
@@ -588,7 +656,7 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
         ie.id = symMapping[key];
         ie.state = (event.type == KeyPress);    
         
-        printf("%c(%d) - %f (%d)\n", ie.utf8, ie.utf8, ie.state, '\n');
+        printf("%c(%d) - %f (%d)\n", ie.utf8, ie.utf8, ie.state, (int)Dynacoe::UserInput::Pad_a);
         devices[0]->PushEvent(ie);
       } break;
 

@@ -851,8 +851,8 @@ void Console::RunAfter()  {
 
 
     if (enableKey && (
-        (Input::IsHeld(UserInput::Key_lshift) ||
-         Input::IsHeld(UserInput::Key_rshift)) &&
+        (Input::GetState(UserInput::Key_lshift) ||
+         Input::GetState(UserInput::Key_rshift)) &&
         Input::GetState(UserInput::Key_tab)))
         Console::Show(!shown);
 

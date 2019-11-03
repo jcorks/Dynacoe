@@ -75,6 +75,12 @@ class InputDevice {
     // Returns the number of button events pending
     int GetEventCount() const;
 
+    // Sets a dead zone for the specified input.
+    // If a deadzone is specified, inputs below this value are ignored
+    // and the new minimum is marked as this deadzone value and is renormalized.    
+    
+    void SetDeadzone(int id, float);
+
   private:
     InputDevice_Impl * self;
 };

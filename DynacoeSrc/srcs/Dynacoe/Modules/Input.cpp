@@ -59,12 +59,6 @@ static void getUnicode(float prevState, const InputDevice::Event &);
 static InputManager * manager;
 static int lastUnicode;
 
-static std::map<std::string, UserInput> stringMapInput;
-static std::map<std::string, std::pair<PadID, UserInput>> stringMapPad;
-
-
-
-
 
 
 static bool inputLocked;
@@ -84,10 +78,11 @@ static std::vector<InputListener*> deletedListeners;
 
 class DeviceState {
   public:
+
     struct InputState {
         float prev;
         float current;
-        std::vector<InputListener*> listeners;
+        std::string mapped;
     };
 
     DeviceState() {
@@ -129,17 +124,18 @@ class DeviceState {
             input->prev = input->current;
             input->current = ev.state;
 
+            printf("%d -> %f\n", index, ev.state);
+
             
 
-            if (input->listeners.size()) {
-                auto inst = &input->listeners;
+            if (listeners.size()) {
+                auto inst = &listeners;
                 for(size_t i = 0; i < inst->size(); ++i) {
+                    (*inst)[i]->OnChange(index, input->current);
                     if (!input->prev && input->current) {
-                        (*inst)[i]->OnPress();
-                    } else if (input->prev && input->current) {
-                        (*inst)[i]->OnHold();
+                        (*inst)[i]->OnPress(index);
                     } else if (input->prev && !input->current) {
-                        (*inst)[i]->OnRelease();
+                        (*inst)[i]->OnRelease(index);
                     }
                 }
             }
@@ -148,12 +144,43 @@ class DeviceState {
                 getUnicode(input->current, ev);
             }
         }
+
+
+
+        // fire callbacks for held buttons
+        if (!listeners.size()) return;
+
+        for(auto it = inputs.begin(); it != inputs.end(); ++it) {
+            InputState * input = it->second;
+            if (fabs(input->current) > 0.0001) {
+                for(uint32_t i = 0; i < listeners.size(); ++i) {
+                    listeners[i]->OnActive(it->first, input->current);
+                }            
+            }
+        }
     }
     InputDevice * device;
 
+
+    void AddListener(InputListener * l) {
+        listeners.push_back(l);
+    }
+
   private:
     std::unordered_map<int, InputState*> inputs;
+    std::vector<InputListener*> listeners;
+
 };
+
+struct MappedInputData {
+    DeviceState * device;
+    int input;
+};
+
+static std::unordered_map<std::string, MappedInputData> stringMapInput;
+static std::set<InputListener*> allListeners;
+
+
 
 static DeviceState devices[(int)InputManager::DefaultDeviceSlots::NumDefaultDevices];
 
@@ -262,56 +289,7 @@ std::vector<int> Input::QueryPads() {
 
 
 
-
-
-
-
-
-
-bool Input::IsHeld(UserInput k) {
-    float prev;
-    float self;
-    DeviceState::InputState * input = nullptr;
-    if (k < UserInput::Pointer_0) {
-        input = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].GetInput((int)k);
-    } else {
-        input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)k);
-    } 
-
-    prev = input->prev;
-    self = input->current;
-    if (!prev) return false;
-    return (prev &&
-            self);
-
-
-}
-
-bool Input::IsHeld(PadID b, UserInput k) {
-
-    DeviceState::InputState * input = devices[b].GetInput((int)k);
-
-    if (!input->prev) return false;
-    return (input->current &&
-            input->prev);
-}
-
-
-bool Input::IsHeld(const std::string & s) {
-    auto keyboardIter = stringMapInput.find(s);
-    if (keyboardIter != stringMapInput.end() &&
-        IsHeld(keyboardIter->second)) return true;
-
-    
-    auto padIter = stringMapPad.find(s);
-    if (padIter != stringMapPad.end() &&
-        IsHeld(padIter->second.first, padIter->second.second)) return true;
-    
-
-    return false;
-}
-
-float Input::GetState(UserInput k) {
+float Input::GetState(int k) {
 
     DeviceState::InputState * input = nullptr;
     if (k < UserInput::Pointer_0) {
@@ -323,27 +301,23 @@ float Input::GetState(UserInput k) {
     return input->current;
 }
 
-float Input::GetState(PadID b, UserInput k) {
+float Input::GetState(PadID b, int k) {
 
-    DeviceState::InputState * input = devices[b].GetInput((int)k);
-
-    if (!input->prev) return false;
-    return (input->current);
+    DeviceState::InputState * input = devices[(int)InputManager::DefaultDeviceSlots::Pad1+b].GetInput((int)k);
+    return input->current;
 }
 
 
 float Input::GetState(const std::string & s) {
-    auto keyboardIter = stringMapInput.find(s);
-    if (keyboardIter != stringMapInput.end() &&
-        GetState(keyboardIter->second)) return true;
+    auto iter = stringMapInput.find(s);
+    if (iter == stringMapInput.end()) return false;
 
-    
-    auto padIter = stringMapPad.find(s);
-    if (padIter != stringMapPad.end() &&
-        GetState(padIter->second.first, padIter->second.second)) return true;
-    
+    DeviceState::InputState * input = iter->second.device->GetInput(iter->second.input);
+    if (!input->prev) return false;
+    return (input->current &&
+            input->prev);
 
-    return false;
+
 }
 
 
@@ -419,13 +393,30 @@ void Input::RemoveUnicodeListener(UnicodeListener * listener) {
 /* input mapping */
 
 
-void Input::MapInput(const std::string & id, UserInput key) {
-    stringMapInput[id] = key;
+void Input::MapInput(const std::string & id, int k) {
+    DeviceState * input;
+    if (k < UserInput::Pointer_0) {
+        input = &devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
+    } else {
+        input = &devices[(int)InputManager::DefaultDeviceSlots::Mouse];
+    } 
+
+    MappedInputData data;
+    data.device = input;
+    data.input = k;
+
+    stringMapInput[id] = data;
 }
 
 
-void Input::MapInput(const std::string & id, PadID idpad, UserInput key) {
-    stringMapPad[id] = {idpad, key};
+void Input::MapInput(const std::string & id, PadID idpad, int key) {
+    DeviceState * input = &devices[(int)InputManager::DefaultDeviceSlots::Pad1+idpad];
+
+    MappedInputData data;
+    data.device = input;
+    data.input = key;
+
+    stringMapInput[id] = data;
 }
 
 
@@ -443,31 +434,31 @@ void Input::MapInput(const std::string & id, PadID idpad, UserInput key) {
 
 void Input::UnmapInput(const std::string & id) {
     stringMapInput.erase(id);
-    stringMapPad.erase(id);
 }
 
 
 
-void Input::AddListener(InputListener * b, UserInput k) {
-    DeviceState::InputState * input = nullptr;
+void Input::AddKeyboardListener(InputListener * b) {
+    DeviceState * input = &devices[(int)InputManager::DefaultDeviceSlots::Keyboard];
+    input->AddListener(b);
+    allListeners.insert(b);
+}
 
-    if (k < UserInput::Pointer_0) {
-        input = devices[(int)InputManager::DefaultDeviceSlots::Keyboard].GetInput((int)k);
-    } else {
-        input = devices[(int)InputManager::DefaultDeviceSlots::Mouse].GetInput((int)k);
-    } 
-
-    input->listeners.push_back(b);
+void Input::AddMouseListener(InputListener * b) {
+    DeviceState* input = &devices[(int)InputManager::DefaultDeviceSlots::Mouse];
+    input->AddListener(b);
+    allListeners.insert(b);
 }
 
 
-void Input::AddListener(InputListener * b, PadID id, UserInput k) {
-    DeviceState::InputState * input = devices[id].GetInput((int)k);
-
-    input->listeners.push_back(b);
+void Input::AddPadListener(InputListener * b, PadID id) {
+    DeviceState * input = &devices[(int)InputManager::DefaultDeviceSlots::Pad1+id];
+    input->AddListener(b);
+    allListeners.insert(b);    
 }
 
-void Input::AddListener(InputListener * b, const std::string & i) {
+
+void Input::AddMappedListener(InputListener * b, const std::string & i) {
     //strCallbackMap[b] = i;
     // TODO
 }
