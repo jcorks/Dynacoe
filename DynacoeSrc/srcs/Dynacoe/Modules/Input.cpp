@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cstring>
-
+#include <cmath>
 
 using namespace Dynacoe;
 using namespace std;

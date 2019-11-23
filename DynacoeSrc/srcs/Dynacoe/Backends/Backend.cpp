@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dynacoe/Backends/Display/OpenGLFramebuffer_Multi.h>
 #include <Dynacoe/Backends/Display/AndroidBridge_Multi.h>
 
-#include <Dynacoe/Backends/InputManager/Gainput_Multi.h>
+#include <Dynacoe/Backends/InputManager/WinInput_Win32.h>
 #include <Dynacoe/Backends/InputManager/AndroidBridge_Input.h>
 #include <Dynacoe/Backends/InputManager/NoInput_Multi.h>
 #include <Dynacoe/Backends/InputManager/X11Input_X11.h>
@@ -111,8 +111,8 @@ Backend * Backend::CreateDefaultInputManager() {
     #if (defined DC_BACKENDS_X11INPUT_X11)
     return new X11InputManager();
     #endif
-    #if (defined DC_BACKENDS_GAINPUTX11 || defined DC_BACKENDS_GAINPUTWIN32)
-    return new GainputManager();
+    #if (defined DC_BACKENDS_WININPUT_WIN32)
+    return new WinInputManager();
     #endif
 
     return new NoInputManager();

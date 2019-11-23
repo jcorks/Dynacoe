@@ -59,8 +59,7 @@ NoDisplay
 
 inputManagers="
 X11Input_X11
-GainputX11
-GainputWin32
+WinInput_Win32
 NoInput
 "
 
@@ -93,8 +92,7 @@ BEGIN OpenGLFramebuffer_X11 X11 END
 BEGIN GLESFramebuffer_X11 X11 END
 BEGIN OpenGLFramebuffer_Win32 Win32 END
 BEGIN X11Input_X11 X11 END
-BEGIN GainputX11 X11 END
-BEGIN GainputWin32 Win32 END
+BEGIN WinInput_Win32 Win32 END
 BEGIN RtAudioAlsa Alsa END
 BEGIN RtAudioOSS Pulse END
 BEGIN RtAudioDirectSound DirectSound END
@@ -118,8 +116,7 @@ BEGIN OpenGLFramebuffer_X11    -lGLEW -lGL  END
 BEGIN GLESFramebuffer_X11    -lEGL -lGLESv2  END
 BEGIN OpenGLFramebuffer_Win32  -lglew-dc -lOpenGL32  END
 BEGIN X11Input_X11 END
-BEGIN GainputX11   -lgainputstatic END
-BEGIN GainputWin32 -lgainputstatic-dc -lkernel32 -luser32 -lgdi32 -lXinput9_1_0 END
+BEGIN WinInput_Win32 END
 BEGIN RtAudioAlsa -lpthread END
 BEGIN RtAudioOSS  END
 BEGIN RtAudioDirectSound END
@@ -189,8 +186,7 @@ BEGIN OpenGLFramebuffer_X11     -DDC_BACKENDS_OPENGLFRAMEBUFFER_X11 END
 BEGIN GLESFramebuffer_X11     -DDC_BACKENDS_GLESFRAMEBUFFER_X11 END
 BEGIN OpenGLFramebuffer_Win32   -DDC_BACKENDS_OPENGLFRAMEBUFFER_WIN32 END
 BEGIN X11Input_X11               -DDC_BACKENDS_X11INPUT_X11 END
-BEGIN GainputX11                 -DDC_BACKENDS_GAINPUTX11 END
-BEGIN GainputWin32               -DDC_BACKENDS_GAINPUTWIN32 END
+BEGIN WinInput_Win32               -DDC_BACKENDS_WININPUT_WIN32 END
 BEGIN RtAudioAlsa                -DDC_BACKENDS_RTAUDIO_ALSA END
 BEGIN RtAudioOSS                 -DDC_BACKENDS_RTAUDIO_OSS END
 BEGIN RtAudioDirectSound         -DDC_BACKENDS_RTAUDIO_WIN32 END
