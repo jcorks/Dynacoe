@@ -49,21 +49,25 @@ static Entity::ID tooltipManager;
 class GUIManager;
 GUIManager * guiManager = nullptr;
 
-static int selfMState = 0;
-static int prevMState = 0;
 
 
 class GUIManager : public Entity {
   public:
     GUIManager() {
         guiManager = this;
+        prevMState = 0;
     }
     void OnStep() {
+        int selfMState = Input::GetState(UserInput::Pointer_0);
+
         for(int i = guis.size()-1; i >= 0; --i) {
-            guis[i]->Iterate();
+            guis[i]->Iterate(prevMState, selfMState);
         }
         guis.clear();
+        prevMState = selfMState;
+
     }
+    int prevMState;
     std::vector<GUI *> guis;
 
 };
@@ -217,15 +221,11 @@ int GUI::GetRegionH() {
 }
 
 
-
-void GUI::Iterate() {
+void GUI::Iterate(int prevMState, int selfMState) {
     if (grabbed && grabbed != this) return;
-    prevMState = selfMState;
-    selfMState = Input::GetState(UserInput::Pointer_0);
 
     int isPressed  = (!prevMState && selfMState);
     int isReleased = (prevMState && !selfMState);
-
 
 
     Vector pt = {0, 0};

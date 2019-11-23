@@ -139,7 +139,7 @@ class GUI : public Component, public Spatial {
     bool hovered;
     int w, h;
   public:
-    void Iterate();
+    void Iterate(int prev, int now);
 
 };
 

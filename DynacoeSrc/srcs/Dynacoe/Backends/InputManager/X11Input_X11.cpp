@@ -147,7 +147,7 @@ class InputPad {
             switch(ev.type) {
               case EV_KEY:
                 event.id = getInput(ev.code);
-                printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
+                //printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -155,7 +155,7 @@ class InputPad {
               case EV_ABS:
                 event.id = getInput(ev.code+KEY_OK);
                 event.state = 2*((event.state - absMin[ev.code]) / (absMax[ev.code] - absMin[ev.code])) - 1;
-                printf("DEVICE_axis: (%d) %d %f\n", ev.code, event.id, event.state);
+                //printf("DEVICE_axis: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -241,9 +241,6 @@ class InputPad {
                       default:;
                     }
 
-                    printf("BUTTON - %s -> %d \n", libevdev_event_code_get_name(EV_KEY, i), inputMap[i]);
-                } else {
-                    inputMap[i] = Dynacoe::UserInput::NotAnInput;
                 }
             }
 
@@ -656,7 +653,7 @@ void handleEvent(std::vector<Dynacoe::InputDevice *> & devices, XEvent event) {
         ie.id = symMapping[key];
         ie.state = (event.type == KeyPress);    
         
-        printf("%c(%d) - %f (%d)\n", ie.utf8, ie.utf8, ie.state, (int)Dynacoe::UserInput::Pad_a);
+        //printf("%c(%d) - %f (%d)\n", ie.utf8, ie.utf8, ie.state, (int)Dynacoe::UserInput::Pad_a);
         devices[0]->PushEvent(ie);
       } break;
 

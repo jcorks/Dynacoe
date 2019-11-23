@@ -73,7 +73,30 @@ static bool lockCallbackMaps = false;
 static std::vector<InputListener*> deletedListeners;
 
 
+class DeviceState;
+struct MappedInputData {
+    DeviceState * device;
+    int input;
 
+    bool operator==(const MappedInputData & other) const {
+        return other.device == device && other.input == input;
+    }
+};
+
+namespace std {
+    template <>
+    struct hash<MappedInputData> {
+        std::size_t operator()(const MappedInputData & key) const {
+            return hash<void*>()(key.device) ^ (hash<int>()(key.input) << 1);
+        }
+    };
+}
+
+
+
+static std::unordered_map<std::string, MappedInputData> stringMapInput;
+static std::unordered_map<MappedInputData, std::string> inputMapString;
+static std::unordered_map<std::string, std::vector<InputListener *>> stringListeners;
 
 
 class DeviceState {
@@ -124,7 +147,7 @@ class DeviceState {
             input->prev = input->current;
             input->current = ev.state;
 
-            printf("%d -> %f\n", index, ev.state);
+            //printf("%d -> %f\n", index, ev.state);
 
             
 
@@ -140,6 +163,25 @@ class DeviceState {
                 }
             }
 
+            // string handlers
+            if (!inputMapString.empty() && !stringListeners.empty()) {
+                MappedInputData key;
+                key.device = this;
+                key.input = index;
+                auto iter = inputMapString.find(key);
+                if (iter != inputMapString.end()) {
+                    auto inst = &stringListeners[iter->second];
+                    for(size_t i = 0; i < inst->size(); ++i) {
+                        (*inst)[i]->OnChange(index, input->current);
+                        if (!input->prev && input->current) {
+                            (*inst)[i]->OnPress(index);
+                        } else if (input->prev && !input->current) {
+                            (*inst)[i]->OnRelease(index);
+                        }
+                    }
+                }
+            }
+
             if (device->GetType() == InputDevice::Class::Keyboard) {                
                 getUnicode(input->current, ev);
             }
@@ -148,15 +190,35 @@ class DeviceState {
 
 
         // fire callbacks for held buttons
-        if (!listeners.size()) return;
+        if (listeners.size()) {
 
-        for(auto it = inputs.begin(); it != inputs.end(); ++it) {
-            InputState * input = it->second;
-            if (fabs(input->current) > 0.0001) {
-                for(uint32_t i = 0; i < listeners.size(); ++i) {
-                    listeners[i]->OnActive(it->first, input->current);
-                }            
+            for(auto it = inputs.begin(); it != inputs.end(); ++it) {
+                InputState * input = it->second;
+                if (fabs(input->current) > 0.0001) {
+                    for(uint32_t i = 0; i < listeners.size(); ++i) {
+                        listeners[i]->OnActive(it->first, input->current);
+                    }            
+                }
             }
+        }
+
+        // string listeners
+        if (!inputMapString.empty() && !stringListeners.empty()) {
+            for(auto it = inputMapString.begin(); it != inputMapString.end(); ++it) {
+                // only listeners for this device
+                if (it->first.device != this) continue;
+
+                // get input state for this mapping
+                InputState * input = inputs[it->first.input];
+
+                if (fabs(input->current) > 0.0001) {
+                    auto inst = &stringListeners[it->second];
+
+                    for(size_t i = 0; i < inst->size(); ++i) {
+                        (*inst)[i]->OnActive(it->first.input, input->current);
+                    }            
+                }
+            }            
         }
     }
     InputDevice * device;
@@ -172,12 +234,7 @@ class DeviceState {
 
 };
 
-struct MappedInputData {
-    DeviceState * device;
-    int input;
-};
 
-static std::unordered_map<std::string, MappedInputData> stringMapInput;
 static std::set<InputListener*> allListeners;
 
 
@@ -406,6 +463,7 @@ void Input::MapInput(const std::string & id, int k) {
     data.input = k;
 
     stringMapInput[id] = data;
+    inputMapString[data] = id;
 }
 
 
@@ -417,6 +475,8 @@ void Input::MapInput(const std::string & id, PadID idpad, int key) {
     data.input = key;
 
     stringMapInput[id] = data;
+    inputMapString[data] = id;
+
 }
 
 
@@ -461,11 +521,28 @@ void Input::AddPadListener(InputListener * b, PadID id) {
 void Input::AddMappedListener(InputListener * b, const std::string & i) {
     //strCallbackMap[b] = i;
     // TODO
+
+
+    stringListeners[i].push_back(b);
+
+
 }
 
 
 void Input::RemoveListener(InputListener * b) {
     deletedListeners.push_back(b);
+
+    if (!stringListeners.empty()) {
+        for(auto it = stringListeners.begin(); it != stringListeners.end(); ++it) {
+            std::vector<InputListener*> & inst = it->second;
+            for(uint32_t i = 0; i < inst.size(); ++i) {
+                if (inst[i] == b) {
+                    inst.erase(inst.begin()+i);
+                    return;
+                }
+            }
+        }
+    }
 }
 
 
@@ -520,7 +597,7 @@ void getUnicode(float prevState, const InputDevice::Event & event) {
             }            
         }
     } else {
-        printf("aaa %d vs %d\n", lastUnicode, previousUnicode);
+        //printf("aaa %d vs %d\n", lastUnicode, previousUnicode);
 
         // Key has been held, implying a multiple key request (for us / latin keyboards)
         if (lastUnicode == previousUnicode && lastUnicode) {
