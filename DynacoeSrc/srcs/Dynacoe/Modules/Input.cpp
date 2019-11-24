@@ -308,26 +308,12 @@ void Input::RunBefore() {
 
     
 
-    mouseY = inputY->current;
-    mouseX = inputX->current;
+    mouseY = MouseYDeviceToWorld2D(inputY->current);
+    mouseX = MouseXDeviceToWorld2D(inputX->current);
 
 
     lockCallbackMaps = false;
 
-    /*
-    for(uint32_t i = 0; i < deletedListeners.size(); ++i) {
-        auto b = deletedListeners[i];
-        auto pFind = padCallbackMap.find(b);
-        if (pFind != padCallbackMap.end()) padCallbackMap.erase(pFind);
-
-
-        auto kFind = inputCallbackMap.find(b);
-        if (kFind != inputCallbackMap.end()) inputCallbackMap.erase(kFind);
-
-        auto sFind = strCallbackMap.find(b);
-        if (sFind != strCallbackMap.end()) strCallbackMap.erase(sFind);
-    }
-    */
     deletedListeners.clear();
 
 }
