@@ -246,7 +246,11 @@ static int MouseXDeviceToWorld2D(int);
 static int MouseYDeviceToWorld2D(int);
 static ViewID focusID;
 
-
+void Input::SetDeadzone(int pad, int input, float amt) {
+    if (pad < 3) return;
+    if (pad >= (int)InputManager::DefaultDeviceSlots::NumDefaultDevices) return;
+    devices[pad].device->SetDeadzone(input, amt);
+}
 
 void Input::Init() {
     manager = (InputManager *)Backend::CreateDefaultInputManager();
@@ -586,7 +590,7 @@ void getUnicode(float prevState, const InputDevice::Event & event) {
 
     if (lastUnicode != previousUnicode) startTime = Dynacoe::Time::MsSinceStartup();
 
-    if (!(event.state > 0)) {
+    if (event.state) {
         for(uint32_t i = 0; i < unicodeListeners.size(); ++i) {
             unicodeListeners[i]->OnNewUnicode(lastUnicode);
         }
@@ -596,7 +600,8 @@ void getUnicode(float prevState, const InputDevice::Event & event) {
                 unicodeListenersPausable[i]->OnNewUnicode(lastUnicode);
             }            
         }
-    } else {
+    } else if (event.state) {
+    
         //printf("aaa %d vs %d\n", lastUnicode, previousUnicode);
 
         // Key has been held, implying a multiple key request (for us / latin keyboards)

@@ -75,22 +75,6 @@ class InputListener {
 
 
 
-/// \brief Callback functor base class for mapped inputs
-///
-/// To implement a callback signal, create a class that
-/// inherits from this and give it to Input::AddMappedListener()
-class InputMappedListener {
-  public:
-    virtual void OnPress(const std::string &){};
-
-    virtual void OnActive(const std::string &){};
-
-    virtual void OnRelease(const std::string &){};
-
-    virtual void OnChange(const std::string &, float val){}
-
-};
-
 
 /// \brief Callbacck functor for unicode values from a user's keyboard.
 /// On a US keyboard, the following special key signals exist:
@@ -130,7 +114,10 @@ namespace Input {
     float GetState(const std::string &);
     /// \}
 
-    void SetDeadzone(PadID, float);
+
+    /// \brief Sets a deadzone for the input button.
+    ///
+    void SetDeadzone(PadID, int input, float);
 
     /// \brief Returns the last Ascii code from keyboard.
     ///
