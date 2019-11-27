@@ -47,8 +47,6 @@ bool Filesys::ChangeDir(const std::string & dir) {
         return false;
 
 
-	if (chdir(dir.c_str()) == -1)
-		return false;
 
 
     currentPath = pathTemp;
@@ -93,9 +91,9 @@ Filesys::Directory Filesys::QueryDirectory() {
 }
 
 std::string Filesys::GetCWD() {
-	char dir[DIRECTORY_SIZE_LIMIT];
-	currentPath = getcwd(dir, sizeof(dir));
-
+    if (currentPath == "") {
+        currentPath = get_current_dir_name();
+    }
 	return currentPath;
 }
 
