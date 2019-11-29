@@ -50,6 +50,8 @@ class InputDevice {
 
 
     struct Event {
+        Event(){}
+        Event(int id_, float state_, int utf8_ = 0) : id(id_), state(state_), utf8(utf8_){}
         int id;               // input mapping. UserInput enums for ones below the count, else unmarked ints that are system-dependent
         float state;          // state
         int utf8; // unicode mapping to the key, if any

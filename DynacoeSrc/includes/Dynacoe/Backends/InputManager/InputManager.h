@@ -229,6 +229,11 @@ class InputManager : public Backend {
   public:
     virtual ~InputManager(){};
         
+    // Convenience function that attempts to 
+    // convert an id to a sensible string describing the input.
+    // Each is unique.
+    static std::string IDToString(int);
+
     enum InputType {
         Keyboard = 0x1,
         Gamepad  = 0x01,

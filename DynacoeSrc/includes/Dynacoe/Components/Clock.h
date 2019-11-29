@@ -107,10 +107,10 @@ class Clock : public Component {
 
 
     std::string GetInfo();
-
-  private:
     void OnDraw();
     void OnStep();
+
+  private:
 
 
     long startTime;

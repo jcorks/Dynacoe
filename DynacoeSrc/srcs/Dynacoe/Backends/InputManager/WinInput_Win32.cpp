@@ -40,10 +40,13 @@ DEALINGS IN THE SOFTWARE.
 #include <cfloat>
 #include <unordered_map>
 
+
 /* WinAPI backend for input handling. */
 
 #include <windows.h>
+#include <windowsx.h>
 
+#include <XInput.h>
 static int TranslateWINAPIKeyToDCKey(int k) {
     switch(k) {
         case 0x30: return Dynacoe::UserInput::Key_0;
@@ -169,17 +172,30 @@ static int TranslateWINAPIKeyToDCKey(int k) {
     return Dynacoe::UserInput::Count + k;
 }
 
-
+static std::unordered_map<int, int> xinput_to_dc;
 
 class WinAPIDevice {
   public:
-    WinAPIDevice(Dynacoe::InputDevice::Class c) {
+    WinAPIDevice(Dynacoe::InputDevice::Class c) : padState({}) {
         device = new Dynacoe::InputDevice(c);
         jid = -1;
         connected = false;
+        padState = {};
+        prevState = {};
+        padState.dwPacketNumber = -1;
+        prevState.dwPacketNumber = -1;
+
+        if (c == Dynacoe::InputDevice::Class::Gamepad) {
+            device->SetDeadzone(Dynacoe::UserInput::Pad_axisY2, .3);
+            device->SetDeadzone(Dynacoe::UserInput::Pad_axisX2, .3);
+            device->SetDeadzone(Dynacoe::UserInput::Pad_axisY3, .3);
+            device->SetDeadzone(Dynacoe::UserInput::Pad_axisX3, .3);
+
+        }
+
     }
 
-    void HandleMessage(int inputKey, float inputValue, int unicode) {
+    void HandleMessage(int inputKey, float inputValue, int unicode=0) {
         Dynacoe::InputDevice::Event ev;
         ev.id = inputKey;
         ev.state = inputValue;
@@ -190,7 +206,6 @@ class WinAPIDevice {
 
         device->PushEvent(ev);
     }
-
 
     int GetJoyID() {
         return jid;
@@ -206,17 +221,91 @@ class WinAPIDevice {
 
     void SetJoyIDConnected(bool b) {
         connected = b;
+        prevState.dwPacketNumber = -1; // repoll input when reconnected
+    }
+
+
+    #define DXDELTA(__X__) ((prevState.Gamepad.wButtons & __X__) != (padState.Gamepad.wButtons & __X__))
+    void UpdateButtonPad(int pos, int neg) {
+        if (DXDELTA(pos) ||
+            DXDELTA(neg)) {
+            int dc = xinput_to_dc[pos];
+
+            if (padState.Gamepad.wButtons & pos) {
+                HandleMessage(dc, 1.f);
+            } else if (padState.Gamepad.wButtons & neg) {
+                HandleMessage(dc, -1.f);
+            } else {
+                HandleMessage(dc, 0.f);
+            }
+        }
+    }
+
+    void UpdateAxis(int bt, float val, float min, float max) {
+        HandleMessage(bt, 2*((val - min) / (max - min))-1);
+    }
+    #define DXAXISDELTA(__X__, __ID__, __MIN__, __MAX__) if(prevState.Gamepad.__X__ != padState.Gamepad.__X__) UpdateAxis(__ID__, padState.Gamepad.__X__, __MIN__, __MAX__);
+
+    void UpdateButton(int bt) {
+        if (DXDELTA(bt)) HandleMessage(xinput_to_dc[bt], padState.Gamepad.wButtons & bt ? 1.f : 0.f);
+    }
+
+    void UpdatePadValues() {
+        XInputGetState(GetJoyID(), &padState);
+        if (padState.dwPacketNumber != prevState.dwPacketNumber) {
+            // add events for each change
+            UpdateButtonPad(XINPUT_GAMEPAD_DPAD_UP,    XINPUT_GAMEPAD_DPAD_DOWN);
+            UpdateButtonPad(XINPUT_GAMEPAD_DPAD_RIGHT, XINPUT_GAMEPAD_DPAD_LEFT);
+
+            UpdateButton(XINPUT_GAMEPAD_START);
+            UpdateButton(XINPUT_GAMEPAD_BACK);
+
+            UpdateButton(XINPUT_GAMEPAD_LEFT_THUMB);
+            UpdateButton(XINPUT_GAMEPAD_RIGHT_THUMB);
+
+            UpdateButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+            UpdateButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
+
+
+            UpdateButton(XINPUT_GAMEPAD_A);
+            UpdateButton(XINPUT_GAMEPAD_B);
+            UpdateButton(XINPUT_GAMEPAD_X);
+            UpdateButton(XINPUT_GAMEPAD_Y);
+
+            DXAXISDELTA(bLeftTrigger,  Dynacoe::UserInput::Pad_l2, 0, 255);
+            DXAXISDELTA(bRightTrigger, Dynacoe::UserInput::Pad_r2, 0, 255);
+
+            DXAXISDELTA(sThumbLX, Dynacoe::UserInput::Pad_axisX2, -0xffff/2, 0xffff/2);
+            DXAXISDELTA(sThumbLY, Dynacoe::UserInput::Pad_axisY2, -0xffff/2, 0xffff/2);
+
+            DXAXISDELTA(sThumbRX, Dynacoe::UserInput::Pad_axisR2, -0xffff/2, 0xffff/2);
+            DXAXISDELTA(sThumbRY, Dynacoe::UserInput::Pad_axisR2, -0xffff/2, 0xffff/2);
+
+            prevState = padState;
+
+            if (device->GetEventCount()) {
+                printf("gamepad %d has %d new events\n", GetJoyID(), device->GetEventCount());
+                fflush(stdout);
+            }
+        }        
+        
+
     }
 
     Dynacoe::InputDevice * GetDevice() {
         return device;
     }
 
+    // if connected, then the pad state is reliable
+    XINPUT_STATE padState;
   private:
+    XINPUT_STATE prevState;
     Dynacoe::InputDevice* device;
     int jid;
     bool connected;
+
 };
+
 
 
 static std::vector<WinAPIDevice*> devices;
@@ -230,6 +319,25 @@ Dynacoe::WinInputManager::WinInputManager() {
     devices.push_back(new WinAPIDevice(Dynacoe::InputDevice::Class::Gamepad));
     devices.push_back(new WinAPIDevice(Dynacoe::InputDevice::Class::Gamepad));
 
+
+    XInputEnable(TRUE);
+
+    xinput_to_dc[XINPUT_GAMEPAD_DPAD_UP]     = Dynacoe::UserInput::Pad_axisY;
+    xinput_to_dc[XINPUT_GAMEPAD_DPAD_DOWN]   = Dynacoe::UserInput::Pad_axisY;
+    xinput_to_dc[XINPUT_GAMEPAD_DPAD_LEFT]   = Dynacoe::UserInput::Pad_axisX;
+    xinput_to_dc[XINPUT_GAMEPAD_DPAD_RIGHT]  = Dynacoe::UserInput::Pad_axisX;
+
+    xinput_to_dc[XINPUT_GAMEPAD_START]  = Dynacoe::UserInput::Pad_start;
+    xinput_to_dc[XINPUT_GAMEPAD_BACK]  = Dynacoe::UserInput::Pad_select;
+    xinput_to_dc[XINPUT_GAMEPAD_A]  = Dynacoe::UserInput::Pad_a;
+    xinput_to_dc[XINPUT_GAMEPAD_B]  = Dynacoe::UserInput::Pad_b;
+    xinput_to_dc[XINPUT_GAMEPAD_X]  = Dynacoe::UserInput::Pad_x;
+    xinput_to_dc[XINPUT_GAMEPAD_Y]  = Dynacoe::UserInput::Pad_y;
+
+    xinput_to_dc[XINPUT_GAMEPAD_LEFT_SHOULDER] = Dynacoe::UserInput::Pad_l;
+    xinput_to_dc[XINPUT_GAMEPAD_RIGHT_SHOULDER] = Dynacoe::UserInput::Pad_r;
+    xinput_to_dc[XINPUT_GAMEPAD_LEFT_THUMB] = Dynacoe::UserInput::Pad_l2;
+    xinput_to_dc[XINPUT_GAMEPAD_RIGHT_THUMB] = Dynacoe::UserInput::Pad_r2;
 
 
 
@@ -260,18 +368,13 @@ bool Dynacoe::WinInputManager::HandleEvents() {
     MSG msg;
     std::vector<MSG> * ev = (std::vector<MSG>*)display->GetLastSystemEvent();
 
-    if (ev->size()) {
-        int num = joyGetNumDevs();
-
-        bool claimedDevs[num] = {};
+    if (true) {
+        bool claimedDevs[4] = {};
 
         // get existing joypad updates
         for(int i = 3; i < devices.size(); ++i) {
             if (devices[i]->GetJoyID() == -1) continue;
 
-            JOYINFOEX jp = {};
-            jp.dwSize = sizeof(JOYINFOEX);
-            jp.dwFlags = JOY_RETURNALL;
 
             int result;
 
@@ -279,7 +382,7 @@ bool Dynacoe::WinInputManager::HandleEvents() {
             //   - check if its still connected
             //   - mark it as claimed
 
-            if ((result = joyGetPosEx(devices[i]->GetJoyID(), &jp)) != JOYERR_NOERROR) {
+            if (XInputGetState(devices[i]->GetJoyID(), &devices[i]->padState) != ERROR_SUCCESS) {
                 if (devices[i]->IsJoyIDConnected()) {
                     printf("Slot %d disconnected\n", i);
                     fflush(stdout);
@@ -289,56 +392,46 @@ bool Dynacoe::WinInputManager::HandleEvents() {
                 // reconnected!!
                 devices[i]->SetJoyIDConnected(true);
                 printf("Slot %d reconnected\n");
+                fflush(stdout);
             }
 
-            claimedDevs[i] = true;
+            claimedDevs[devices[i]->GetJoyID()] = true;
 
         }
 
         // look for 
-        for(int i = 0; i < 16; ++i) {
+        for(int i = 0; i < 4; ++i) {
             if (claimedDevs[i]) continue;
 
-            JOYINFOEX jp = {};
-            jp.dwSize = sizeof(JOYINFOEX);
-            jp.dwFlags = JOY_RETURNALL;
+
             int result;
-            if ((result = joyGetPosEx(i, &jp)) == JOYERR_NOERROR) {
+            XINPUT_STATE state;
+            if ((result = XInputGetState(i, &state)) == ERROR_SUCCESS) {
                 for(int n = 3; n < devices.size(); ++n) {
                     if (devices[n]->GetJoyID() == -1) {
-                        if(joySetCapture(((*ev)[0]).hwnd, i, 0, FALSE)) {
-                            printf("Could not capture ID %d\n", i);
-                            fflush(stdout);
-                            devices[n]->SetJoyID(i);
-                        } else {
-                            printf("captured ID %d -> gamepad %d\n", i, n-3);
-                        }
-
+                        devices[n]->SetJoyID(i);
+                        devices[n]->SetJoyIDConnected(true);
+                        devices[n]->padState = state;
+                        printf("captured ID %d -> gamepad %d\n", i, n-3);
+                        fflush(stdout);
+                        break;
                     }
                 }
-            } else {
-                /*
-                printf("No info or availability for slot %d\n", i, result);
-                switch(result) {
-                  case MMSYSERR_NODRIVER:    printf("(MMSYSERR_NODRIVER)\n"); break;
-                  case MMSYSERR_INVALPARAM:  printf("(MMSYSERR_INVALPARAM)\n"); break;
-                  case MMSYSERR_BADDEVICEID: printf("(MMSYSERR_BADDEVICEID)\n"); break;
-
-                  case JOYERR_UNPLUGGED: printf("(UNPLUGGED)\n"); break;
-                  case JOYERR_PARMS: printf("(PARMS)\n"); break;
-
-
-                }
-                */
-            }
+            } 
 
         }
 
-            fflush(stdout);
-            
+        fflush(stdout);
+        
 
 
     }
+    for(int i = 3; i < devices.size(); ++i) {
+        if (devices[i]->IsJoyIDConnected()) {
+            devices[i]->UpdatePadValues();
+        }
+    }
+
 
     for(uint32_t i = 0; i < ev->size(); ++i) {
         MSG * msg = &(*ev)[i];
@@ -365,32 +458,43 @@ bool Dynacoe::WinInputManager::HandleEvents() {
 
             devices[0]->HandleMessage(
                 TranslateWINAPIKeyToDCKey(msg->wParam), 
-                msg->message == WM_KEYUP ? 1.f : 0.f, 
+                msg->message == WM_KEYDOWN ? 1.f : 0.f, 
                 ch
             );
             break;
           }
-          
-          // pads!
-          case MM_JOY1MOVE: 
-          case MM_JOY1BUTTONDOWN: 
-          case MM_JOY1BUTTONUP:
-          {
 
-            printf("JPID 1\n");
-            fflush(stdout);
+
+
+          // mouse
+          case WM_MOUSEMOVE:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_X, GET_X_LPARAM(msg->lParam));
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_Y, GET_Y_LPARAM(msg->lParam));
             break;
-          }
 
-          case MM_JOY2MOVE: 
-          case MM_JOY2BUTTONDOWN: 
-          case MM_JOY2BUTTONUP:
-          {
-
-            printf("JPID 2\n");
-            fflush(stdout);
+          case WM_LBUTTONUP:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_0, 0.f);
             break;
-          }
+
+          case WM_LBUTTONDOWN:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_0, 1.f);
+            break;
+
+          case WM_RBUTTONUP:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_1, 0.f);
+            break;
+
+          case WM_RBUTTONDOWN:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_1, 1.f);
+            break;
+
+          case WM_MBUTTONUP:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_2, 0.f);
+            break;
+
+          case WM_MBUTTONDOWN:
+            devices[1]->HandleMessage(Dynacoe::UserInput::Pointer_2, 1.f);
+            break;
 
 
           default: {

@@ -209,8 +209,7 @@ class DeviceState {
                 if (it->first.device != this) continue;
 
                 // get input state for this mapping
-                InputState * input = inputs[it->first.input];
-
+                InputState * input = GetInput(it->first.input);
                 if (fabs(input->current) > 0.0001) {
                     auto inst = &stringListeners[it->second];
 

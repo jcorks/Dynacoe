@@ -124,7 +124,7 @@ BEGIN NoInput END
 BEGIN NoRender END
 BEGIN NoDisplay END
 BEGIN NoAudio END
-BEGIN Win32 -lmingw32 -lole32 -lwinmm -lWsock32 -lgdi32 -lm -lpng-dc -lz-dc -lfreetype-dc -lvorbisfile-dc -lvorbis-dc -logg-dc  END
+BEGIN Win32 -lmingw32 -lole32 -lwinmm -lWsock32 -lgdi32 -lxinput  -lm -lpng-dc -lz-dc -lfreetype-dc -lvorbisfile-dc -lvorbis-dc -logg-dc  END
 BEGIN X11 -lpthread -lX11 -lm -lpng -lz -lfreetype -lvorbisfile -lvorbis -logg -levdev END
 BEGIN Alsa -lasound END
 BEGIN DirectSound -ldsound END

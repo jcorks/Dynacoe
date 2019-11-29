@@ -127,7 +127,7 @@ class MapInput : public Dynacoe::Entity {
     void SetLastInput(int b) {
         if (active == this) {
             button = b;
-            key->text = Chain() << buttonName << ":" << button;
+            key->text = Chain() << buttonName << ":" << Dynacoe::InputManager::IDToString(button);
             Input::MapInput(buttonName, 0, button);
             active->control->Execute("idle");
         }
