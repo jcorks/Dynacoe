@@ -147,7 +147,7 @@ class InputPad {
             switch(ev.type) {
               case EV_KEY:
                 event.id = getInput(ev.code);
-                //printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
+                printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -155,7 +155,7 @@ class InputPad {
               case EV_ABS:
                 event.id = getInput(ev.code+KEY_OK);
                 event.state = 2*((event.state - absMin[ev.code]) / (absMax[ev.code] - absMin[ev.code])) - 1;
-                //printf("DEVICE_axis: (%d) %d %f\n", ev.code, event.id, event.state);
+                printf("DEVICE_axis: (%d) %d %f\n", ev.code+KEY_OK, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -223,6 +223,33 @@ class InputPad {
             inputMap[BTN_MODE] = Dynacoe::UserInput::Pad_options;
 
 
+        } else if (strstr(name, "Sony Interactive Entertainment Controller")) {
+            printf("Adding tweaks for Sony PSC controller...\n");
+
+            // ABYX
+            inputMap[306] = Dynacoe::UserInput::Pad_a;
+            inputMap[305]  = Dynacoe::UserInput::Pad_b;
+            inputMap[304]  = Dynacoe::UserInput::Pad_y;
+            inputMap[307] = Dynacoe::UserInput::Pad_x;
+
+            // directional pad
+            inputMap[353] = Dynacoe::UserInput::Pad_axisX;
+            inputMap[352] = Dynacoe::UserInput::Pad_axisY;
+
+
+            // RL buttons
+            inputMap[308] = Dynacoe::UserInput::Pad_l;
+            inputMap[309] = Dynacoe::UserInput::Pad_r;
+
+            // rl bumpers
+            inputMap[310] = Dynacoe::UserInput::Pad_axisL;
+            inputMap[311] = Dynacoe::UserInput::Pad_axisR;
+
+
+
+            // start select
+            inputMap[BTN_START] = Dynacoe::UserInput::Pad_start;
+            inputMap[BTN_SELECT] = Dynacoe::UserInput::Pad_select;
         } else {
             // poll available buttons and axes to get count for the state pointer.
             for(int i = BTN_MISC; i < KEY_OK; ++i) {
