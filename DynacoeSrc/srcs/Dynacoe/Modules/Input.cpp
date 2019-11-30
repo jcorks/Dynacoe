@@ -359,9 +359,7 @@ float Input::GetState(const std::string & s) {
     if (iter == stringMapInput.end()) return false;
 
     DeviceState::InputState * input = iter->second.device->GetInput(iter->second.input);
-    if (!input->prev) return false;
-    return (input->current &&
-            input->prev);
+    return (input->current);
 
 
 }
