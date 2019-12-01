@@ -147,7 +147,7 @@ class InputPad {
             switch(ev.type) {
               case EV_KEY:
                 event.id = getInput(ev.code);
-                printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
+                //printf("DEVICE_button: (%d) %d %f\n", ev.code, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -155,7 +155,7 @@ class InputPad {
               case EV_ABS:
                 event.id = getInput(ev.code+KEY_OK);
                 event.state = 2*((event.state - absMin[ev.code]) / (absMax[ev.code] - absMin[ev.code])) - 1;
-                printf("DEVICE_axis: (%d) %d %f\n", ev.code+KEY_OK, event.id, event.state);
+                //printf("DEVICE_axis: (%d) %d %f\n", ev.code+KEY_OK, event.id, event.state);
                 state->PushEvent(event);
                 break;
 
@@ -233,8 +233,8 @@ class InputPad {
             inputMap[307] = Dynacoe::UserInput::Pad_x;
 
             // directional pad
-            inputMap[353] = Dynacoe::UserInput::Pad_axisX;
-            inputMap[352] = Dynacoe::UserInput::Pad_axisY;
+            inputMap[352] = Dynacoe::UserInput::Pad_axisX;
+            inputMap[353] = Dynacoe::UserInput::Pad_axisY;
 
 
             // RL buttons
