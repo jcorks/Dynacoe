@@ -130,6 +130,12 @@ class Camera : public Entity {
     ///
     TransformMatrix GetProjectionTransform();
 
+    /// \brief Sets the filtering hint for this camera. The default is 
+    /// to filter the entire visual.
+    ///
+    void SetFilteredHint(bool);
+
+
     /// \brief Returns the framebuffer for the camera.
     ///
     Framebuffer * GetFramebuffer();

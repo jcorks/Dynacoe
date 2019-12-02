@@ -329,6 +329,11 @@ AssetID Camera::GetBackVisual() {
     return CopyDisplay(fbAux);
 }
 
+void Camera::SetFilteredHint(bool b) {
+    fb->   SetFilteredHint(b);
+    fbAux->SetFilteredHint(b);
+}
+
 AssetID Camera::CopyDisplay(Framebuffer * fbTarget) {
     std::vector<uint8_t> data;
     data.resize(fbTarget->Width() * fbTarget->Height() * 4);
