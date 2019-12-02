@@ -581,11 +581,7 @@ class ConsoleInputStream : public Entity {
     void UnicodeAddRequest(int ch) {
         if (!Console::IsVisible()) return;
         
-        if (ch == 17) {Left(); return;}
-        if (ch == 18) {Up(); return;}
-        if (ch == 19) {Right(); return;}
-        if (ch == 20) {Down(); return;}
-        
+
 
         int character = ch;
         if (character == '\n') {
@@ -600,6 +596,8 @@ class ConsoleInputStream : public Entity {
                 inputString.substr(cursorIter, std::string::npos);
 
             cursorIter++;
+            Math::Clamp(cursorIter, 0, inputString.size());
+
         }
         inputStringAspect->text = Chain() << "$  " << inputString;
         //changed = true;
@@ -608,12 +606,16 @@ class ConsoleInputStream : public Entity {
 
     void Left() {
         cursorIter--;
-        saturation = 0.f;            
+        saturation = 0.f;  
+        Math::Clamp(cursorIter, 0, inputString.size());
+          
     }
 
     void Right() {
         cursorIter++;
         saturation = 0.f;            
+        Math::Clamp(cursorIter, 0, inputString.size());
+
     }
 
     void Up() {
@@ -640,6 +642,8 @@ class ConsoleInputStream : public Entity {
                 inputString.substr(cursorIter, std::string::npos);
             cursorIter--;
             inputStringAspect->text = Chain() << "$  " << inputString;  
+            Math::Clamp(cursorIter, 0, inputString.size());
+        
         }
     }
     bool changed = false;
@@ -660,8 +664,7 @@ class ConsoleInputStream : public Entity {
 
 
 
-        Math::Clamp(cursorIter, 0, inputString.size());
-
+ 
 
         // history control:
         // moves the old commadn to the active command slot
@@ -678,12 +681,13 @@ class ConsoleInputStream : public Entity {
                 inputString = history[historyIter];
                 cursorIter = inputString.size();
             }
+            Math::Clamp(cursorIter, 0, inputString.size());
         }
 
 
 
 
-        Math::Clamp(cursorIter, 0, inputString.size());
+        
 
 
         // update displayed string
@@ -700,6 +704,8 @@ class ConsoleInputStream : public Entity {
         historyIter = history.size();
         inputString = "";
         inputStringAspect->text = ("$  ");
+        Math::Clamp(cursorIter, 0, inputString.size());
+
         return out;
     }
 
@@ -801,11 +807,79 @@ void Console::Init() {
     inputActive = true;
 }
 
+static float saturator = 0;
+class ConsoleKeyDetector : public InputListener {
+  public:
+    void OnPress(int button) {
+        switch(button) {
+
+
+
+          case UserInput::Key_tab:
+            if (enableKey && (
+                (Input::GetState(UserInput::Key_lshift) ||
+                 Input::GetState(UserInput::Key_rshift)))) {
+
+                Console::Show(!shown);
+
+            }
+            break;
+          case UserInput::Key_enter: {
+            // halted input
+            std::string inputString = streamIn->Consume();
+            ConsoleStream(AcquireStreamOutput, Color("white")) << ConsoleStream::MessageType::Normal <<  ">" << inputString << "\n";
+
+            if (commandCallback) {
+                if (commandCallback(nullptr, nullptr, Entity::ID(), Entity::ID(), {inputString})) {
+                    Console::Info() << interp->RunCommand(inputString) << '\n';
+                }
+            } else if (!inputString.empty()) {
+                Console::Info() << interp->RunCommand(inputString) << '\n';
+            }
+            break;
+          }
+
+
+
+          case UserInput::Key_up: 
+            streamIn->Up();
+            break;
+
+          case UserInput::Key_down: 
+            streamIn->Down();
+            break;
+
+          case UserInput::Key_left: 
+            streamIn->Left();
+            break;
+
+          case UserInput::Key_right: 
+            streamIn->Right();
+            break;
+
+    
+        }
+    }
+
+
+    void OnActive(int button, float value) {
+        switch(button) {
+          case UserInput::Key_pageDown:
+            saturator += .5f;
+            break;
+
+          case UserInput::Key_pageUp:
+            saturator -= .5f;
+            break;
+        }
+    }
+};
+
 void Console::InitAfter() {
     AddDefaultCommands();
+    Input::AddKeyboardListener(new ConsoleKeyDetector);
 }
 void Console::RunBefore() {
-    static float saturator = 0;
     static float lastW, lastH;
     if (lastW != Graphics::GetRenderCamera().Width() ||
         lastH != Graphics::GetRenderCamera().Height()) {
@@ -824,14 +898,13 @@ void Console::RunBefore() {
     */
 
 
-
-    if (Input::MouseWheel() == -1 || Input::GetState(UserInput::Key_pageDown)) {
+    if (Input::MouseWheel() == -1) {
         //if (saturator < 0) saturator = 0;
         saturator += .5f;
     }
 
 
-    if (Input::MouseWheel() == 1 || Input::GetState(UserInput::Key_pageUp)) {
+    if (Input::MouseWheel() == 1) {
         //if (saturator > 0) saturator = 0;
         saturator -= .5f;
     }
@@ -850,11 +923,6 @@ void Console::RunAfter()  {
     ProcessStreamOutput();
 
 
-    if (enableKey && (
-        (Input::GetState(UserInput::Key_lshift) ||
-         Input::GetState(UserInput::Key_rshift)) &&
-        Input::GetState(UserInput::Key_tab)))
-        Console::Show(!shown);
 
 
 
@@ -869,21 +937,6 @@ void Console::RunAfter()  {
 
             
         
-        
-        if (Input::GetState(UserInput::Key_enter)) {
-
-            // halted input
-            std::string inputString = streamIn->Consume();
-            ConsoleStream(AcquireStreamOutput, Color("white")) << ConsoleStream::MessageType::Normal <<  ">" << inputString << "\n";
-
-            if (commandCallback) {
-                if (commandCallback(nullptr, nullptr, Entity::ID(), Entity::ID(), {inputString})) {
-                    Console::Info() << interp->RunCommand(inputString) << '\n';
-                }
-            } else if (!inputString.empty()) {
-                Console::Info() << interp->RunCommand(inputString) << '\n';
-            }
-        }
 
     }
     
@@ -1085,7 +1138,7 @@ void Console::DrawAfter() {
     
     
     
-    /*
+    
     // not proud of this, but...
     int viewOffsetY_tmp = viewOffsetY;
     Math::Clamp(viewOffsetY_tmp, 0, lines.size() - lineViews.size());
@@ -1093,7 +1146,7 @@ void Console::DrawAfter() {
 
 
     // todo
-
+    /*
 
 
 

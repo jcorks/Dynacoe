@@ -141,7 +141,7 @@ void GUI::Initialize() {
     if (!tooltipManager.Valid()) {
         tooltipManager = Entity::Create<TooltipManager>();
         Engine::AttachManager(tooltipManager);
-        Engine::AttachManager(Entity::Create<GUIManager>());
+        Engine::AttachManager(Entity::Create<GUIManager>(), false);
     }
 }
 
