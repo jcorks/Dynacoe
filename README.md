@@ -1,3 +1,17 @@
+FOR FUTURE REFERENCE:
+====================
+This project will eventually be discontinued in place of 2 separate projects:
+
+"sandboxe" http://github.com/jcorks/sandboxe
+- javascript bindings of the current dynacoe toolkit
+
+"topaz" http://github.com/jcorks/topaz
+- C library with the same goals and basic usage as Dynacoe
+
+
+
+
+
 Dynacoe
 =======
 
